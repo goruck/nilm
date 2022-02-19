@@ -13,20 +13,22 @@ void setup()
   Serial.end();
   Serial.begin(115200);
   
-  Serial.println("\nStaring monitoring..."); 
+  Serial.println("\nStaring monitoring...");
 
-  EmonLibCM_SetADC_VChannel(0, 120.64);                    // ADC Input channel, voltage calibration
-  EmonLibCM_SetADC_IChannel(1, 90.91, 4.6);                // ADC Input channel, current calibration, phase calibration
-  EmonLibCM_SetADC_IChannel(2, 90.91, 4.2);                // The current channels will be read in this order
+  EmonLibCM_SetADC_VChannel(0, 132.0);                    // ADC Input channel, voltage calibration
+  EmonLibCM_SetADC_IChannel(1, 58.0, 4.6);                // ADC Input channel, current calibration, phase calibration
+  EmonLibCM_SetADC_IChannel(2, 58.0, 4.2);                // The current channels will be read in this order
 
-  //analogReference(INTERNAL1V1);
-  EmonLibCM_setADC_VRef(INTERNAL1V1);                      // ADC Reference voltage (set to 1.1V)
+  EmonLibCM_setADC_VRef(INTERNAL2V56);                    // ADC Reference voltage (set to 2.56V)
+  EmonLibCM_ADCCal(2.56);                                 // ADC Cal voltage (set to 2.56V)
   
-  EmonLibCM_cycles_per_second(60);                         // mains frequency 50Hz, 60Hz
+  EmonLibCM_cycles_per_second(60);                        // Line frequency is 60Hz
   
-  EmonLibCM_min_startup_cycles(10);                        // number of cycles to let ADC run before starting first actual measurement
+  EmonLibCM_min_startup_cycles(10);                       // Number of cycles to let ADC run before starting first actual measurement
 
-  EmonLibCM_Init();                                        // Start continuous monitoring.
+  EmonLibCM_datalog_period(10.0);                         // Set interval over which stats are reports
+
+  EmonLibCM_Init();                                       // Start continuous monitoring
 
 }
 
@@ -42,7 +44,7 @@ void loop()
     Serial.print(" V=");Serial.print(EmonLibCM_getVrms());
     Serial.print(" f=");Serial.println(EmonLibCM_getLineFrequency(),2);           
 
-    for (byte ch=0; ch<4; ch++)
+    for (byte ch=0; ch<2; ch++)
     {
         Serial.print("Ch ");Serial.print(ch+1);
         Serial.print(" I=");Serial.print(EmonLibCM_getIrms(ch),3);
