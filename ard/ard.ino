@@ -8,9 +8,9 @@
 void setup() 
 {
 
-  Serial.begin(9600);
-  Serial.println("Set baud=115200");
-  Serial.end();
+  //Serial.begin(9600);
+  //Serial.println("Set baud=115200");
+  //Serial.end();
   Serial.begin(115200);
   
   Serial.println("\nStaring monitoring...");
@@ -37,12 +37,25 @@ void loop()
 
   if (EmonLibCM_Ready())
   {
+    
+    Serial.println(EmonLibCM_getVrms());
+    Serial.println(EmonLibCM_getLineFrequency(),2);
+    for (byte ch=0; ch<2; ch++)
+    {
+        Serial.println(EmonLibCM_getIrms(ch),3);
+        Serial.println(EmonLibCM_getRealPower(ch));
+        Serial.println(EmonLibCM_getApparentPower(ch));
+        Serial.println(EmonLibCM_getWattHour(ch));
+        Serial.println(EmonLibCM_getPF(ch),4);
+        delay(10);
+    }
 
+    /*
     Serial.println(EmonLibCM_acPresent()?"AC present ":"AC missing ");
     delay(5);
 
     Serial.print(" V=");Serial.print(EmonLibCM_getVrms());
-    Serial.print(" f=");Serial.println(EmonLibCM_getLineFrequency(),2);           
+    Serial.print(" f=");Serial.println(EmonLibCM_getLineFrequency(),2);
 
     for (byte ch=0; ch<2; ch++)
     {
@@ -51,10 +64,10 @@ void loop()
         Serial.print(" W=");Serial.print(EmonLibCM_getRealPower(ch));
         Serial.print(" VA=");Serial.print(EmonLibCM_getApparentPower(ch));
         Serial.print(" Wh=");Serial.print(EmonLibCM_getWattHour(ch));
-        Serial.print(" pf=");Serial.print(EmonLibCM_getPF(ch),4);   
+        Serial.print(" pf=");Serial.print(EmonLibCM_getPF(ch),4);
         Serial.println();
         delay(10);
     }
-
+    */
   }
 }
