@@ -3,11 +3,11 @@ Captures Ardunio data from the serial port to a CSV file.
 
 Copyright (c) 2022 Lindo St. Angel
 """
-import serial, time, csv
+import serial, time, csv, datetime
 
-CSV_FILE_NAME = 'samples.csv'
-#timestamp, rms voltage, {rms current, real power, appearent power} for each phase
-CSV_ROW_NAMES = ['TS','V','I1','W1','VA1','I2','W2','VA2']
+CSV_FILE_NAME = '/mnt/usbstorage/nilm/samples.csv'
+#datetime, unix timestamp(UTC), rms voltage, {rms current, real power, appearent power} for each phase
+CSV_ROW_NAMES = ['DT','TS','V','I1','W1','VA1','I2','W2','VA2']
 
 SAMPLE_MAX = 1000
 
@@ -37,8 +37,10 @@ if __name__ == '__main__':
                             #   rms current, real power, appearent power for phase 0,
                             #   rms current, real power, appearent power for phase 1
                             sample = [float(d) for d in decoded_bytes.split(',')]
+                            # Insert datetime.
+                            sample.insert(0, datetime.datetime.now())
                             # Insert timestamp.
-                            sample.insert(0, round(time.time(), 2))
+                            sample.insert(1, round(time.time(), 2))
                             #print(f'sample = {sample}')
                             # Write to csv file.
                             csv_writer.writerow(sample)
