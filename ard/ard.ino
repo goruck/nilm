@@ -27,7 +27,7 @@ void setup()
   
   EmonLibCM_cycles_per_second(60);             // Line frequency (set to 60 Hz)
 
-  EmonLibCM_datalog_period(0.1);               // Interval over which stats are reported (in secs)
+  EmonLibCM_datalog_period(8.0);               // Interval over which stats are reported (in secs)
 
   EmonLibCM_Init();                            // Start continuous monitoring
 
