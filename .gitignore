@@ -1,0 +1,7 @@
+*.pb
+*variables.index
+*variables.data*
+*pycache*
+*.csv
+*.npy
+*.log
