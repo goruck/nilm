@@ -44,7 +44,7 @@ params_appliance = {
         's2s_length': 2000}
     }
 
-def load_dataset(file_name, crop=None) -> tuple:
+def load_dataset(file_name, crop=None) -> np.array:
     """Load CSV file, convert to np and return mains and appliance samples."""
     df = pd.read_csv(file_name, nrows=crop)
 
