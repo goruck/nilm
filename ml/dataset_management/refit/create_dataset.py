@@ -24,7 +24,6 @@ def get_arguments():
                           help='The directory to store the training data')
     return parser.parse_args()
 
-
 params_appliance = {
     'kettle': {
         'windowlength': 599,

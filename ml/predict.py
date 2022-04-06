@@ -4,6 +4,7 @@ Predict appliance using novel data from my home.
 Copyright (c) 2022 Lindo St. Angel
 """
 
+from math import ceil
 import os
 import argparse
 import socket
@@ -14,8 +15,16 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 from logger import log
-import nilm_metric as nm
 from common import WindowGenerator, params_appliance
+
+PANEL_LOCATION = 'garage'
+WINDOW_LENGTH = 599
+AGGREGATE_MEAN = 522
+AGGREGATE_STD = 814
+
+default_appliances = ['kettle', 'fridge', 'microwave', 'washingmachine', 'dishwasher']
+test_file_path = '/home/lindo/Develop/nilm/ml/dataset_management/my-house/'
+test_file_name = 'garage.csv'
 
 def get_arguments():
     parser = argparse.ArgumentParser(description='Predict appliance\
@@ -24,10 +33,11 @@ def get_arguments():
                                      network input = mains window;\
                                      network target = the states of\
                                      the target appliance.')
-    parser.add_argument('--appliance_name',
+    parser.add_argument('--appliances',
                         type=str,
-                        default='kettle',
-                        help='the name of target appliance')
+                        nargs='+',
+                        default=default_appliances,
+                        help='Name(s) of target appliance')
     parser.add_argument('--datadir',
                         type=str,
                         default='./dataset_management/refit',
@@ -44,23 +54,8 @@ def get_arguments():
                         type=str,
                         default='./results',
                         help='this is the directory to save the predictions')
-    parser.add_argument('--test_type',
-                        type=str,
-                        default='test',
-                        help='Type of the test set to load: \
-                            test -- test on the proper test set;\
-                            train -- test on a already prepared slice of the train set;\
-                            val -- test on the validation set;\
-                            uk -- test on UK-DALE;\
-                            redd -- test on REDD.')
-    parser.add_argument("--transfer", action='store_true',
-                        help="If set, use a pre-trained CNN (True) or not (False).")
-    parser.add_argument('--plot_results', action='store_true',
-                        help='If set, plot the predicted appliance against ground truth.')
-    parser.add_argument('--cnn',
-                        type=str,
-                        default='kettle',
-                        help='The trained CNN for the appliance to load.')
+    parser.add_argument('--show_plot', action='store_true',
+                        help='If set, show plot the predicted appliance and mains power.')
     parser.add_argument('--crop',
                         type=int,
                         default=None,
@@ -69,12 +64,11 @@ def get_arguments():
                         type=int,
                         default=1000,
                         help='Sets mini-batch size.')
-    parser.set_defaults(plot_results=False)
-    parser.set_defaults(transfer=False)
+    parser.set_defaults(show_plot=False)
     return parser.parse_args()
 
 def load_dataset(file_name, crop=None) -> np.array:
-    """Load CSV file, convert to np and return mains samples."""
+    """Load input dataset file and return as np array.."""
     df = pd.read_csv(file_name, nrows=crop)
 
     return np.array(df, dtype=np.float32)
@@ -85,29 +79,15 @@ if __name__ == '__main__':
     log('Arguments: ')
     log(args)
 
-    appliance_name = args.appliance_name
-    log('Appliance target is: ' + appliance_name)
-
-    #test_filename = find_test_filename(args.datadir, appliance_name)
-    #log('File for test: ' + test_filename)
-    #test_file_path = os.path.join(args.datadir, appliance_name, test_filename)
-    #log('Loading from: ' + test_file_path)
+    log(f'Target appliance(s): {args.appliances}')
 
     # offset parameter from window length
-    WINDOW_LENGTH = 599
     offset = int(0.5 * (WINDOW_LENGTH - 1.0))
 
-    test_file_path = '/home/lindo/Develop/nilm/ml/dataset_management/my-house/'
-    test_file_name = 'garage.csv'
     test_set_x = load_dataset(os.path.join(
         test_file_path, test_file_name), args.crop)
     ts_size = test_set_x.size
     log(f'There are {ts_size/10**6:.3f}M test samples.')
-    #if args.crop > ts_size:
-        #log('(crop larger than dataset size, ignoring it)')
-
-    # Ground truth is center of test target (y) windows.
-    #ground_truth = test_set_y[offset:-offset]
 
     test_provider = WindowGenerator(
         dataset=(test_set_x.flatten(), None),
@@ -115,94 +95,63 @@ if __name__ == '__main__':
         train=False,
         shuffle=False,
         batch_size=args.batch_size)
+    
+    def prediction(appliance) -> np.array:
+        """Make appliance prediction and return post-processed result."""
+        log(f'Making prediction for {appliance}.')
+        model_file_path = os.path.join(
+            args.trained_model_dir, appliance, args.ckpt_dir)
+        log(f'Loading saved model from {model_file_path}.')
+        model = tf.keras.models.load_model(model_file_path)
+        model.summary()
+        prediction = model.predict(
+            x=test_provider,
+            verbose=1,
+            workers=24,
+            use_multiprocessing=True)
+        # De-normalize.
+        mean = params_appliance[appliance]['mean']
+        std = params_appliance[appliance]['std']
+        log(f'appliance_mean: {str(mean)}')
+        log(f'appliance_std: {str(std)}')
+        prediction = prediction * std + mean
+        # Zero out any negative power.
+        prediction[prediction <= 0.0] = 0.0
+        return prediction
+    predictions = {appliance : prediction(appliance) for appliance in args.appliances}
 
-    # Load best checkpoint from saved trained model for appliance.
-    model_file_path = os.path.join(
-        args.trained_model_dir, appliance_name, args.ckpt_dir)
-    log(f'Loading saved model from {model_file_path}.')
-    model = tf.keras.models.load_model(model_file_path)
+    log('aggregate_mean: ' + str(AGGREGATE_MEAN))
+    log('aggregate_std: ' + str(AGGREGATE_STD))
+    aggregate = test_set_x.flatten() * AGGREGATE_STD + AGGREGATE_MEAN
 
-    model.summary()
-
-    test_prediction = model.predict(
-        x=test_provider,
-        verbose=1,
-        workers=24,
-        use_multiprocessing=True)
-
-    # Parameters.
-    max_power = params_appliance[appliance_name]['max_on_power']
-    threshold = params_appliance[appliance_name]['on_power_threshold']
-    aggregate_mean = 242.24
-    aggregate_std = 15.26
-
-    appliance_mean = params_appliance[appliance_name]['mean']
-    appliance_std = params_appliance[appliance_name]['std']
-
-    log('aggregate_mean: ' + str(aggregate_mean))
-    log('aggregate_std: ' + str(aggregate_std))
-    log('appliance_mean: ' + str(appliance_mean))
-    log('appliance_std: ' + str(appliance_std))
-
-    prediction = test_prediction * appliance_std + appliance_mean
-    prediction[prediction <= 0.0] = 0.0
-    #ground_truth = ground_truth * appliance_std + appliance_mean
-
-    # Metric evaluation.
-    #sample_second = 8.0  # sample time is 8 seconds
-    #log('F1:{0}'.format(nm.get_F1(ground_truth.flatten(), prediction.flatten(), threshold)))
-    #log('NDE:{0}'.format(nm.get_nde(ground_truth.flatten(), prediction.flatten())))
-    #log('\nMAE: {:}\n    -std: {:}\n    -min: {:}\n    -max: {:}\n    -q1: {:}\n    -median: {:}\n    -q2: {:}'
-        #.format(*nm.get_abs_error(ground_truth.flatten(), prediction.flatten())))
-    #log('SAE: {:}'.format(nm.get_sae(ground_truth.flatten(), prediction.flatten(), sample_second)))
-    #log('Energy per Day: {:}'.format(nm.get_Epd(ground_truth.flatten(), prediction.flatten(), sample_second)))
-
-    # Save results.
-    savemains = test_set_x.flatten() * aggregate_std + aggregate_mean
-    #savegt = ground_truth
-    #savepred = prediction.flatten()
-
-    """
-    if args.transfer:
-        save_name = args.save_results_dir + '/' + appliance_name + '/' + test_filename + '_transf_' + args.cnn
-    else:
-        save_name = args.save_results_dir + '/' + appliance_name + '/' + test_filename
-    if not os.path.exists(save_name):
-        os.makedirs(save_name)
-
-    np.save(save_name + '_pred.npy', savepred)
-    #np.save(save_name + '_gt.npy', savegt)
-    np.save(save_name + '_mains.npy', savemains)
-    """
-
-    #log('size: x={0}, y={0}, gt={0}'
-        #.format(np.shape(savemains), np.shape(savepred), np.shape(savegt)))
-
-    room = 'garage'
-    save_path = os.path.join(args.save_results_dir, room)
+    save_path = os.path.join(args.save_results_dir, PANEL_LOCATION)
     if not os.path.exists(save_path):
         os.makedirs(save_path)
 
-    # Plot.
-    if args.plot_results:
-        fig1 = plt.figure()
-        ax1 = fig1.add_subplot(111)
+    # Find max value in predictions for setting plot limits.
+    max_pred = 0
+    for appliance in args.appliances:
+        max = np.max(predictions[appliance])
+        if max > max_pred:
+            max_pred = max
+    max_pred = ceil(max_pred)
 
-        ax1.plot(savemains[offset:-offset], color='#7f7f7f', linewidth=1.8)
-        #ax1.plot(ground_truth, color='#d62728', linewidth=1.6)
-        ax1.plot(prediction,
-                 color='#1f77b4',
-                 #marker='o',
-                 linewidth=1.5)
-        ax1.grid()
-        ax1.set_title('Test results on {:}'
-            .format(test_file_name), fontsize=16, fontweight='bold', y=1.08)
-        ax1.set_ylabel('Watts')
-        ax1.set_xlabel('Sample Number')
-        ax1.legend(['aggregate', f'{appliance_name} prediction'])
-
-        #mng = plt.get_current_fig_manager()
-        #mng.resize(*mng.window.maxsize())
-        plot_file_name = os.path.join(save_path, appliance_name)
-        plt.savefig(fname=plot_file_name)
-        plt.show()
+    # Show and save aggregate and appliance power in a single row of subplots.
+    nrows = len(args.appliances) + 1
+    fig, ax = plt.subplots(nrows=nrows, ncols=1, constrained_layout=True)
+    ax[0].set_ylabel('Watts')
+    ax[0].set_title('aggregate')
+    ax[0].plot(aggregate[offset:-offset], color='#7f7f7f', linewidth=1.8)
+    row = 1
+    for appliance in args.appliances:
+        ax[row].set_ylabel('Watts')
+        ax[row].set_title(appliance)
+        ax[row].set_ylim(0, max_pred)
+        ax[row].plot(predictions[appliance], color='#1f77b4', linewidth=1.5)
+        row+=1
+    fig.suptitle('Test results on {:}'
+        .format(test_file_name), fontsize=16, fontweight='bold')
+    plot_savepath = os.path.join(save_path, f'{PANEL_LOCATION}.png')
+    plt.savefig(fname=plot_savepath)
+    plt.show()
+    plt.close()

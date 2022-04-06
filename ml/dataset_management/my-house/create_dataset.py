@@ -6,10 +6,10 @@ import re
 import argparse
 
 DATA_DIRECTORY = '/home/lindo/Develop/nilm-datasets/my-house/garage'
-FILE_NAME = 'samples_garage_4_3_22.csv'
+FILE_NAME = 'samples_4_4_22.csv'
 SAVE_PATH = '/home/lindo/Develop/nilm/ml/dataset_management/my-house/garage.csv'
-AGG_MEAN = 242.24
-AGG_STD = 15.26
+AGG_MEAN = 522#242.24
+AGG_STD = 814#15.26
 
 def get_arguments():
     parser = argparse.ArgumentParser(description='sequence to point learning \
@@ -97,16 +97,18 @@ params_appliance = {
     }
 }
 
-def load_app_pwr(file_name) -> pd.DataFrame:
-    """Load csv and return apparent power for phase 1 (garage)."""
+def get_app_pwr(file_name) -> pd.DataFrame:
+    """Load input dataset and return total apparent power."""
 
-    return pd.read_csv(file_name,
+    df = pd.read_csv(file_name,
         header=0,
-        names=['VA1'], # VA1 is garage apparent power
-        usecols=[5],
+        names=['VA1', 'VA2'],
+        usecols=[5, 8],
         na_filter=False,
         parse_dates=True,
         infer_datetime_format=True)
+
+    return df.iloc[:,0] + df.iloc[:,1]
 
 def main():
     args = get_arguments()
@@ -122,13 +124,13 @@ def main():
 
     print('Creating dataset.')
 
-    # Load
-    app_pwr = load_app_pwr(path)
+    # Get apparent power. 
+    app_pwr = get_app_pwr(path)
 
-    # Normalize
+    # Normalize.
     app_pwr = (app_pwr - aggregate_mean) / aggregate_std
 
-    # Save
+    # Save.
     app_pwr.to_csv(save_path, header=False, index=False)
 
     print(f'Created dataset and saved to {save_path}')

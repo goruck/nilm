@@ -10,7 +10,7 @@ Thirty-Second AAAI Conference on Artificial Intelligence (AAAI-18), Feb. 2-7, 20
 
 (2) https://arxiv.org/abs/1902.08835
 
-(2) https://github.com/MingjunZhong/transferNILM.
+(3) https://github.com/MingjunZhong/transferNILM.
 
 Copyright (c) 2022 Lindo St. Angel
 """
@@ -170,6 +170,7 @@ if __name__ == '__main__':
 
     callbacks = [early_stopping, checkpoint_callback]
 
+    # Load datasets.
     train_dataset = load_dataset(training_path, args.crop_train_dataset)
     val_dataset = load_dataset(validation_path, args.crop_val_dataset)
 
@@ -221,6 +222,7 @@ if __name__ == '__main__':
     plt.savefig(fname=plot_filepath)
     if args.show_plot:
         plt.show()
+    plt.close()
     # Mean Absolute Error.
     val_mae = history.history['val_mae']
     plt.plot(plot_epochs, smooth_curve(val_mae))
@@ -233,3 +235,4 @@ if __name__ == '__main__':
     plt.savefig(fname=plot_filepath)
     if args.show_plot:
         plt.show()
+    plt.close()

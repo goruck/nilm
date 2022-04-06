@@ -10,7 +10,7 @@ Thirty-Second AAAI Conference on Artificial Intelligence (AAAI-18), Feb. 2-7, 20
 
 (2) https://arxiv.org/abs/1902.08835
 
-(2) https://github.com/MingjunZhong/transferNILM.
+(3) https://github.com/MingjunZhong/transferNILM.
 
 Copyright (c) 2022 Lindo St. Angel
 """
@@ -65,7 +65,7 @@ def get_arguments():
                             redd -- test on REDD.')
     parser.add_argument("--transfer", action='store_true',
                         help="If set, use a pre-trained CNN (True) or not (False).")
-    parser.add_argument('--plot_results', action='store_true',
+    parser.add_argument('--plot', action='store_true',
                         help='If set, plot the predicted appliance against ground truth.')
     parser.add_argument('--cnn',
                         type=str,
@@ -79,7 +79,7 @@ def get_arguments():
                         type=int,
                         default=1000,
                         help='Sets mini-batch size.')
-    parser.set_defaults(plot_results=False)
+    parser.set_defaults(plot=False)
     parser.set_defaults(transfer=False)
     return parser.parse_args()
 
@@ -123,8 +123,8 @@ if __name__ == '__main__':
     test_set_x, test_set_y = load_dataset(test_file_path, args.crop)
     ts_size = test_set_x.size
     log(f'There are {ts_size/10**6:.3f}M test samples.')
-    if args.crop > ts_size:
-        log('(crop larger than dataset size, ignoring it)')
+    #if args.crop > ts_size:
+        #log('(crop larger than dataset size, ignoring it)')
 
     # Ground truth is center of test target (y) windows.
     ground_truth = test_set_y[offset:-offset]
@@ -197,10 +197,9 @@ if __name__ == '__main__':
         .format(np.shape(savemains), np.shape(savepred), np.shape(savegt)))
 
     # Plot.
-    if args.plot_results:
+    if args.plot:
         fig1 = plt.figure()
         ax1 = fig1.add_subplot(111)
-
         ax1.plot(savemains[offset:-offset], color='#7f7f7f', linewidth=1.8)
         ax1.plot(ground_truth, color='#d62728', linewidth=1.6)
         ax1.plot(prediction,
@@ -212,7 +211,7 @@ if __name__ == '__main__':
             .format(test_filename), fontsize=16, fontweight='bold', y=1.08)
         ax1.set_ylabel('W')
         ax1.legend(['aggregate', 'ground truth', 'prediction'])
-
-        mng = plt.get_current_fig_manager()
+        #mng = plt.get_current_fig_manager()
         #mng.resize(*mng.window.maxsize())
         plt.show()
+        plt.close()
