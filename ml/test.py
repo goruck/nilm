@@ -169,7 +169,7 @@ if __name__ == '__main__':
     ground_truth = ground_truth * appliance_std + appliance_mean
 
     # Metric evaluation.
-    sample_second = 8.0  # sample time is 8 seconds
+    sample_second = 8.0  # sample period is 8 seconds
     log('F1:{0}'.format(nm.get_F1(ground_truth.flatten(), prediction.flatten(), threshold)))
     log('NDE:{0}'.format(nm.get_nde(ground_truth.flatten(), prediction.flatten())))
     log('\nMAE: {:}\n    -std: {:}\n    -min: {:}\n    -max: {:}\n    -q1: {:}\n    -median: {:}\n    -q2: {:}'
