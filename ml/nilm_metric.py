@@ -4,6 +4,7 @@ Compute test statistics.
 Copyright (c) 2022 Lindo St. Angel
 """
 
+from math import floor
 import numpy as np
 from logger import log
 
@@ -241,10 +242,15 @@ def get_Epd(target, prediction, sample_second):
     gt_en_days = []
     pred_en_days = []
 
-    for start in range(0, int(len(target)-day), int(day)):
+    # Adjust stop for day-length energy calculation.
+    # Cover case where there is only one day's worth of data.
+    stop = max(1, int(len(target) - day))
+    # Find energy in Wh * days.
+    for start in range(0, stop, day):
         gt_en_days.append(np.sum(target[start:start+day]*sample_second)/3600)
         pred_en_days.append(np.sum(prediction[start:start+day]*sample_second)/3600)
 
+    # Find energy in Wh.
     Epd = np.sum(np.abs(np.array(gt_en_days)-np.array(pred_en_days)))/(len(target)/day)
 
     return Epd
