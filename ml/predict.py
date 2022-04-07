@@ -4,7 +4,6 @@ Predict appliance using novel data from my home.
 Copyright (c) 2022 Lindo St. Angel
 """
 
-from math import ceil
 import os
 import argparse
 import socket
@@ -16,6 +15,7 @@ import pandas as pd
 
 from logger import log
 from common import WindowGenerator, params_appliance
+from nilm_metric import get_Epd
 
 PANEL_LOCATION = 'garage'
 WINDOW_LENGTH = 599
@@ -69,7 +69,7 @@ def get_arguments():
 
 def load_dataset(file_name, crop=None) -> np.array:
     """Load input dataset file and return as np array.."""
-    df = pd.read_csv(file_name, nrows=crop)
+    df = pd.read_csv(file_name, header=None, nrows=crop)
 
     return np.array(df, dtype=np.float32)
 
@@ -117,6 +117,9 @@ if __name__ == '__main__':
         prediction = prediction * std + mean
         # Zero out any negative power.
         prediction[prediction <= 0.0] = 0.0
+        # Apply on-power thresholds.
+        threshold = params_appliance[appliance]['on_power_threshold']
+        prediction[prediction <= threshold] = 0.0
         return prediction
     predictions = {appliance : prediction(appliance) for appliance in args.appliances}
 
@@ -124,19 +127,24 @@ if __name__ == '__main__':
     log('aggregate_std: ' + str(AGGREGATE_STD))
     aggregate = test_set_x.flatten() * AGGREGATE_STD + AGGREGATE_MEAN
 
+    # Calculate metrics.
+    SAMPLE_PERIOD = 8 # Sampling period in seconds. 
+    # get_Epd returns a relative metric between two powers, so zero out one.
+    target = np.zeros_like(aggregate)
+    aggregate_epd = get_Epd(target, aggregate, SAMPLE_PERIOD)
+    log(f'Aggregate energy: {aggregate_epd/1000:.3f} kWh')
+    for appliance in args.appliances:
+        epd = get_Epd(target, predictions[appliance], SAMPLE_PERIOD)
+        log(f'{appliance} energy: {epd/1000:.3f} kWh')
+
     save_path = os.path.join(args.save_results_dir, PANEL_LOCATION)
     if not os.path.exists(save_path):
         os.makedirs(save_path)
 
     # Find max value in predictions for setting plot limits.
-    max_pred = 0
-    for appliance in args.appliances:
-        max = np.max(predictions[appliance])
-        if max > max_pred:
-            max_pred = max
-    max_pred = ceil(max_pred)
+    max_pred = np.ceil(np.max(list(predictions.values())))
 
-    # Show and save aggregate and appliance power in a single row of subplots.
+    # Save and perhaps show powers in a single row of subplots.
     nrows = len(args.appliances) + 1
     fig, ax = plt.subplots(nrows=nrows, ncols=1, constrained_layout=True)
     ax[0].set_ylabel('Watts')
@@ -153,5 +161,6 @@ if __name__ == '__main__':
         .format(test_file_name), fontsize=16, fontweight='bold')
     plot_savepath = os.path.join(save_path, f'{PANEL_LOCATION}.png')
     plt.savefig(fname=plot_savepath)
-    plt.show()
+    if args.show_plot:
+        plt.show()
     plt.close()
