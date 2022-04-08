@@ -1,5 +1,5 @@
 """
-Predict appliance using novel data from my home.
+Predict appliance type and power using novel data from my home.
 
 Copyright (c) 2022 Lindo St. Angel
 """
@@ -17,65 +17,63 @@ from logger import log
 from common import WindowGenerator, params_appliance
 from nilm_metric import get_Epd
 
-PANEL_LOCATION = 'garage'
 WINDOW_LENGTH = 599
 AGGREGATE_MEAN = 522
 AGGREGATE_STD = 814
 
-default_appliances = ['kettle', 'fridge', 'microwave', 'washingmachine', 'dishwasher']
-test_file_path = '/home/lindo/Develop/nilm/ml/dataset_management/my-house/'
-test_file_name = 'garage.csv'
+if __name__ == '__main__':
+    default_appliances = \
+        ['kettle', 'fridge', 'microwave', 'washingmachine', 'dishwasher']
+    default_dataset_dir = \
+        '/home/lindo/Develop/nilm/ml/dataset_management/my-house'
+    default_panel_location = 'garage'
+    default_model_dir = '/home/lindo/Develop/nilm/ml/models'
+    default_ckpt_dir = 'checkpoints'
+    default_results_dir = '/home/lindo/Develop/nilm/ml/results'
 
-def get_arguments():
     parser = argparse.ArgumentParser(description='Predict appliance\
                                      given a trained neural network\
                                      for energy disaggregation -\
-                                     network input = mains window;\
-                                     network target = the states of\
-                                     the target appliance.')
+                                     network input = mains window.')
     parser.add_argument('--appliances',
                         type=str,
                         nargs='+',
                         default=default_appliances,
-                        help='Name(s) of target appliance')
+                        help='name(s) of target appliance')
     parser.add_argument('--datadir',
                         type=str,
-                        default='./dataset_management/refit',
-                        help='this is the directory to the test data')
+                        default=default_dataset_dir,
+                        help='directory to the test data')
+    parser.add_argument('--panel',
+                        type=str,
+                        default=default_panel_location,
+                        help='sub-panel location')
     parser.add_argument('--trained_model_dir',
                         type=str,
-                        default='./models',
-                        help='this is the directory to the trained models')
+                        default=default_model_dir,
+                        help='directory to the trained models')
     parser.add_argument('--ckpt_dir',
                         type=str,
-                        default='checkpoints',
+                        default=default_ckpt_dir,
                         help='directory name of model checkpoint')
     parser.add_argument('--save_results_dir',
                         type=str,
-                        default='./results',
-                        help='this is the directory to save the predictions')
+                        default=default_results_dir,
+                        help='directory to save the predictions')
     parser.add_argument('--show_plot', action='store_true',
-                        help='If set, show plot the predicted appliance and mains power.')
+                        help='show predicted appliance and mains power plots')
     parser.add_argument('--crop',
                         type=int,
                         default=None,
-                        help='To use part of the dataset for testing.')
+                        help='use part of the dataset for testing')
     parser.add_argument('--batch_size',
                         type=int,
                         default=1000,
-                        help='Sets mini-batch size.')
+                        help='mini-batch size')
     parser.set_defaults(show_plot=False)
-    return parser.parse_args()
 
-def load_dataset(file_name, crop=None) -> np.array:
-    """Load input dataset file and return as np array.."""
-    df = pd.read_csv(file_name, header=None, nrows=crop)
-
-    return np.array(df, dtype=np.float32)
-
-if __name__ == '__main__':
     log(f'Machine name: {socket.gethostname()}')
-    args = get_arguments()
+    args = parser.parse_args()
     log('Arguments: ')
     log(args)
 
@@ -84,8 +82,14 @@ if __name__ == '__main__':
     # offset parameter from window length
     offset = int(0.5 * (WINDOW_LENGTH - 1.0))
 
+    def load_dataset(file_name, crop=None) -> np.array:
+        """Load input dataset file and return as np array.."""
+        df = pd.read_csv(file_name, header=None, nrows=crop)
+
+        return np.array(df, dtype=np.float32)
+
     test_set_x = load_dataset(os.path.join(
-        test_file_path, test_file_name), args.crop)
+        args.datadir, f'{args.panel}.csv'), args.crop)
     ts_size = test_set_x.size
     log(f'There are {ts_size/10**6:.3f}M test samples.')
 
@@ -115,13 +119,12 @@ if __name__ == '__main__':
         log(f'appliance_mean: {str(mean)}')
         log(f'appliance_std: {str(std)}')
         prediction = prediction * std + mean
-        # Zero out any negative power.
-        prediction[prediction <= 0.0] = 0.0
         # Apply on-power thresholds.
         threshold = params_appliance[appliance]['on_power_threshold']
         prediction[prediction <= threshold] = 0.0
         return prediction
-    predictions = {appliance : prediction(appliance) for appliance in args.appliances}
+    predictions = \
+        {appliance : prediction(appliance) for appliance in args.appliances}
 
     log('aggregate_mean: ' + str(AGGREGATE_MEAN))
     log('aggregate_std: ' + str(AGGREGATE_STD))
@@ -132,12 +135,12 @@ if __name__ == '__main__':
     # get_Epd returns a relative metric between two powers, so zero out one.
     target = np.zeros_like(aggregate)
     aggregate_epd = get_Epd(target, aggregate, SAMPLE_PERIOD)
-    log(f'Aggregate energy: {aggregate_epd/1000:.3f} kWh')
+    log(f'Aggregate energy: {aggregate_epd/1000:.3f} kWh per day')
     for appliance in args.appliances:
         epd = get_Epd(target, predictions[appliance], SAMPLE_PERIOD)
-        log(f'{appliance} energy: {epd/1000:.3f} kWh')
+        log(f'{appliance} energy: {epd/1000:.3f} kWh per day')
 
-    save_path = os.path.join(args.save_results_dir, PANEL_LOCATION)
+    save_path = os.path.join(args.save_results_dir, args.panel)
     if not os.path.exists(save_path):
         os.makedirs(save_path)
 
@@ -157,9 +160,9 @@ if __name__ == '__main__':
         ax[row].set_ylim(0, max_pred)
         ax[row].plot(predictions[appliance], color='#1f77b4', linewidth=1.5)
         row+=1
-    fig.suptitle('Test results on {:}'
-        .format(test_file_name), fontsize=16, fontweight='bold')
-    plot_savepath = os.path.join(save_path, f'{PANEL_LOCATION}.png')
+    fig.suptitle(f'Prediction results for {args.panel}',
+        fontsize=16, fontweight='bold')
+    plot_savepath = os.path.join(save_path, f'{args.panel}.png')
     plt.savefig(fname=plot_savepath)
     if args.show_plot:
         plt.show()
