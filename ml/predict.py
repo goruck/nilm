@@ -20,6 +20,7 @@ from nilm_metric import get_Epd
 WINDOW_LENGTH = 599
 AGGREGATE_MEAN = 522
 AGGREGATE_STD = 814
+SAMPLE_PERIOD = 8 # Mains sample period in seconds.
 
 if __name__ == '__main__':
     default_appliances = \
@@ -130,8 +131,7 @@ if __name__ == '__main__':
     log('aggregate_std: ' + str(AGGREGATE_STD))
     aggregate = test_set_x.flatten() * AGGREGATE_STD + AGGREGATE_MEAN
 
-    # Calculate metrics.
-    SAMPLE_PERIOD = 8 # Sampling period in seconds. 
+    # Calculate metrics. 
     # get_Epd returns a relative metric between two powers, so zero out one.
     target = np.zeros_like(aggregate)
     aggregate_epd = get_Epd(target, aggregate, SAMPLE_PERIOD)
