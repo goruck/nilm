@@ -1,11 +1,8 @@
-<<<<<<< HEAD
 .vscode/*
-=======
-*.pb
-*variables.index
-*variables.data*
-*pycache*
-*.csv
-*.npy
 *.log
->>>>>>> 70ac1774ce92a0665bfc48e254a736e2d92a0e07
+*.tflite
+*.pb
+*.index
+variables.data*
+*.csv
+__pycache__
