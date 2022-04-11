@@ -74,13 +74,6 @@ def get_arguments():
                         n (n>0) -- to save the model params every n steps;\
                         -1 -- only save the learnt model params\
                         at the end of training.')
-    parser.add_argument('--dense_layers',
-                        type=int,
-                        default=1,
-                        help=':\
-                                1 -- One dense layers;\
-                                2 -- Two dense layers;\
-                                3 -- Three dense layers.')
     parser.add_argument("--transfer_model", action='store_true',
                         help="If set: using entire pre-trained model.\
                              Else: retrain the entire pre-trained model;\
@@ -137,8 +130,7 @@ if __name__ == '__main__':
 
     window_length = params_appliance[appliance_name]['windowlength']
 
-    model = create_model(
-        input_window_length=window_length, n_dense=args.dense_layers)
+    model = create_model(input_window_length=window_length)
 
     model.compile(
         optimizer=tf.keras.optimizers.Adam(
@@ -164,7 +156,6 @@ if __name__ == '__main__':
         monitor='val_loss',
         verbose=1,
         save_best_only=True,
-        save_weights_only=False,
         mode='auto',
         save_freq='epoch')
 
