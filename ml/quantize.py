@@ -13,6 +13,7 @@ import time
 import tensorflow as tf
 import numpy as np
 
+import nilm_metric as nm
 from common import load_dataset, WindowGenerator, params_appliance
 from logger import log
 
@@ -20,8 +21,8 @@ from logger import log
 NUM_CAL = 1000
 # Number of standard deviations for sample float32 to int8 conversion.
 NUM_STD = 3.0
-# Number of inferences to evaluate quantized model.
-NUM_EVAL = 1000
+# Dataset energy sampling period in seconds. 
+SAMPLE_PERIOD = 8
 
 rng = np.random.default_rng()
 
@@ -29,10 +30,8 @@ def map_range(value, in_min, in_max, out_min, out_max):
         """Map a value in [in_min, in_max] to [out_min, out_max]."""
         return ((value - in_min) / (in_max - in_min)) * (out_max - out_min) + out_min
 
-def eval_model(model_content, params, dataset, provider):
-    """Evaluate tflite model accuracy."""
-
-    log('Starting tflite model evaluation.')
+def tflite_infer(model_content, params, dataset, provider, num_eval) -> list:
+    """Performs inference using a tflite model."""
 
     # Start the tflite interpreter on the tpu and allocate tensors.
     interpreter = tf.lite.Interpreter(model_content=model_content)
@@ -58,12 +57,12 @@ def eval_model(model_content, params, dataset, provider):
     appliance_threshold = params[appliance_name]['on_power_threshold']
     log(f'appliance threshold: {appliance_threshold}')
 
-    sample_max = np.amax(dataset[0])
-    sample_min = np.amin(dataset[0])
-    sample_mean = np.mean(dataset[0])
-    sample_std = np.std(dataset[0])
-    log(f'dataset sample min: {sample_min}, dataset sample max: {sample_max}')
-    log(f'dataset sample mean: {sample_mean}, dataset sample std: {sample_std}')
+    samples = dataset[0]
+    (sample_mean, sample_std, sample_min, sample_max,
+    sample_quartile1, sample_median, sample_quartile2) = nm.get_statistics(samples)
+    log(f'sample stats - mean: {sample_mean} std: {sample_std} \n'
+        f'min: {sample_min} max: {sample_max} quartile1: {sample_quartile1} \n'
+        f'median: {sample_median} quartile2: {sample_quartile2}')
 
     # Determine range of samples to preserve dynamic range in int8 conversion.
     in_min = sample_mean - NUM_STD * sample_std
@@ -71,15 +70,14 @@ def eval_model(model_content, params, dataset, provider):
     in_max = sample_mean + NUM_STD * sample_std
     log(f'in_max: {in_max}')
 
-    # Calculate EVAL_SIZE sized indices of random locations in provider.
-    eval_indices = rng.choice(provider.__len__(), size=NUM_EVAL)
+    # Calculate num_eval sized indices of random locations in provider.
+    eval_indices = rng.choice(provider.__len__(), size=num_eval)
 
-    square_of_errors = 0
-
+    log(f'Running inference on {num_eval} samples...')
     start = time.time()
-    for i in eval_indices:
+    def infer(i):
         sample, target = provider.__getitem__(i)
-        if not sample.any(): continue # skip missing data
+        if not sample.any(): return # ignore missing data
         ground_truth = np.squeeze(target) * appliance_std + appliance_mean
         if not floating_input:
             sample = map_range(sample, in_min, in_max, -128.0, 127.0).astype(np.int8)
@@ -93,16 +91,13 @@ def eval_model(model_content, params, dataset, provider):
         if prediction < 0: prediction = 0 # zero out negative energy
         #print(f'sample index: {i} ground_truth: {ground_truth:.3f} prediction: {prediction:.3f}')
         #np.testing.assert_allclose(ground_truth, prediction, rtol=1e-5, atol=0)
-        square_of_errors += np.square(ground_truth - prediction)
-        # https://stackoverflow.com/questions/56777704/how-to-fix-there-is-at-least-1-reference-to-internal-data-in-the-interpreter-in
-        #interpreter = tf.lite.Interpreter(model_content=tflite_model_quant)
-        #interpreter.allocate_tensors()
+        return ground_truth, prediction
+    results = [infer(i) for i in eval_indices]
     end = time.time()
+    log('Inference run complete.')
+    log(f'Inference rate: {num_eval / (end - start):.3f} Hz')
 
-    log('Evaluation complete.')
-    log(f'Inference rate: {NUM_EVAL / (end - start):.3f} Hz')
-    mse = square_of_errors / NUM_EVAL
-    log(f'mse: {mse}')
+    return results
 
 def change_model_batch_shape(model, batch_shape):
     """
@@ -196,6 +191,10 @@ def get_arguments():
                         help='If set, make tflite inputs and outputs int8.')
     parser.add_argument('--evaluate', action='store_true',
                         help='If set, evaluate tflite model for accuracy.')
+    parser.add_argument('--num_eval',
+                        type=int,
+                        default=10000,
+                        help='Number of inferences used to evaluate quantized model.')
     parser.set_defaults(io_int=False)
     parser.set_defaults(evaluate=False)
     return parser.parse_args()
@@ -214,16 +213,16 @@ if __name__ == '__main__':
     log(f'Model file path: {model_filepath}')
     checkpoint_filepath = os.path.join(model_filepath,'checkpoints')
     log(f'Checkpoint file path: {checkpoint_filepath}')
+    original_model = tf.keras.models.load_model(checkpoint_filepath)
+    original_model.summary()
 
     # Calculate offset parameter from window length.
     window_length = params_appliance[appliance_name]['windowlength']
     offset = int(0.5 * (window_length - 1.0))
 
-    # Load model checkpoint and change batch shape to (1, window_length).
+    # Change loaded model batch shape to (1, window_length).
     # This will make the batch size static for use in tpu compilation.
     # The edge tpu compiler accepts only static batch sizes.
-    original_model = tf.keras.models.load_model(checkpoint_filepath)
-    original_model.summary()
     model = change_model_batch_shape(
         original_model, batch_shape=(1, window_length))
     model.summary()
@@ -233,9 +232,8 @@ if __name__ == '__main__':
         args.datadir,appliance_name,f'{appliance_name}_training_.csv')
     log(f'dataset: {dataset_path}')
     dataset = load_dataset(dataset_path, args.crop)
-
-    num_train_samples = dataset[0].size
-    log(f'There are {num_train_samples/10**6:.3f}M samples in dataset.')
+    num_samples = dataset[0].size
+    log(f'Loaded {num_samples/10**6:.3f}M samples from dataset.')
 
     # Provider of windowed dataset samples and single point targets.
     provider = WindowGenerator(
@@ -259,8 +257,23 @@ if __name__ == '__main__':
     log(f'Quantized tflite model saved to {filepath}.')
 
     if args.evaluate:
-        eval_model(
+        results = tflite_infer(
             model_content=tflite_model_quant,
             params=params_appliance,
             dataset=dataset,
-            provider=provider)
+            provider=provider,
+            num_eval=args.num_eval)
+
+        ground_truth = np.array([g for g, _ in results])
+        prediction = np.array([p for _, p in results])
+        
+        # Calculate absolute error statistics. 
+        (mean, std, min, max, quartile1,
+        median, quartile2, _) = nm.get_abs_error(ground_truth, prediction)
+        log(f'abs error - mean: {mean} std: {std} \n'
+            f'min: {min} max: {max} quartile1: {quartile1} \n'
+            f'median: {median} quartile2: {quartile2}')
+        # Calculate normalized disaggregation error.
+        log(f'nde: {nm.get_nde(ground_truth, prediction)}')
+        # Calculate normalized signal aggregate error. 
+        log(f'sde: {nm.get_sae(ground_truth, prediction, SAMPLE_PERIOD)}')
