@@ -28,5 +28,6 @@ def create_model(input_window_length):
             activation='relu'),
         tf.keras.layers.Flatten(),
         tf.keras.layers.Dense(1024, activation='relu'),
+        tf.keras.layers.Dense(1024, activation='relu'),
         tf.keras.layers.Dense(1, activation='linear')
     ])
