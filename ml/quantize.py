@@ -30,8 +30,8 @@ def map_range(value, in_min, in_max, out_min, out_max):
         """Map a value in [in_min, in_max] to [out_min, out_max]."""
         return ((value - in_min) / (in_max - in_min)) * (out_max - out_min) + out_min
 
-def tflite_infer(model_content, params, dataset, provider, num_eval) -> list:
-    """Performs inference using a tflite model."""
+def tflite_infer(model_content, dataset, provider, num_eval) -> list:
+    """Perform inference using a tflite model."""
 
     # Start the tflite interpreter on the tpu and allocate tensors.
     interpreter = tf.lite.Interpreter(model_content=model_content)
@@ -49,13 +49,6 @@ def tflite_infer(model_content, params, dataset, provider, num_eval) -> list:
     log(f'tflite model floating output: {floating_output}')
     input_index = input_details[0]['index']
     output_index = output_details[0]['index']
-
-    appliance_mean = params[appliance_name]['mean']
-    log(f'appliance mean: {appliance_mean}')
-    appliance_std = params[appliance_name]['std']
-    log(f'appliance std: {appliance_std}')
-    appliance_threshold = params[appliance_name]['on_power_threshold']
-    log(f'appliance threshold: {appliance_threshold}')
 
     samples = dataset[0]
     (sample_mean, sample_std, sample_min, sample_max,
@@ -78,7 +71,7 @@ def tflite_infer(model_content, params, dataset, provider, num_eval) -> list:
     def infer(i):
         sample, target = provider.__getitem__(i)
         if not sample.any(): return # ignore missing data
-        ground_truth = np.squeeze(target) * appliance_std + appliance_mean
+        ground_truth = np.squeeze(target)
         if not floating_input:
             sample = map_range(sample, in_min, in_max, -128.0, 127.0).astype(np.int8)
         interpreter.set_tensor(input_index, sample)
@@ -87,7 +80,6 @@ def tflite_infer(model_content, params, dataset, provider, num_eval) -> list:
         prediction = np.squeeze(result)
         if not floating_output:
             prediction = prediction / 127.0
-        prediction = prediction * appliance_std + appliance_mean
         if prediction < 0: prediction = 0 # zero out negative energy
         #print(f'sample index: {i} ground_truth: {ground_truth:.3f} prediction: {prediction:.3f}')
         #np.testing.assert_allclose(ground_truth, prediction, rtol=1e-5, atol=0)
@@ -259,13 +251,25 @@ if __name__ == '__main__':
     if args.evaluate:
         results = tflite_infer(
             model_content=tflite_model_quant,
-            params=params_appliance,
             dataset=dataset,
             provider=provider,
             num_eval=args.num_eval)
 
         ground_truth = np.array([g for g, _ in results])
         prediction = np.array([p for _, p in results])
+
+        # De-normalize.
+        appliance_mean = params_appliance[appliance_name]['mean']
+        log(f'appliance mean: {appliance_mean}')
+        appliance_std = params_appliance[appliance_name]['std']
+        log(f'appliance std: {appliance_std}')
+        prediction = prediction * appliance_std + appliance_mean
+        ground_truth = ground_truth * appliance_std + appliance_mean
+
+        # Apply on-power threshold.
+        appliance_threshold = params_appliance[appliance_name]['on_power_threshold']
+        log(f'appliance threshold: {appliance_threshold}')
+        prediction[prediction < appliance_threshold] = 0.0
         
         # Calculate absolute error statistics. 
         (mean, std, min, max, quartile1,
@@ -273,7 +277,9 @@ if __name__ == '__main__':
         log(f'abs error - mean: {mean} std: {std} \n'
             f'min: {min} max: {max} quartile1: {quartile1} \n'
             f'median: {median} quartile2: {quartile2}')
+
         # Calculate normalized disaggregation error.
         log(f'nde: {nm.get_nde(ground_truth, prediction)}')
+        
         # Calculate normalized signal aggregate error. 
         log(f'sde: {nm.get_sae(ground_truth, prediction, SAMPLE_PERIOD)}')
