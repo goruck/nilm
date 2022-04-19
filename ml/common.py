@@ -2,6 +2,7 @@
 Various utilities and common modules.
 """
 
+import os
 import tensorflow as tf
 import pandas as pd
 import numpy as np
@@ -43,6 +44,27 @@ params_appliance = {
         'std': 700,
         's2s_length': 2000}
     }
+
+def find_test_filename(test_dir, appliance, test_type) -> str:
+    """TBA"""
+    for filename in os.listdir(os.path.join(test_dir, appliance)):
+        if test_type == 'train' and 'TRAIN' in filename.upper():
+            test_filename = filename
+            break
+        elif test_type == 'uk' and 'UK' in filename.upper():
+            test_filename = filename
+            break
+        elif test_type == 'redd' and 'REDD' in filename.upper():
+            test_filename = filename
+            break
+        elif test_type == 'test' and 'TEST' in\
+                filename.upper() and 'TRAIN' not in filename.upper() and 'UK' not in filename.upper():
+            test_filename = filename
+            break
+        elif test_type == 'val' and 'VALIDATION' in filename.upper():
+            test_filename = filename
+            break
+    return test_filename
 
 def load_dataset(file_name, crop=None) -> np.array:
     """Load CSV file, convert to np and return mains and appliance samples."""
