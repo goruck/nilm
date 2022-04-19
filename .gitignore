@@ -5,4 +5,5 @@
 *.index
 variables.data*
 *.csv
+*.npy
 __pycache__
