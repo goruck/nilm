@@ -20,6 +20,7 @@ import argparse
 import socket
 
 import tensorflow as tf
+import tensorflow_model_optimization as tfmot
 import matplotlib.pyplot as plt
 
 from cnn_model import create_model
@@ -95,15 +96,22 @@ def get_arguments():
                         type=int,
                         default=None,
                         help='Partial number of val samples to use. Default uses entire dataset.')
-    parser.add_argument('--show_plot', action='store_true',
+    parser.add_argument('--plot', action='store_true',
                         help='If set, display training result plots.')
+    parser.add_argument('--qat', action='store_true',
+                        help='If set, fine-tune pre-trained model with quantization aware training.')
+    parser.add_argument('--train', action='store_true',
+                        help='If set, train model from scratch.')
     parser.set_defaults(transfer_model=False)
     parser.set_defaults(transfer_cnn=False)
-    parser.set_defaults(show_plot=False)
+    parser.set_defaults(plot=False)
+    parser.set_defaults(qat=False)
+    parser.set_defaults(train=False)
     return parser.parse_args()
 
 if __name__ == '__main__':
     log(f'Machine name: {socket.gethostname()}')
+    log(f'tf version: {tf.version.VERSION}')
     args = get_arguments()
     log('Arguments: ')
     log(args)
@@ -130,17 +138,6 @@ if __name__ == '__main__':
 
     window_length = params_appliance[appliance_name]['windowlength']
 
-    model = create_model(input_window_length=window_length)
-
-    model.compile(
-        optimizer=tf.keras.optimizers.Adam(
-            learning_rate=0.001,
-            beta_1=0.9,
-            beta_2=0.999,
-            epsilon=1e-08),
-        loss='mse',
-        metrics=['mse', 'msle', 'mae'])
-
     early_stopping = tf.keras.callbacks.EarlyStopping(
         monitor='val_loss',
         patience=6,
@@ -148,6 +145,7 @@ if __name__ == '__main__':
 
     model_filepath = os.path.join(args.save_dir, appliance_name)
     log(f'Model file path: {model_filepath}')
+
     checkpoint_filepath = os.path.join(model_filepath,'checkpoints')
     log(f'Checkpoint file path: {checkpoint_filepath}')
 
@@ -164,6 +162,10 @@ if __name__ == '__main__':
     # Load datasets.
     train_dataset = load_dataset(training_path, args.crop_train_dataset)
     val_dataset = load_dataset(validation_path, args.crop_val_dataset)
+    num_train_samples = train_dataset[0].size
+    log(f'There are {num_train_samples/10**6:.3f}M training samples.')
+    num_val_samples = val_dataset[0].size
+    log(f'There are {num_val_samples/10**6:.3f}M validation samples.')
 
     training_provider = WindowGenerator(
         dataset=train_dataset,
@@ -175,55 +177,110 @@ if __name__ == '__main__':
         batch_size=args.batchsize,
         shuffle=False)
 
-    num_train_samples = train_dataset[0].size
-    log(f'There are {num_train_samples/10**6:.3f}M training samples.')
-    num_val_samples = val_dataset[0].size
-    log(f'There are {num_val_samples/10**6:.3f}M validation samples.')
+    if args.train:
+        log('Training model from scratch.')
+        model = create_model(input_window_length=window_length)
 
-    history = model.fit(
-        x=training_provider,
-        steps_per_epoch=None,
-        epochs=args.n_epoch,
-        callbacks=callbacks,
-        validation_data=validation_provider,
-        validation_steps=None,
-        workers=24,
-        use_multiprocessing=True)
+        model.compile(
+            optimizer=tf.keras.optimizers.Adam(
+                learning_rate=0.001,
+                beta_1=0.9,
+                beta_2=0.999,
+                epsilon=1e-08),
+            loss='mse',
+            metrics=['mse', 'msle', 'mae'])
 
-    model.summary()
+        history = model.fit(
+            x=training_provider,
+            steps_per_epoch=None,
+            epochs=args.n_epoch,
+            callbacks=callbacks,
+            validation_data=validation_provider,
+            validation_steps=None,
+            workers=24,
+            use_multiprocessing=True)
 
-    # Save results and show plots if set.
-    # Losses.
-    loss = history.history['loss']
-    val_loss = history.history['val_loss']
-    plot_epochs = range(1,len(loss)+1)
-    plt.plot(
-        plot_epochs, smooth_curve(loss),
-        label='Smoothed Training Loss')
-    plt.plot(
-        plot_epochs, smooth_curve(val_loss),
-        label='Smoothed Validation Loss')
-    plt.title('Training History')
-    plt.ylabel('Loss (Mean Squared Error)')
-    plt.xlabel('Epoch')
-    plt.legend()
-    plot_filepath = os.path.join(
-        args.save_dir,appliance_name,'loss.png')
-    log(f'Plot directory: {plot_filepath}')
-    plt.savefig(fname=plot_filepath)
-    if args.show_plot:
-        plt.show()
-    plt.close()
-    # Mean Absolute Error.
-    val_mae = history.history['val_mae']
-    plt.plot(plot_epochs, smooth_curve(val_mae))
-    plt.title('Smoothed Validation MAE')
-    plt.ylabel('Mean Absolute Error')
-    plt.xlabel('Epoch')
-    plot_filepath = os.path.join(
-        args.save_dir,args.appliance_name,'mae.png')
-    log(f'Plot directory: {plot_filepath}')
-    plt.savefig(fname=plot_filepath)
-    if args.show_plot:
-        plt.show()
-    plt.close()
+        model.summary()
+
+    if args.qat:
+        log('Fine-tuning pre-trained model with quantization aware training.')
+        quantize_model = tfmot.quantization.keras.quantize_model
+
+        model = tf.keras.models.load_model(checkpoint_filepath)
+
+        q_aware_model = quantize_model(model)
+
+        q_aware_model.compile(
+            optimizer=tf.keras.optimizers.Adam(
+                learning_rate=0.001,
+                beta_1=0.9,
+                beta_2=0.999,
+                epsilon=1e-08),
+            loss='mse',
+            metrics=['mse', 'msle', 'mae'])
+
+        q_aware_model.summary()
+
+        q_checkpoint_filepath = os.path.join(model_filepath,'qat_checkpoints')
+        log(f'QAT checkpoint file path: {q_checkpoint_filepath}')
+
+        q_checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
+            filepath = q_checkpoint_filepath,
+            monitor='val_loss',
+            verbose=1,
+            save_best_only=True,
+            mode='auto',
+            save_freq='epoch')
+
+        callbacks = [early_stopping, q_checkpoint_callback]
+
+        history = q_aware_model.fit(
+            x=training_provider,
+            steps_per_epoch=None,
+            epochs=args.n_epoch,
+            callbacks=callbacks,
+            validation_data=validation_provider,
+            validation_steps=None,
+            workers=24,
+            use_multiprocessing=True)
+
+    if args.train or args.qat:
+        # Save results and show plots if set.
+        # Losses.
+        loss = history.history['loss']
+        val_loss = history.history['val_loss']
+        plot_epochs = range(1,len(loss)+1)
+        plt.plot(
+            plot_epochs, smooth_curve(loss),
+            label='Smoothed Training Loss')
+        plt.plot(
+            plot_epochs, smooth_curve(val_loss),
+            label='Smoothed Validation Loss')
+        plt.title('Training History')
+        plt.ylabel('Loss (Mean Squared Error)')
+        plt.xlabel('Epoch')
+        plt.legend()
+        s = 'loss_qat.png' if args.qat else 'loss.png'
+        plot_filepath = os.path.join(
+            args.save_dir, appliance_name, s)
+        log(f'Plot directory: {plot_filepath}')
+        plt.savefig(fname=plot_filepath)
+        if args.plot:
+            plt.show()
+        plt.close()
+        # Mean Absolute Error.
+        val_mae = history.history['val_mae']
+        plt.plot(plot_epochs, smooth_curve(val_mae))
+        plt.title('Smoothed Validation MAE')
+        plt.ylabel('Mean Absolute Error')
+        plt.xlabel('Epoch')
+        s = 'mae_qat.png' if args.qat else 'mae.png'
+        plot_filepath = os.path.join(
+            args.save_dir, args.appliance_name, s)
+        log(f'Plot directory: {plot_filepath}')
+        plt.savefig(fname=plot_filepath)
+        if args.plot:
+            plt.show()
+        plt.close()
+    else:
+        log(f'Nothing was done since no training options were selected.')
