@@ -27,7 +27,7 @@ def tflite_infer(model, provider, num_eval) -> list:
     """Perform inference using a tflite model."""
 
     # Start the tflite interpreter on the tpu and allocate tensors.
-    interpreter = tf.lite.Interpreter(model=model,
+    interpreter = tflite.Interpreter(model=model,
         experimental_delegates=[tflite.load_delegate('libedgetpu.so.1')])
     interpreter.allocate_tensors()
 
@@ -125,24 +125,13 @@ if __name__ == '__main__':
     # The appliance to train on.
     appliance_name = args.appliance_name
 
-    # Load Keras model from best checkpoint during training.
-    model_filepath = os.path.join(args.save_dir, appliance_name)
+    # Get tflite model path.
+    model_filepath = os.path.join(args.model_path)
     log(f'Model file path: {model_filepath}')
-    checkpoint_filepath = os.path.join(model_filepath,'checkpoints')
-    log(f'Checkpoint file path: {checkpoint_filepath}')
-    original_model = tf.keras.models.load_model(checkpoint_filepath)
-    original_model.summary()
 
     # Calculate offset parameter from window length.
     window_length = common.params_appliance[appliance_name]['windowlength']
     offset = int(0.5 * (window_length - 1.0))
-
-    # Change loaded model batch shape to (1, window_length).
-    # This will make the batch size static for use in tpu compilation.
-    # The edge tpu compiler accepts only static batch sizes.
-    model = change_model_batch_shape(
-        original_model, batch_shape=(1, window_length))
-    model.summary()
 
     # Load dataset.
     test_file_name = common.find_test_filename(args.datadir, appliance_name, args.test_type)
@@ -160,7 +149,7 @@ if __name__ == '__main__':
         shuffle=False)
 
     results = tflite_infer(
-        model=tflite_model_quant,
+        model=model_filepath,
         provider=provider,
         num_eval=args.num_eval)
 
