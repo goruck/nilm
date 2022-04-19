@@ -8,6 +8,8 @@ import os
 import argparse
 import socket
 import time
+import sys
+sys.path.append('../ml/')
 
 import tflite_runtime.interpreter as tflite
 import numpy as np
