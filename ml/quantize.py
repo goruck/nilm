@@ -14,23 +14,17 @@ import tensorflow as tf
 import numpy as np
 
 import nilm_metric as nm
-from common import load_dataset, WindowGenerator, params_appliance
+import common
 from logger import log
 
 # Number of samples for post-training quantization calibration.
 NUM_CAL = 1000
-# Number of standard deviations for sample float32 to int8 conversion.
-NUM_STD = 3.0
 # Dataset energy sampling period in seconds. 
 SAMPLE_PERIOD = 8
 
 rng = np.random.default_rng()
 
-def map_range(value, in_min, in_max, out_min, out_max):
-        """Map a value in [in_min, in_max] to [out_min, out_max]."""
-        return ((value - in_min) / (in_max - in_min)) * (out_max - out_min) + out_min
-
-def tflite_infer(model_content, dataset, provider, num_eval) -> list:
+def tflite_infer(model_content, provider, num_eval) -> list:
     """Perform inference using a tflite model."""
 
     # Start the tflite interpreter on the tpu and allocate tensors.
@@ -41,30 +35,22 @@ def tflite_infer(model_content, dataset, provider, num_eval) -> list:
     log(f'interpreter input details: {input_details}')
     output_details = interpreter.get_output_details()
     log(f'interpreter output details: {output_details}')
-    # check the type of the input tensor
+    # Check I/O tensor type.
     floating_input = input_details[0]['dtype'] == np.float32
     log(f'tflite model floating input: {floating_input}')
-    # check the type of the output tensor
     floating_output = output_details[0]['dtype'] == np.float32
     log(f'tflite model floating output: {floating_output}')
+    # Get I/O indices.
     input_index = input_details[0]['index']
     output_index = output_details[0]['index']
-
-    samples = dataset[0]
-    (sample_mean, sample_std, sample_min, sample_max,
-    sample_quartile1, sample_median, sample_quartile2) = nm.get_statistics(samples)
-    log(f'sample stats - mean: {sample_mean} std: {sample_std} \n'
-        f'min: {sample_min} max: {sample_max} quartile1: {sample_quartile1} \n'
-        f'median: {sample_median} quartile2: {sample_quartile2}')
-
-    # Determine range of samples to preserve dynamic range in int8 conversion.
-    in_min = sample_mean - NUM_STD * sample_std
-    log(f'in_min: {in_min}')
-    in_max = sample_mean + NUM_STD * sample_std
-    log(f'in_max: {in_max}')
+    # If model has int I/O get quantization information.
+    if not floating_input:
+        input_scale, input_zero_point = input_details[0]['quantization']
+    if not floating_output:
+        output_scale, output_zero_point = output_details[0]['quantization']
 
     # Calculate num_eval sized indices of random locations in provider.
-    eval_indices = rng.choice(provider.__len__(), size=num_eval)
+    eval_indices = rng.integers(low=0, high=provider.__len__(), size=num_eval)
 
     log(f'Running inference on {num_eval} samples...')
     start = time.time()
@@ -72,17 +58,16 @@ def tflite_infer(model_content, dataset, provider, num_eval) -> list:
         sample, target = provider.__getitem__(i)
         if not sample.any(): return # ignore missing data
         ground_truth = np.squeeze(target)
-        if not floating_input:
-            sample = map_range(sample, in_min, in_max, -128.0, 127.0).astype(np.int8)
+        if not floating_input: # convert to float to int8
+            sample = sample / input_scale + input_zero_point
+            sample = sample.astype(np.int8)
         interpreter.set_tensor(input_index, sample)
         interpreter.invoke() # run inference
         result = interpreter.get_tensor(output_index)
         prediction = np.squeeze(result)
-        if not floating_output:
-            prediction = prediction / 127.0
-        if prediction < 0: prediction = 0 # zero out negative energy
+        if not floating_output: # convert int8 to float
+            prediction = (prediction - output_zero_point) * output_scale
         #print(f'sample index: {i} ground_truth: {ground_truth:.3f} prediction: {prediction:.3f}')
-        #np.testing.assert_allclose(ground_truth, prediction, rtol=1e-5, atol=0)
         return ground_truth, prediction
     results = [infer(i) for i in eval_indices]
     end = time.time()
@@ -126,7 +111,7 @@ def representative_dataset_gen(provider, num_cal) -> np.float32:
         sample, _ = provider.__getitem__(i)
         yield [sample]
 
-def convert(model, provider, num_cal, io_int=False):
+def convert(model, provider, num_cal, io_float=False):
     """
     Convert Keras model to tflite, optimize for latency and size,
     quantize weights and activations to int8 and optionally quantize input
@@ -138,7 +123,7 @@ def convert(model, provider, num_cal, io_int=False):
         model: Keras input model.
         provider: Object that provides samples for calibration.
         num_cal: Number of calibration passes.
-        io_int: Boolean indicating int8 input and outputs.
+        io_float: Boolean indicating float input and outputs.
 
     Returns:
         Quantized tflite model.
@@ -154,7 +139,7 @@ def convert(model, provider, num_cal, io_int=False):
         provider=provider, num_cal=num_cal)
     converter.representative_dataset = tf.lite.RepresentativeDataset(ref_gen)
     converter.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS_INT8]
-    if io_int:
+    if not io_float:
         converter.inference_input_type = tf.int8
         converter.inference_output_type = tf.int8
 
@@ -179,15 +164,24 @@ def get_arguments():
                         type=int,
                         default=None,
                         help='Number of dataset samples to use. Default uses entire dataset.')
-    parser.add_argument('--io_int', action='store_true',
-                        help='If set, make tflite inputs and outputs int8.')
+    parser.add_argument('--io_float', action='store_true',
+                        help='If set, make tflite I/O float.')
     parser.add_argument('--evaluate', action='store_true',
                         help='If set, evaluate tflite model for accuracy.')
     parser.add_argument('--num_eval',
                         type=int,
                         default=10000,
                         help='Number of inferences used to evaluate quantized model.')
-    parser.set_defaults(io_int=False)
+    parser.add_argument('--test_type',
+                        type=str,
+                        default='test',
+                        help='Type of the test set to load: \
+                            test -- test on the proper test set;\
+                            train -- test on a already prepared slice of the train set;\
+                            val -- test on the validation set;\
+                            uk -- test on UK-DALE;\
+                            redd -- test on REDD.')
+    parser.set_defaults(io_float=False)
     parser.set_defaults(evaluate=False)
     return parser.parse_args()
 
@@ -209,7 +203,7 @@ if __name__ == '__main__':
     original_model.summary()
 
     # Calculate offset parameter from window length.
-    window_length = params_appliance[appliance_name]['windowlength']
+    window_length = common.params_appliance[appliance_name]['windowlength']
     offset = int(0.5 * (window_length - 1.0))
 
     # Change loaded model batch shape to (1, window_length).
@@ -220,15 +214,15 @@ if __name__ == '__main__':
     model.summary()
 
     # Load dataset.
-    dataset_path = os.path.join(
-        args.datadir,appliance_name,f'{appliance_name}_training_.csv')
+    test_file_name = common.find_test_filename(args.datadir, appliance_name, args.test_type)
+    dataset_path = os.path.join(args.datadir, appliance_name, test_file_name)
     log(f'dataset: {dataset_path}')
-    dataset = load_dataset(dataset_path, args.crop)
+    dataset = common.load_dataset(dataset_path, args.crop)
     num_samples = dataset[0].size
     log(f'Loaded {num_samples/10**6:.3f}M samples from dataset.')
 
     # Provider of windowed dataset samples and single point targets.
-    provider = WindowGenerator(
+    provider = common.WindowGenerator(
         dataset=dataset,
         offset=offset,
         batch_size=1,
@@ -239,11 +233,11 @@ if __name__ == '__main__':
         model=model,
         provider=provider,
         num_cal=NUM_CAL,
-        io_int=args.io_int)
+        io_float=args.io_float)
 
     # Save converted model.
-    filepath = os.path.join(args.save_dir, appliance_name,
-        f'{appliance_name}_quant.tflite') 
+    s = f'{appliance_name}_quant_flt.tflite' if args.io_float else f'{appliance_name}_quant.tflite'
+    filepath = os.path.join(args.save_dir, appliance_name, s)
     with open(filepath, 'wb') as file:
         file.write(tflite_model_quant)
     log(f'Quantized tflite model saved to {filepath}.')
@@ -251,7 +245,6 @@ if __name__ == '__main__':
     if args.evaluate:
         results = tflite_infer(
             model_content=tflite_model_quant,
-            dataset=dataset,
             provider=provider,
             num_eval=args.num_eval)
 
@@ -259,15 +252,15 @@ if __name__ == '__main__':
         prediction = np.array([p for _, p in results])
 
         # De-normalize.
-        appliance_mean = params_appliance[appliance_name]['mean']
+        appliance_mean = common.params_appliance[appliance_name]['mean']
         log(f'appliance mean: {appliance_mean}')
-        appliance_std = params_appliance[appliance_name]['std']
+        appliance_std = common.params_appliance[appliance_name]['std']
         log(f'appliance std: {appliance_std}')
         prediction = prediction * appliance_std + appliance_mean
         ground_truth = ground_truth * appliance_std + appliance_mean
 
         # Apply on-power threshold.
-        appliance_threshold = params_appliance[appliance_name]['on_power_threshold']
+        appliance_threshold = common.params_appliance[appliance_name]['on_power_threshold']
         log(f'appliance threshold: {appliance_threshold}')
         prediction[prediction < appliance_threshold] = 0.0
         
@@ -282,4 +275,4 @@ if __name__ == '__main__':
         log(f'nde: {nm.get_nde(ground_truth, prediction)}')
         
         # Calculate normalized signal aggregate error. 
-        log(f'sde: {nm.get_sae(ground_truth, prediction, SAMPLE_PERIOD)}')
+        log(f'sae: {nm.get_sae(ground_truth, prediction, SAMPLE_PERIOD)}')
