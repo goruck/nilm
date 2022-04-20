@@ -15,7 +15,6 @@ import tflite_runtime.interpreter as tflite
 import numpy as np
 
 import nilm_metric as nm
-from common import params_appliance, find_test_filename, load_dataset
 from logger import log
 
 # Number of samples for post-training quantization calibration.
@@ -24,6 +23,73 @@ NUM_CAL = 1000
 SAMPLE_PERIOD = 8
 
 rng = np.random.default_rng()
+
+params_appliance = {
+    'kettle': {
+        'windowlength': 599,
+        'on_power_threshold': 2000,
+        'max_on_power': 3998,
+        'mean': 700,
+        'std': 1000,
+        's2s_length': 128, },
+    'microwave': {
+        'windowlength': 599,
+        'on_power_threshold': 200,
+        'max_on_power': 3969,
+        'mean': 500,
+        'std': 800,
+        's2s_length': 128},
+    'fridge': {
+        'windowlength': 599,
+        'on_power_threshold': 50,
+        'max_on_power': 3323,
+        'mean': 200,
+        'std': 400,
+        's2s_length': 512},
+    'dishwasher': {
+        'windowlength': 599,
+        'on_power_threshold': 10,
+        'max_on_power': 3964,
+        'mean': 700,
+        'std': 1000,
+        's2s_length': 1536},
+    'washingmachine': {
+        'windowlength': 599,
+        'on_power_threshold': 20,
+        'max_on_power': 3999,
+        'mean': 400,
+        'std': 700,
+        's2s_length': 2000}
+    }
+
+def find_test_filename(test_dir, appliance, test_type) -> str:
+    """TBA"""
+    for filename in os.listdir(os.path.join(test_dir, appliance)):
+        if test_type == 'train' and 'TRAIN' in filename.upper():
+            test_filename = filename
+            break
+        elif test_type == 'uk' and 'UK' in filename.upper():
+            test_filename = filename
+            break
+        elif test_type == 'redd' and 'REDD' in filename.upper():
+            test_filename = filename
+            break
+        elif test_type == 'test' and 'TEST' in\
+                filename.upper() and 'TRAIN' not in filename.upper() and 'UK' not in filename.upper():
+            test_filename = filename
+            break
+        elif test_type == 'val' and 'VALIDATION' in filename.upper():
+            test_filename = filename
+            break
+    return test_filename
+
+def load_dataset(file_name, crop=None) -> np.array:
+    """Load CSV file, convert to np and return mains and appliance samples."""
+    df = pd.read_csv(file_name, nrows=crop)
+
+    df_np = np.array(df, dtype=np.float32)
+
+    return df_np[:, 0], df_np[:, 1]
 
 class WindowGenerator():
     """
