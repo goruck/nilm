@@ -210,7 +210,7 @@ def get_arguments():
                         help='Name of target appliance.')
     parser.add_argument('--datadir',
                         type=str,
-                        default='/media/mendel/nilm/ml/dataset_management/refit/fridge/',
+                        default='/media/mendel/nilm/ml/dataset_management/refit/',
                         help='Directory of datasets.')
     parser.add_argument('--model_path',
                         type=str,
