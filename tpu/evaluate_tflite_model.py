@@ -1,5 +1,5 @@
 """
-Evaluate tflite model on the edge tpu.
+Evaluate tflite model performance on the edge tpu.
 
 Copyright (c) 2022 Lindo St. Angel.
 """
@@ -9,17 +9,15 @@ import argparse
 import socket
 import time
 import sys
-sys.path.append('../ml/')
 
 import tflite_runtime.interpreter as tflite
 import numpy as np
 import pandas as pd
 
+sys.path.append('../ml/')
 import nilm_metric as nm
 from logger import log
 
-# Number of samples for post-training quantization calibration.
-NUM_CAL = 1000
 # Dataset energy sampling period in seconds. 
 SAMPLE_PERIOD = 8
 
@@ -31,40 +29,35 @@ params_appliance = {
         'on_power_threshold': 2000,
         'max_on_power': 3998,
         'mean': 700,
-        'std': 1000,
-        's2s_length': 128, },
+        'std': 1000},
     'microwave': {
         'windowlength': 599,
         'on_power_threshold': 200,
         'max_on_power': 3969,
         'mean': 500,
-        'std': 800,
-        's2s_length': 128},
+        'std': 800},
     'fridge': {
         'windowlength': 599,
         'on_power_threshold': 50,
         'max_on_power': 3323,
         'mean': 200,
-        'std': 400,
-        's2s_length': 512},
+        'std': 400},
     'dishwasher': {
         'windowlength': 599,
         'on_power_threshold': 10,
         'max_on_power': 3964,
         'mean': 700,
-        'std': 1000,
-        's2s_length': 1536},
+        'std': 1000},
     'washingmachine': {
         'windowlength': 599,
         'on_power_threshold': 20,
         'max_on_power': 3999,
         'mean': 400,
-        'std': 700,
-        's2s_length': 2000}
+        'std': 700}
     }
 
 def find_test_filename(test_dir, appliance, test_type) -> str:
-    """TBA"""
+    """Determine test set."""
     for filename in os.listdir(os.path.join(test_dir, appliance)):
         if test_type == 'train' and 'TRAIN' in filename.upper():
             test_filename = filename
@@ -93,9 +86,7 @@ def load_dataset(file_name, crop=None) -> np.array:
     return df_np[:, 0], df_np[:, 1]
 
 class WindowGenerator():
-    """
-    TBA
-    """
+    """Generate windows of samples and optionally single point targets."""
 
     def __init__(self, dataset, batch_size, offset,
         train=True,
@@ -128,10 +119,10 @@ class WindowGenerator():
         if self.shuffle:
             self.rng.shuffle(self.indices)
 
-    def __len__(self) -> int:
+    def len(self) -> int:
         return(int(np.ceil(self.num_samples / self.batch_size)))
 
-    def __getitem__(self, index) -> np.array:
+    def getitem(self, index) -> np.array:
         # Row indices for current batch.
         rows = self.indices[
             index * self.batch_size:(index + 1) * self.batch_size]
@@ -149,11 +140,11 @@ class WindowGenerator():
             # Return only samples if in test mode.
             return samples
 
-def tflite_infer(model, provider, num_eval) -> list:
+def tflite_infer(model_path, provider, num_eval) -> list:
     """Perform inference using a tflite model."""
 
     # Start the tflite interpreter on the tpu and allocate tensors.
-    interpreter = tflite.Interpreter(model_path=model,
+    interpreter = tflite.Interpreter(model_path=model_path,
         experimental_delegates=[tflite.load_delegate('libedgetpu.so.1')])
     interpreter.allocate_tensors()
 
@@ -176,12 +167,12 @@ def tflite_infer(model, provider, num_eval) -> list:
         output_scale, output_zero_point = output_details[0]['quantization']
 
     # Calculate num_eval sized indices of random locations in provider.
-    eval_indices = rng.integers(low=0, high=provider.__len__(), size=num_eval)
+    eval_indices = rng.integers(low=0, high=provider.len(), size=num_eval)
 
     log(f'Running inference on {num_eval} samples...')
     start = time.time()
     def infer(i):
-        sample, target = provider.__getitem__(i)
+        sample, target = provider.getitem(i)
         if not sample.any(): return # ignore missing data
         ground_truth = np.squeeze(target)
         if not floating_input: # convert to float to int8
@@ -204,7 +195,7 @@ def tflite_infer(model, provider, num_eval) -> list:
 
 def get_arguments():
     parser = argparse.ArgumentParser(
-        description='Convert a trained Keras model to tflite and quantize.')
+        description='Evaluate a tflite model on the edge tpu.')
     parser.add_argument('--appliance_name',
                         type=str,
                         default='kettle',
@@ -215,16 +206,12 @@ def get_arguments():
                         help='Directory of datasets.')
     parser.add_argument('--model_path',
                         type=str,
-                        default='/media/mendel/nilm/ml/models/fridge/fridge_quant_edgetpu.tflite',
+                        default='/media/mendel/nilm/ml/models/',
                         help='tflite model path')
     parser.add_argument('--crop',
                         type=int,
                         default=None,
                         help='Number of dataset samples to use. Default uses entire dataset.')
-    parser.add_argument('--io_float', action='store_true',
-                        help='If set, make tflite I/O float.')
-    parser.add_argument('--evaluate', action='store_true',
-                        help='If set, evaluate tflite model for accuracy.')
     parser.add_argument('--num_eval',
                         type=int,
                         default=10000,
@@ -238,8 +225,6 @@ def get_arguments():
                             val -- test on the validation set;\
                             uk -- test on UK-DALE;\
                             redd -- test on REDD.')
-    parser.set_defaults(io_float=False)
-    parser.set_defaults(evaluate=False)
     return parser.parse_args()
 
 if __name__ == '__main__':
@@ -251,9 +236,10 @@ if __name__ == '__main__':
     # The appliance to train on.
     appliance_name = args.appliance_name
 
-    # Get tflite model path.
-    model_filepath = os.path.join(args.model_path)
-    log(f'Model file path: {model_filepath}')
+    # Load tflite model.
+    model_filepath = os.path.join(args.model_path, appliance_name,
+        f'{appliance_name}_quant_edgetpu.tflite')
+    log(f'tflite model: {model_filepath}')
 
     # Calculate offset parameter from window length.
     window_length = params_appliance[appliance_name]['windowlength']
@@ -275,7 +261,7 @@ if __name__ == '__main__':
         shuffle=False)
 
     results = tflite_infer(
-        model=model_filepath,
+        model_path=model_filepath,
         provider=provider,
         num_eval=args.num_eval)
 
