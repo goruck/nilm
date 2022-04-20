@@ -15,7 +15,7 @@ import tflite_runtime.interpreter as tflite
 import numpy as np
 
 import nilm_metric as nm
-import common
+from common import params_appliance, find_test_filename, load_dataset
 from logger import log
 
 # Number of samples for post-training quantization calibration.
@@ -24,6 +24,63 @@ NUM_CAL = 1000
 SAMPLE_PERIOD = 8
 
 rng = np.random.default_rng()
+
+class WindowGenerator():
+    """
+    TBA
+    """
+
+    def __init__(self, dataset, batch_size, offset,
+        train=True,
+        shuffle=True) -> None:
+
+        self.X, self.y = dataset
+        self.batch_size = batch_size
+        self.shuffle = shuffle
+        self.offset = offset
+        self.train = train
+
+        # Total number of samples in dataset.
+        self.total_samples=self.X.size
+
+        # Number of input samples adjusted for windowing.
+        # This prevents partial window generation.
+        self.num_samples = self.total_samples - 2 * self.offset
+
+        # Indices of adjusted input sample array.
+        self.indices = np.arange(self.num_samples)
+
+        self.rng = np.random.default_rng()
+
+        # Initial shuffle. 
+        if self.shuffle:
+            self.rng.shuffle(self.indices)
+
+    def on_epoch_end(self) -> None:
+        # Shuffle at end of each epoch. 
+        if self.shuffle:
+            self.rng.shuffle(self.indices)
+
+    def __len__(self) -> int:
+        return(int(np.ceil(self.num_samples / self.batch_size)))
+
+    def __getitem__(self, index) -> np.array:
+        # Row indices for current batch.
+        rows = self.indices[
+            index * self.batch_size:(index + 1) * self.batch_size]
+
+        # Create a batch of windowed samples.
+        samples = np.array(
+            [self.X[row:row + 2 * self.offset + 1] for row in rows])
+
+        if self.train:
+            # Create batch of single point targets offset from window start.
+            targets = np.array([self.y[row + self.offset] for row in rows])
+            # Return a batch of (sample, target) tuples.
+            return samples, targets
+        else:
+            # Return only samples if in test mode.
+            return samples
 
 def tflite_infer(model, provider, num_eval) -> list:
     """Perform inference using a tflite model."""
@@ -132,19 +189,19 @@ if __name__ == '__main__':
     log(f'Model file path: {model_filepath}')
 
     # Calculate offset parameter from window length.
-    window_length = common.params_appliance[appliance_name]['windowlength']
+    window_length = params_appliance[appliance_name]['windowlength']
     offset = int(0.5 * (window_length - 1.0))
 
     # Load dataset.
-    test_file_name = common.find_test_filename(args.datadir, appliance_name, args.test_type)
+    test_file_name = find_test_filename(args.datadir, appliance_name, args.test_type)
     dataset_path = os.path.join(args.datadir, appliance_name, test_file_name)
     log(f'dataset: {dataset_path}')
-    dataset = common.load_dataset(dataset_path, args.crop)
+    dataset = load_dataset(dataset_path, args.crop)
     num_samples = dataset[0].size
     log(f'Loaded {num_samples/10**6:.3f}M samples from dataset.')
 
     # Provider of windowed dataset samples and single point targets.
-    provider = common.WindowGenerator(
+    provider = WindowGenerator(
         dataset=dataset,
         offset=offset,
         batch_size=1,
@@ -159,15 +216,15 @@ if __name__ == '__main__':
     prediction = np.array([p for _, p in results])
 
     # De-normalize.
-    appliance_mean = common.params_appliance[appliance_name]['mean']
+    appliance_mean = params_appliance[appliance_name]['mean']
     log(f'appliance mean: {appliance_mean}')
-    appliance_std = common.params_appliance[appliance_name]['std']
+    appliance_std = params_appliance[appliance_name]['std']
     log(f'appliance std: {appliance_std}')
     prediction = prediction * appliance_std + appliance_mean
     ground_truth = ground_truth * appliance_std + appliance_mean
 
     # Apply on-power threshold.
-    appliance_threshold = common.params_appliance[appliance_name]['on_power_threshold']
+    appliance_threshold = params_appliance[appliance_name]['on_power_threshold']
     log(f'appliance threshold: {appliance_threshold}')
     prediction[prediction < appliance_threshold] = 0.0
     
