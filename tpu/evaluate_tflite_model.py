@@ -153,7 +153,7 @@ def tflite_infer(model, provider, num_eval) -> list:
     """Perform inference using a tflite model."""
 
     # Start the tflite interpreter on the tpu and allocate tensors.
-    interpreter = tflite.Interpreter(model=model,
+    interpreter = tflite.Interpreter(model_path=model,
         experimental_delegates=[tflite.load_delegate('libedgetpu.so.1')])
     interpreter.allocate_tensors()
 
