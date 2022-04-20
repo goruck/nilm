@@ -13,6 +13,7 @@ sys.path.append('../ml/')
 
 import tflite_runtime.interpreter as tflite
 import numpy as np
+import pandas as pd
 
 import nilm_metric as nm
 from logger import log
