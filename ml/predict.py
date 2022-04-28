@@ -23,14 +23,15 @@ AGGREGATE_STD = 814
 SAMPLE_PERIOD = 8 # Mains sample period in seconds.
 
 if __name__ == '__main__':
-    default_appliances = \
-        ['kettle', 'fridge', 'microwave', 'washingmachine', 'dishwasher']
-    default_dataset_dir = \
-        '/home/lindo/Develop/nilm/ml/dataset_management/my-house'
+    default_appliances = [
+        'kettle', 'fridge', 'microwave', 'washingmachine', 'dishwasher'
+    ]
+    default_dataset_dir = '/home/lindo/Develop/nilm/ml/dataset_management/my-house'
     default_panel_location = 'garage'
     default_model_dir = '/home/lindo/Develop/nilm/ml/models'
     default_ckpt_dir = 'checkpoints'
     default_results_dir = '/home/lindo/Develop/nilm/ml/results'
+    default_rt_preds_dataset_dir = '/home/lindo/Develop/nilm-datasets/my-house/garage/samples_4_26_22.csv'
 
     parser = argparse.ArgumentParser(description='Predict appliance\
                                      given a trained neural network\
@@ -44,7 +45,11 @@ if __name__ == '__main__':
     parser.add_argument('--datadir',
                         type=str,
                         default=default_dataset_dir,
-                        help='directory to the test data')
+                        help='directory location of test data')
+    parser.add_argument('--rt_preds_datadir',
+                        type=str,
+                        default=default_rt_preds_dataset_dir,
+                        help='directory location of real-time prediction dataset')
     parser.add_argument('--panel',
                         type=str,
                         default=default_panel_location,
@@ -61,17 +66,20 @@ if __name__ == '__main__':
                         type=str,
                         default=default_results_dir,
                         help='directory to save the predictions')
-    parser.add_argument('--show_plot', action='store_true',
+    parser.add_argument('--plot', action='store_true',
                         help='show predicted appliance and mains power plots')
+    parser.add_argument('--show_rt_preds', action='store_true',
+                        help='show real-time predictions on plot')
     parser.add_argument('--crop',
                         type=int,
                         default=None,
-                        help='use part of the dataset for testing')
+                        help='use part of the dataset for predictions')
     parser.add_argument('--batch_size',
                         type=int,
                         default=1000,
                         help='mini-batch size')
-    parser.set_defaults(show_plot=False)
+    parser.set_defaults(plot=False)
+    parser.set_defaults(show_rt_preds=False)
 
     log(f'Machine name: {socket.gethostname()}')
     args = parser.parse_args()
@@ -124,8 +132,11 @@ if __name__ == '__main__':
         threshold = params_appliance[appliance]['on_power_threshold']
         prediction[prediction <= threshold] = 0.0
         return prediction
-    predictions = \
-        {appliance : prediction(appliance) for appliance in args.appliances}
+    predictions = {
+        appliance : prediction(
+            appliance
+        ) for appliance in args.appliances
+    }
 
     log('aggregate_mean: ' + str(AGGREGATE_MEAN))
     log('aggregate_std: ' + str(AGGREGATE_STD))
@@ -147,23 +158,49 @@ if __name__ == '__main__':
     # Find max value in predictions for setting plot limits.
     max_pred = np.ceil(np.max(list(predictions.values())))
 
+    if args.show_rt_preds:
+        # Load real-time prediction dataset.
+        df = pd.read_csv(args.rt_preds_datadir)
+        df = df.fillna(0) # convert NaN's into zero's
+        df = df.iloc[:, 2:] # drop first two columns (date and time)
+        rt_preds_dataset = np.array(df, dtype=np.float32)
+        # Select appliance prediction column then adjust for output timing.
+        # Adjustment is simply moving samples earlier in time by
+        # a WINDOW_LENGTH since the real-time code places the prediction
+        # at the end of a window of samples. 
+        rt_pred = lambda c: rt_preds_dataset[:, c][WINDOW_LENGTH:]
+        # Define real-time predictions columns to appliance names.
+        rt_preds_to_appliances = {
+            'kettle': rt_pred(7),
+            'fridge': rt_pred(8),
+            'microwave': rt_pred(9),
+            'washingmachine': rt_pred(10),
+            'dishwasher': rt_pred(11)
+        }
+
     # Save and perhaps show powers in a single row of subplots.
     nrows = len(args.appliances) + 1
     fig, ax = plt.subplots(nrows=nrows, ncols=1, constrained_layout=True)
     ax[0].set_ylabel('Watts')
     ax[0].set_title('aggregate')
-    ax[0].plot(aggregate[offset:-offset], color='#7f7f7f', linewidth=1.8)
+    ax[0].plot(aggregate[offset:-offset], color='tab:orange', linewidth=1.8)
     row = 1
     for appliance in args.appliances:
         ax[row].set_ylabel('Watts')
         ax[row].set_title(appliance)
         ax[row].set_ylim(0, max_pred)
-        ax[row].plot(predictions[appliance], color='#1f77b4', linewidth=1.5)
+        ax[row].plot(predictions[appliance], color='tab:red', linewidth=1.5)
+        if args.show_rt_preds:
+            ax[row].plot(
+                rt_preds_to_appliances[appliance], color='tab:green',
+                linewidth=1.5, label='real-time prediction'
+            )
+            ax[row].legend(loc='upper right')
         row+=1
     fig.suptitle(f'Prediction results for {args.panel}',
         fontsize=16, fontweight='bold')
     plot_savepath = os.path.join(save_path, f'{args.panel}.png')
     plt.savefig(fname=plot_savepath)
-    if args.show_plot:
+    if args.plot:
         plt.show()
     plt.close()
