@@ -160,22 +160,20 @@ if __name__ == '__main__':
 
     if args.show_rt_preds:
         # Load real-time prediction dataset.
-        df = pd.read_csv(args.rt_preds_datadir)
+        df = pd.read_csv(
+            args.rt_preds_datadir,
+            usecols=['kettle','fridge','microwave','washingmachine','dishwasher']
+        )
         df = df.fillna(0) # convert NaN's into zero's
-        df = df.iloc[:, 2:] # drop first two columns (date and time)
-        rt_preds_dataset = np.array(df, dtype=np.float32)
+        # Define real-time predictions columns to appliance names.
         # Select appliance prediction column then adjust for output timing.
         # Adjustment is simply moving samples earlier in time by
         # a WINDOW_LENGTH since the real-time code places the prediction
-        # at the end of a window of samples. 
-        rt_pred = lambda c: rt_preds_dataset[:, c][WINDOW_LENGTH:]
-        # Define real-time predictions columns to appliance names.
+        # at the end of a window of samples.
         rt_preds_to_appliances = {
-            'kettle': rt_pred(7),
-            'fridge': rt_pred(8),
-            'microwave': rt_pred(9),
-            'washingmachine': rt_pred(10),
-            'dishwasher': rt_pred(11)
+            appliance: np.array(
+                df[[appliance]][WINDOW_LENGTH:], dtype=np.float32
+            ) for appliance in args.appliances
         }
 
     # Save and perhaps show powers in a single row of subplots.
@@ -189,7 +187,10 @@ if __name__ == '__main__':
         ax[row].set_ylabel('Watts')
         ax[row].set_title(appliance)
         ax[row].set_ylim(0, max_pred)
-        ax[row].plot(predictions[appliance], color='tab:red', linewidth=1.5)
+        ax[row].plot(
+            predictions[appliance], color='tab:red', 
+            linewidth=1.5, label='prediction'
+        )
         if args.show_rt_preds:
             ax[row].plot(
                 rt_preds_to_appliances[appliance], color='tab:green',
