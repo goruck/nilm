@@ -160,10 +160,7 @@ if __name__ == '__main__':
 
     if args.show_rt_preds:
         # Load real-time prediction dataset.
-        df = pd.read_csv(
-            args.rt_preds_datadir,
-            usecols=['kettle','fridge','microwave','washingmachine','dishwasher']
-        )
+        df = pd.read_csv(args.rt_preds_datadir, usecols=default_appliances)
         df = df.fillna(0) # convert NaN's into zero's
         # Define real-time predictions columns to appliance names.
         # Select appliance prediction column then adjust for output timing.
