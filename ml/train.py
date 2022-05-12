@@ -1,7 +1,7 @@
-"""
-Train a neural network to perform energy disaggregation,
-i.e., given a sequence of electricity mains reading,
-the algorithm separates the mains into appliances.
+"""Train a neural network to perform energy disaggregation.
+
+Given a sequence of electricity mains reading, the algorithm
+separates the mains into appliances.
 
 References:
 (1) Chaoyun Zhang, Mingjun Zhong, Zongzuo Wang, Nigel Goddard, and Charles Sutton.
@@ -179,7 +179,7 @@ if __name__ == '__main__':
 
     if args.train:
         log('Training model from scratch.')
-        model = create_model(input_window_length=window_length)
+        model = create_model(window_length=window_length)
 
         model.compile(
             optimizer=tf.keras.optimizers.Adam(
@@ -283,4 +283,4 @@ if __name__ == '__main__':
             plt.show()
         plt.close()
     else:
-        log(f'Nothing was done since no training options were selected.')
+        log('Nothing was done since no training options were selected.')
