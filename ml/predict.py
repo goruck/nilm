@@ -31,7 +31,7 @@ if __name__ == '__main__':
     default_model_dir = '/home/lindo/Develop/nilm/ml/models'
     default_ckpt_dir = 'checkpoints'
     default_results_dir = '/home/lindo/Develop/nilm/ml/results'
-    default_rt_preds_dataset_dir = '/home/lindo/Develop/nilm-datasets/my-house/garage/samples_4_26_22.csv'
+    default_rt_preds_dataset_dir = '/home/lindo/Develop/nilm-datasets/my-house/garage/samples_5_10_22.csv'
 
     parser = argparse.ArgumentParser(description='Predict appliance\
                                      given a trained neural network\
@@ -70,6 +70,8 @@ if __name__ == '__main__':
                         help='show predicted appliance and mains power plots')
     parser.add_argument('--show_rt_preds', action='store_true',
                         help='show real-time predictions on plot')
+    parser.add_argument('--threshold_rt_preds', action='store_true',
+                        help='apply power on thresholds to real-time predictions on plot')                    
     parser.add_argument('--crop',
                         type=int,
                         default=None,
@@ -80,6 +82,7 @@ if __name__ == '__main__':
                         help='mini-batch size')
     parser.set_defaults(plot=False)
     parser.set_defaults(show_rt_preds=False)
+    parser.set_defaults(threshold_rt_preds=False)
 
     log(f'Machine name: {socket.gethostname()}')
     args = parser.parse_args()
@@ -172,6 +175,12 @@ if __name__ == '__main__':
                 df[[appliance]][WINDOW_LENGTH:], dtype=np.float32
             ) for appliance in args.appliances
         }
+
+        # Apply power on thresholds.
+        if args.threshold_rt_preds:
+            for appliance in args.appliances:
+                threshold = params_appliance[appliance]['on_power_threshold']
+                rt_preds_to_appliances[appliance][rt_preds_to_appliances[appliance] <= threshold] = 0.0
 
     # Save and perhaps show powers in a single row of subplots.
     nrows = len(args.appliances) + 1
