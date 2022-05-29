@@ -1,6 +1,8 @@
 """
 Convert a trained Keras model to tflite and quantize it.
 
+***DEPRECATED USE "convert_keras_to_tflite.py" INSTEAD***
+
 Copyright (c) 2022 Lindo St. Angel.
 """
 
