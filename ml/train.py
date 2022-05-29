@@ -23,11 +23,12 @@ import tensorflow as tf
 import tensorflow_model_optimization as tfmot
 import matplotlib.pyplot as plt
 
-from cnn_model import create_model
+from define_models import create_model
 from logger import log
 from common import load_dataset, WindowGenerator, params_appliance
 
 def smooth_curve(points, factor=0.8):
+    """Smooth a series of points given a smoothing factor."""
     smoothed_points = []
     for point in points:
         if smoothed_points:
@@ -37,75 +38,137 @@ def smooth_curve(points, factor=0.8):
             smoothed_points.append(point)
     return smoothed_points
 
+def plot(history, plot_name, plot_display, appliance_name):
+    """Save and display mse and mae plots."""
+    # Mean square error.
+    mse = history.history['mse']
+    val_mse = history.history['val_mse']
+    plot_epochs = range(1,len(mse)+1)
+    plt.plot(
+        plot_epochs, smooth_curve(mse),
+        label='Smoothed Training MSE')
+    plt.plot(
+        plot_epochs, smooth_curve(val_mse),
+        label='Smoothed Validation MSE')
+    plt.title(f'Training history for {appliance_name} ({plot_name})')
+    plt.ylabel('Mean Squared Error')
+    plt.xlabel('Epoch')
+    plt.legend()
+    plot_filepath = os.path.join(
+        args.save_dir, appliance_name, f'{plot_name}_mse')
+    log(f'Plot directory: {plot_filepath}')
+    plt.savefig(fname=plot_filepath)
+    if plot_display:
+        plt.show()
+    plt.close()
+    # Mean Absolute Error.
+    val_mae = history.history['val_mae']
+    plt.plot(plot_epochs, smooth_curve(val_mae))
+    plt.title(f'Smoothed validation MAE for {appliance_name} ({plot_name})')
+    plt.ylabel('Mean Absolute Error')
+    plt.xlabel('Epoch')
+    plot_filepath = os.path.join(
+        args.save_dir, appliance_name, f'{plot_name}_mae')
+    log(f'Plot directory: {plot_filepath}')
+    plt.savefig(fname=plot_filepath)
+    if plot_display:
+        plt.show()
+    plt.close()
+
+def normalize(dataset):
+    """Normalize or standardize a data set."""
+    import numpy as np
+    # Compute aggregate statistics.
+    agg_mean = np.mean(dataset[0])
+    agg_std = np.std(dataset[0])
+    print(f'agg mean: {agg_mean}, agg std: {agg_std}')
+    agg_median = np.percentile(train_dataset[0], 50)
+    agg_quartile1 = np.percentile(train_dataset[0], 25)
+    agg_quartile3 = np.percentile(train_dataset[0], 75)
+    print(f'agg median: {agg_median}, agg q1: {agg_quartile1}, agg q3: {agg_quartile3}')
+    # Compute appliance statistics.
+    app_mean = np.mean(dataset[1])
+    app_std = np.std(dataset[1])
+    print(f'app mean: {app_mean}, app std: {app_std}')
+    app_median = np.percentile(train_dataset[1], 50)
+    app_quartile1 = np.percentile(train_dataset[1], 25)
+    app_quartile3 = np.percentile(train_dataset[1], 75)
+    print(f'app median: {app_median}, app q1: {app_quartile1}, app q3: {app_quartile3}')
+    def z_norm(dataset, mean, std):
+        return (dataset - mean) / std
+    def robust_scaler(dataset, median, quartile1, quartile3):
+        return (dataset - median) / (quartile3 - quartile1)
+    return (
+        z_norm(
+            dataset[0], agg_mean, agg_std),
+        z_norm(
+            dataset[1], app_mean, app_std))
+
 def get_arguments():
-    parser = argparse.ArgumentParser(description='Train a neural network\
-                                     for energy disaggregation - \
-                                     network input = mains window; \
-                                     network target = the states of \
-                                     the target appliance.')
-    parser.add_argument('--appliance_name',
-                        type=str,
-                        default='kettle',
-                        help='the name of target appliance')
-    parser.add_argument('--datadir',
-                        type=str,
-                        default='./dataset_management/refit',
-                        help='this is the directory of the training samples')
-    parser.add_argument('--pretrainedmodel_dir',
-                        type=str,
-                        default='./pretrained_model',
-                        help='this is the directory of the pre-trained models')
-    parser.add_argument('--save_dir',
-                        type=str,
-                        default='./models',
-                        help='this is the directory to save the trained models')
-    parser.add_argument('--batchsize',
-                        type=int,
-                        default=1000,
-                        help='The batch size of training examples')
-    parser.add_argument('--n_epoch',
-                        type=int,
-                        default=50,
-                        help='The number of epochs.')
-    parser.add_argument('--save_model',
-                        type=int,
-                        default=-1,
-                        help='Save the learnt model:\
-                        0 -- not to save the learnt model parameters;\
-                        n (n>0) -- to save the model params every n steps;\
-                        -1 -- only save the learnt model params\
-                        at the end of training.')
-    parser.add_argument("--transfer_model", action='store_true',
-                        help="If set: using entire pre-trained model.\
-                             Else: retrain the entire pre-trained model;\
-                             This will override the 'transfer_cnn' and 'cnn' parameters;\
-                             The appliance_name parameter will use to retrieve \
-                             the entire pre-trained model of that appliance.")
-    parser.add_argument("--transfer_cnn", action='store_true',
-                        help="If set: using a pre-trained CNN\
-                              Else: not using a pre-trained CNN.")
-    parser.add_argument('--cnn',
-                        type=str,
-                        default='kettle',
-                        help='The CNN trained by which appliance to load (pretrained model).')
-    parser.add_argument('--crop_train_dataset',
-                        type=int,
-                        default=None,
-                        help='Partial number of training samples to use. Default uses entire dataset.')
-    parser.add_argument('--crop_val_dataset',
-                        type=int,
-                        default=None,
-                        help='Partial number of val samples to use. Default uses entire dataset.')
-    parser.add_argument('--plot', action='store_true',
-                        help='If set, display training result plots.')
-    parser.add_argument('--qat', action='store_true',
-                        help='If set, fine-tune pre-trained model with quantization aware training.')
-    parser.add_argument('--train', action='store_true',
-                        help='If set, train model from scratch.')
-    parser.set_defaults(transfer_model=False)
-    parser.set_defaults(transfer_cnn=False)
+    parser = argparse.ArgumentParser(
+        description='Train a neural network for energy disaggregation - \
+            network input = mains window; network target = the states of \
+            the target appliance.')
+    parser.add_argument(
+        '--appliance_name',
+        type=str,
+        default='kettle',
+        help='the name of target appliance')
+    parser.add_argument(
+        '--datadir',
+        type=str,
+        default='./dataset_management/refit',
+        help='this is the directory of the training samples')
+    parser.add_argument(
+        '--save_dir',
+        type=str,
+        default='./models',
+        help='this is the directory to save the trained models')
+    parser.add_argument(
+        '--prune_log_dir',
+        type=str,
+        default='/home/lindo/Develop/nilm/ml/pruning_logs',
+        help='location of pruning logs')
+    parser.add_argument(
+        '--batchsize',
+        type=int,
+        default=1000,
+        help='The batch size of training examples')
+    parser.add_argument(
+        '--n_epoch',
+        type=int,
+        default=50,
+        help='The number of epochs.')
+    parser.add_argument(
+        '--prune_end_epoch',
+        type=int,
+        default=15,
+        help='The number of epochs to prune over.')
+    parser.add_argument(
+        '--crop_train_dataset',
+        type=int,
+        default=None,
+        help='Number of train samples to use. Default uses entire dataset.')
+    parser.add_argument(
+        '--crop_val_dataset',
+        type=int,
+        default=None,
+        help='Number of val samples to use. Default uses entire dataset.')
+    parser.add_argument(
+        '--qat', action='store_true',
+        help='Fine-tune pre-trained model with quantization aware training.')
+    parser.add_argument(
+        '--prune', action='store_true',
+        help='Prune pre-trained model for on-device inference.')
+    parser.add_argument(
+        '--train', action='store_true',
+        help='If set, train model from scratch.')
+    parser.add_argument(
+        '--plot', action='store_true',
+        help='If set, display plots.')
     parser.set_defaults(plot=False)
     parser.set_defaults(qat=False)
+    parser.set_defaults(prune=False)
     parser.set_defaults(train=False)
     return parser.parse_args()
 
@@ -125,7 +188,7 @@ if __name__ == '__main__':
     log(f'Training dataset: {training_path}')
 
     # Looking for the validation set
-    for filename in os.listdir(os.path.join(args.datadir,appliance_name)):
+    for filename in os.listdir(os.path.join(args.datadir, appliance_name)):
         if 'validation' in filename:
             val_filename = filename
 
@@ -136,28 +199,11 @@ if __name__ == '__main__':
     # offset parameter from window length
     offset = int(0.5 * (params_appliance[appliance_name]['windowlength'] - 1.0))
 
-    window_length = params_appliance[appliance_name]['windowlength']
-
-    early_stopping = tf.keras.callbacks.EarlyStopping(
-        monitor='val_loss',
-        patience=6,
-        verbose=2)
-
     model_filepath = os.path.join(args.save_dir, appliance_name)
     log(f'Model file path: {model_filepath}')
 
     checkpoint_filepath = os.path.join(model_filepath,'checkpoints')
     log(f'Checkpoint file path: {checkpoint_filepath}')
-
-    checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
-        filepath = checkpoint_filepath,
-        monitor='val_loss',
-        verbose=1,
-        save_best_only=True,
-        mode='auto',
-        save_freq='epoch')
-
-    callbacks = [early_stopping, checkpoint_callback]
 
     # Load datasets.
     train_dataset = load_dataset(training_path, args.crop_train_dataset)
@@ -177,18 +223,43 @@ if __name__ == '__main__':
         batch_size=args.batchsize,
         shuffle=False)
 
+    early_stopping = tf.keras.callbacks.EarlyStopping(
+        monitor='val_mse',
+        patience=6,
+        verbose=2)
+
     if args.train:
         log('Training model from scratch.')
+
+        window_length = params_appliance[appliance_name]['windowlength']
         model = create_model(window_length=window_length)
+
+        steps_per_epoch = training_provider.__len__()
+
+        lr_schedule = tf.keras.optimizers.schedules.InverseTimeDecay(
+            0.001,
+            decay_steps=steps_per_epoch*5,
+            decay_rate=1,
+            staircase=False)
 
         model.compile(
             optimizer=tf.keras.optimizers.Adam(
-                learning_rate=0.001,
+                learning_rate=lr_schedule,
                 beta_1=0.9,
                 beta_2=0.999,
                 epsilon=1e-08),
             loss='mse',
             metrics=['mse', 'msle', 'mae'])
+
+        checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
+        filepath = checkpoint_filepath,
+        monitor='val_mse',
+        verbose=1,
+        save_best_only=True,
+        mode='auto',
+        save_freq='epoch')
+
+        callbacks = [early_stopping, checkpoint_callback]
 
         history = model.fit(
             x=training_provider,
@@ -202,8 +273,14 @@ if __name__ == '__main__':
 
         model.summary()
 
-    if args.qat:
+        plot(
+            history,
+            plot_name='train',
+            plot_display=args.plot,
+            appliance_name=appliance_name)
+    elif args.qat:
         log('Fine-tuning pre-trained model with quantization aware training.')
+
         quantize_model = tfmot.quantization.keras.quantize_model
 
         model = tf.keras.models.load_model(checkpoint_filepath)
@@ -212,7 +289,7 @@ if __name__ == '__main__':
 
         q_aware_model.compile(
             optimizer=tf.keras.optimizers.Adam(
-                learning_rate=0.001,
+                learning_rate=0.0001,
                 beta_1=0.9,
                 beta_2=0.999,
                 epsilon=1e-08),
@@ -226,7 +303,7 @@ if __name__ == '__main__':
 
         q_checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
             filepath = q_checkpoint_filepath,
-            monitor='val_loss',
+            monitor='val_mse',
             verbose=1,
             save_best_only=True,
             mode='auto',
@@ -244,43 +321,94 @@ if __name__ == '__main__':
             workers=24,
             use_multiprocessing=True)
 
-    if args.train or args.qat:
-        # Save results and show plots if set.
-        # Losses.
-        loss = history.history['loss']
-        val_loss = history.history['val_loss']
-        plot_epochs = range(1,len(loss)+1)
-        plt.plot(
-            plot_epochs, smooth_curve(loss),
-            label='Smoothed Training Loss')
-        plt.plot(
-            plot_epochs, smooth_curve(val_loss),
-            label='Smoothed Validation Loss')
-        plt.title('Training History')
-        plt.ylabel('Loss (Mean Squared Error)')
-        plt.xlabel('Epoch')
-        plt.legend()
-        s = 'loss_qat.png' if args.qat else 'loss.png'
-        plot_filepath = os.path.join(
-            args.save_dir, appliance_name, s)
-        log(f'Plot directory: {plot_filepath}')
-        plt.savefig(fname=plot_filepath)
-        if args.plot:
-            plt.show()
-        plt.close()
-        # Mean Absolute Error.
-        val_mae = history.history['val_mae']
-        plt.plot(plot_epochs, smooth_curve(val_mae))
-        plt.title('Smoothed Validation MAE')
-        plt.ylabel('Mean Absolute Error')
-        plt.xlabel('Epoch')
-        s = 'mae_qat.png' if args.qat else 'mae.png'
-        plot_filepath = os.path.join(
-            args.save_dir, args.appliance_name, s)
-        log(f'Plot directory: {plot_filepath}')
-        plt.savefig(fname=plot_filepath)
-        if args.plot:
-            plt.show()
-        plt.close()
+        plot(
+            history,
+            plot_name='qat',
+            plot_display=args.plot,
+            appliance_name=appliance_name)
+    elif args.prune:
+        log('Prune pre-trained model for on-device inference.')
+
+        model = tf.keras.models.load_model(checkpoint_filepath)
+
+        # Compute end step to finish pruning after 15 epochs.
+        end_step = (num_train_samples // args.batchsize) * args.prune_end_epoch
+
+        # Define parameters for pruning.
+        pruning_params = {
+            'pruning_schedule': tfmot.sparsity.keras.PolynomialDecay(
+                initial_sparsity=0.25,
+                final_sparsity=0.75,
+                begin_step=0,
+                end_step=end_step)
+        }
+
+        # Sparsifies the layer's weights during training.
+        prune_low_magnitude = tfmot.sparsity.keras.prune_low_magnitude
+
+        # Try to apply pruning wrapper with pruning policy parameter.
+        try:
+            model_for_pruning = prune_low_magnitude(model, **pruning_params)
+        except ValueError as e:
+            log(e, level='error')
+            exit()
+
+        model_for_pruning.compile(
+            optimizer=tf.keras.optimizers.Adam(
+                learning_rate=0.0001, # lower rate than training from scratch
+                beta_1=0.9,
+                beta_2=0.999,
+                epsilon=1e-08),
+            loss='mse',
+            metrics=['mse', 'msle', 'mae'])
+
+        model_for_pruning.summary()
+
+        pruning_checkpoint_filepath = os.path.join(
+            model_filepath,'pruning_checkpoints')
+        log(f'Pruning checkpoint file path: {pruning_checkpoint_filepath}')
+
+        pruning_checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
+            filepath = pruning_checkpoint_filepath,
+            monitor='val_mse',
+            verbose=1,
+            save_best_only=True,
+            mode='auto',
+            save_freq='epoch')
+
+        pruning_callbacks = [
+            pruning_checkpoint_callback,
+            tfmot.sparsity.keras.UpdatePruningStep(),
+            tfmot.sparsity.keras.PruningSummaries(log_dir=args.prune_log_dir)
+        ]
+
+        history = model_for_pruning.fit(
+            x=training_provider,
+            steps_per_epoch=None,
+            epochs=args.prune_end_epoch,
+            callbacks=pruning_callbacks,
+            validation_data=validation_provider,
+            validation_steps=None,
+            workers=24,
+            use_multiprocessing=True)
+
+        plot(
+            history,
+            plot_name='prune',
+            plot_display=args.plot,
+            appliance_name=appliance_name)
+
+        model_for_pruning.summary()
+
+        pruned_model_filepath = os.path.join(model_filepath,'pruned_model')
+        log(f'Final pruned model file path: {pruned_model_filepath}')
+        model_for_pruning.save(pruned_model_filepath)
+
+        model_for_export = tfmot.sparsity.keras.strip_pruning(model_for_pruning)
+        model_for_export.summary()
+
+        pruned_model_for_export_filepath = os.path.join(model_filepath,'pruned_model_for_export')
+        log(f'Pruned model for export file path: {pruned_model_for_export_filepath}')
+        model_for_export.save(pruned_model_for_export_filepath)
     else:
-        log('Nothing was done since no training options were selected.')
+        print('Nothing was done, train, qat or prune must be selected.')
