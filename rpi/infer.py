@@ -25,19 +25,17 @@ from logger import log
 SER_PORT = '/dev/ttyACM0'
 # Rpi serial port baudrate.
 SER_BAUDRATE = 115200
+# These are the appliance types that the models will predict power for.
+APPLIANCES = [
+    'kettle', 'fridge', 'microwave', 'washingmachine', 'dishwasher'
+]
 # Row names of csv file that stores power readings and predictions. 
 CSV_ROW_NAMES = [
     'DT','TS', # datetime, unix timestamp(UTC)
     'V', # rms main voltage
     'I1','W1','VA1', # mains phase 1 rms current, real power, apparent power
     'I2','W2','VA2', # mains phase 2 rms current, real power, apparent power
-    'KP','FP', # kettle, fridge predicted power
-    'MP','WP','DP' # microwave, washing machine, dishwasher predected power
-]
-# These are the appliance types that the models will predict power for.
-APPLIANCES = [
-    'kettle', 'fridge', 'microwave', 'washingmachine', 'dishwasher'
-]
+] + APPLIANCES # predicted appliance apparent powers
 # Number of power mains samples to run inference on.
 WINDOW_LENGTH = 599
 # Aggregate statistics used to normalize mains power.
@@ -76,16 +74,16 @@ def infer(appliance, input, args):
     """Perform inference using a tflite model."""
     log(f'Predicting power for {appliance}.', level='debug')
 
-    # Get tflite model file path.
-    model_filepath = os.path.join(args.model_path, appliance,
-        f'{appliance}_quant.tflite')
+    model_filepath = os.path.join(
+        args.model_path, appliance, f'{appliance}_quant.tflite')
 
     # Start the tflite interpreter.
     try:
         interpreter = tflite.Interpreter(model_path=model_filepath)
         log(f'tflite model: {model_filepath}', level='debug')
-    except ValueError:
-        log(f'{appliance}_quant.tflite not found')
+    except ValueError as e:
+        log(f'{appliance} tflite model not found', level='error')
+        log(e, level='error')
         return np.NaN
 
     # Add batch dimension to match model input shape.
@@ -99,9 +97,9 @@ def infer(appliance, input, args):
 
     # Check I/O tensor type.
     floating_input = input_details[0]['dtype'] == np.float32
-    #log(f'tflite model floating input: {floating_input}')
+    log(f'tflite model floating input: {floating_input}', level='debug')
     floating_output = output_details[0]['dtype'] == np.float32
-    #log(f'tflite model floating output: {floating_output}')
+    log(f'tflite model floating output: {floating_output}', level='debug')
     # Get I/O indices.
     input_index = input_details[0]['index']
     output_index = output_details[0]['index']
@@ -114,6 +112,8 @@ def infer(appliance, input, args):
     if not floating_input: # convert to float to int8
         input = input / input_scale + input_zero_point
         input = input.astype(np.int8)
+    else:
+        input = input.astype(np.float32)
     interpreter.set_tensor(input_index, input)
     interpreter.invoke() # run inference
     result = interpreter.get_tensor(output_index)
@@ -123,7 +123,8 @@ def infer(appliance, input, args):
 
     return prediction
 
-def get_arduino_data(port):
+def get_arduino_data(port) -> list:
+    """Get voltage and power from Arduino and timestamp."""
     # Get bytes from Arduino.
     ser_bytes = port.readline()
     # Decode them as utf-8.
@@ -143,19 +144,22 @@ def get_arduino_data(port):
 
 def get_arguments():
     parser = argparse.ArgumentParser(
-        description='Read data from arduino and perform inference using raspberry pi.')
-    parser.add_argument('--sample_max',
-                        type=int,
-                        default=int(5 * 24 * 60 * 60 / 8), # 5 days @ 8 sec sampling period
-                        help='maximum number of mains samples to capture')
-    parser.add_argument('--model_path',
-                        type=str,
-                        default='/home/pi/nilm/ml/models/',
-                        help='tflite model path')
-    parser.add_argument('--csv_file_name',
-                        type=str,
-                        default='/mnt/usbstorage/nilm/garage/samples.csv',
-                        help='full path of csv file to store samples and predictions')
+        description=f'Read data from arduino and perform '
+        f'inference using raspberry pi.')
+    parser.add_argument(
+        '--model_path',
+        type=str,
+        default='/home/pi/nilm/ml/models/',
+        help='tflite model path')
+    parser.add_argument(
+        '--csv_file_name',
+        type=str,
+        default='/mnt/usbstorage/nilm/garage/samples.csv',
+        help='full path of csv file to store samples and predictions')
+    parser.add_argument(
+        '--apply_threshold', action='store_true',
+        help='threshold appliance predictions')
+    parser.set_defaults(apply_threshold=False)
     return parser.parse_args()
 
 def handler(signal_received, frame):
@@ -173,8 +177,7 @@ if __name__ == '__main__':
 
     for appliance in APPLIANCES:
         model_filepath = os.path.join(
-            args.model_path, appliance, f'{appliance}_quant.tflite'
-        )
+            args.model_path, appliance, f'{appliance}_quant.tflite')
         log(f'Using model {model_filepath} for {appliance}.')
 
     log('Running. Press CTRL-C to exit.')
@@ -184,19 +187,18 @@ if __name__ == '__main__':
             time.sleep(1.0) # wait for port to be ready
             log(f'Connected to port {ser.port}.')
             with open(args.csv_file_name, 'w') as csv_file:
-                log(
-                    f'Opened {args.csv_file_name} '
-                    f'for writing {args.sample_max} samples.'
-                )
+                log(f'Opened {args.csv_file_name} for writing samples.')
                 csv_writer = csv.writer(csv_file)
                 csv_writer.writerow(CSV_ROW_NAMES)
                 ser.reset_input_buffer()
 
                 # Initialize a ndarray to hold windowed mains power readings.
                 mains_power = np.empty((0), dtype=np.float32)
+                # Initialize sample counter. The sampling rate is set by the Arduino code.
+                # E.g., 5 days of samples is 5 * 24 * 60 * 60 / 8 @ 8 sec sampling period.
                 sample_num = 0
                 log('Gathering initial window of samples...')
-                while sample_num < args.sample_max:
+                while True:
                     if ser.in_waiting > 0:
                         # Get mains power data from Arduino.
                         sample = get_arduino_data(ser)
@@ -255,10 +257,13 @@ if __name__ == '__main__':
                                 log(f'Appliance mean: {mean}', level='debug')
                                 log(f'Appliance std: {std}', level='debug')
                                 prediction = prediction * std + mean
+                                # Zero out negative power predictions.
+                                prediction = 0 if prediction < 0 else prediction
                                 # Apply on-power threshold.
-                                appliance_threshold = params_appliance[appliance]['on_power_threshold']
-                                log(f'Appliance threshold: {appliance_threshold}', level='debug')
-                                prediction = 0 if prediction < appliance_threshold else prediction
+                                if args.apply_threshold:
+                                    appliance_threshold = params_appliance[appliance]['on_power_threshold']
+                                    log(f'Appliance threshold: {appliance_threshold}', level='debug')
+                                    prediction = 0 if prediction < appliance_threshold else prediction
                                 log(f'Prediction for {appliance}: {prediction:.3f} Watts.')
                                 sample.append(prediction)
 
