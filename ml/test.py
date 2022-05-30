@@ -27,6 +27,35 @@ from logger import log
 import nilm_metric as nm
 from common import WindowGenerator, load_dataset, params_appliance
 
+def normalize(test_set_x, test_set_y):
+    """Normalize or standardize datasets.
+    
+    Currently not in use.
+    """
+    # Normalize
+    import numpy as np
+    # Compute aggregate statistics.
+    agg_mean = 522
+    agg_std = 814
+    print(f'agg mean: {agg_mean}, agg std: {agg_std}')
+    agg_median = 308.0
+    agg_quartile1 = 173.0
+    agg_quartile3 = 584.0
+    log(f'agg median: {agg_median},agg q1: {agg_quartile1}, agg q3: {agg_quartile3}')
+    # Compute appliance statistics.
+    app_mean = 200
+    app_std = 400
+    log(f'app mean: {app_mean}, app std: {app_std}')
+    app_median = 5.0
+    app_quartile1 = 1.0
+    app_quartile3 = 87.0
+    log(f'app median: {app_median}, app q1: {app_quartile1}, app q3: {app_quartile3}')
+    def z_norm(dataset, mean, std):
+        return (dataset - mean) / std
+    def robust_scaler(dataset, median, quartile1, quartile3):
+        return (dataset - median) / (quartile3 - quartile1)
+    return z_norm(test_set_x, agg_mean, agg_std), z_norm(test_set_y, app_mean, app_std)
+
 def get_arguments():
     parser = argparse.ArgumentParser(description='Predict appliance\
                                      given a trained neural network\
