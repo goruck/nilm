@@ -10,7 +10,7 @@ CSV_FILE_NAME = '/mnt/usbstorage/nilm/garage/samples.csv'
 #datetime, unix timestamp(UTC), rms voltage, {rms current, real power, apparent power} for each phase
 CSV_ROW_NAMES = ['DT','TS','V','I1','W1','VA1','I2','W2','VA2']
 
-SAMPLE_MAX = 10800 # 24 hours @ 8 sec sampling period
+SAMPLE_MAX = 5 * 10800 # 5 days @ 8 sec sampling period
 
 def get_arduino_data(port) -> list:
     # Get bytes from Arduino.
