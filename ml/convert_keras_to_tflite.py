@@ -63,6 +63,8 @@ def tflite_infer(model_content, provider, num_eval) -> list:
     start = time.time()
     def infer(i):
         sample, target = provider.__getitem__(i)
+        # Add axis to match model InputLayer. 
+        sample = sample[:, :, :, np.newaxis]
         if not sample.any(): return # ignore missing data
         ground_truth = np.squeeze(target)
         if not floating_input: # convert to float to int8
@@ -125,27 +127,26 @@ def convert(model, provider, num_cal, io_float=False):
 
     return converter.convert()
 
-def change_model_batch_shape(model, batch_shape):
-    """Change input model's batch shape.
-
-    Ref: https://discuss.tensorflow.org/t/change-batch-size-statically-for-inference-tf2/5995
-    """
+def change_model_batch_size(model, batch_size=1):
+    """Change a model's batch size."""
     model_config = model.get_config()
-    model_config['layers'][0] = {
-        'name': 'new_input',
-        'class_name': 'InputLayer',
-        'config': {
-            'batch_input_shape': batch_shape,
-            'dtype': 'float32',
-            'sparse': False,
-            'name': 'modified_input'
-        },
-        'inbound_nodes': []
-    }
-    model_config['layers'][1]['inbound_nodes'] = [[['new_input', 0, 0, {}]]]
-    model_config['input_layers'] = [['new_input', 0, 0]]
+
+    # Get the layer config to modify.
+    layer_0_config = model_config['layers'][0]
+
+    # Change batch size.
+    lst = list(layer_0_config['config']['batch_input_shape'])
+    lst[0] = batch_size
+    layer_0_config['config']['batch_input_shape'] = tuple(lst)
+
+    # Apply changes to layers.
+    model_config['layers'][0] = layer_0_config
+    
+    # Create new model based on new config.
     new_model = model.__class__.from_config(model_config, custom_objects={})
+    # Apply weights from original model to new model.
     new_model.set_weights(model.get_weights())
+
     return new_model
 
 def representative_dataset_gen(provider, num_cal) -> np.float32:
@@ -157,9 +158,11 @@ def representative_dataset_gen(provider, num_cal) -> np.float32:
     # Generate samples from provider.
     for i in indices:
         sample, _ = provider.__getitem__(i)
+        # Add axis to match model InputLayer.
+        sample = sample[:, :, :, np.newaxis]
         yield [sample]
 
-def evaluate_tflite(args, appliance_name, tflite_model):
+def evaluate_tflite(args, appliance_name, tflite_model, provider):
     """Evaluate a converted tflite model"""
     # Load dataset.
     test_file_name = common.find_test_filename(
@@ -169,17 +172,6 @@ def evaluate_tflite(args, appliance_name, tflite_model):
     dataset = common.load_dataset(dataset_path, args.crop)
     num_samples = dataset[0].size
     log(f'Loaded {num_samples/10**6:.3f}M samples from dataset.')
-
-    # Calculate offset parameter from window length.
-    window_length = common.params_appliance[appliance_name]['windowlength']
-    offset = int(0.5 * (window_length - 1.0))
-
-    # Provider of windowed dataset samples and single point targets.
-    provider = common.WindowGenerator(
-        dataset=dataset,
-        offset=offset,
-        batch_size=1,
-        shuffle=False)
 
     results = tflite_infer(
         model_content=tflite_model,
@@ -294,11 +286,10 @@ if __name__ == '__main__':
     # Calculate offset parameter from window length.
     window_length = common.params_appliance[appliance_name]['windowlength']
 
-    # Change loaded model batch shape from None to (1).
+    # Change loaded model batch size from None to 1.
     # This will make the batch size static for use in tpu compilation.
     # The edge tpu compiler accepts only static batch sizes.
-    model = change_model_batch_shape(
-        original_model, batch_shape=(1, window_length))
+    model = change_model_batch_size(original_model)
     model.summary()
 
     # Load dataset.
@@ -314,7 +305,7 @@ if __name__ == '__main__':
     # Provider of windowed dataset samples and single point targets.
     provider = common.WindowGenerator(
         dataset=dataset,
-        offset=int(0.5 * (window_length - 1.0)),
+        window_length=window_length,
         batch_size=1,
         shuffle=False)
 
@@ -336,4 +327,4 @@ if __name__ == '__main__':
     log(f'Quantized tflite model saved to {filepath}.')
 
     if args.evaluate:
-        evaluate_tflite(args, appliance_name, tflite_model_quant)
+        evaluate_tflite(args, appliance_name, tflite_model_quant, provider)
