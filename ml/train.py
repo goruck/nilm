@@ -25,7 +25,7 @@ import matplotlib.pyplot as plt
 
 from define_models import create_model
 from logger import log
-from common import load_dataset, WindowGenerator, params_appliance
+from common import load_dataset, WindowGenerator
 
 def smooth_curve(points, factor=0.8):
     """Smooth a series of points given a smoothing factor."""
@@ -187,17 +187,13 @@ if __name__ == '__main__':
         args.datadir,appliance_name,f'{appliance_name}_training_.csv')
     log(f'Training dataset: {training_path}')
 
-    # Looking for the validation set
+    # Look for the validation set
     for filename in os.listdir(os.path.join(args.datadir, appliance_name)):
         if 'validation' in filename:
             val_filename = filename
-
     # path for validation data
     validation_path = os.path.join(args.datadir,appliance_name,val_filename)
     log(f'Validation dataset: {validation_path}')
-
-    # offset parameter from window length
-    offset = int(0.5 * (params_appliance[appliance_name]['windowlength'] - 1.0))
 
     model_filepath = os.path.join(args.save_dir, appliance_name)
     log(f'Model file path: {model_filepath}')
@@ -213,15 +209,9 @@ if __name__ == '__main__':
     num_val_samples = val_dataset[0].size
     log(f'There are {num_val_samples/10**6:.3f}M validation samples.')
 
-    training_provider = WindowGenerator(
-        dataset=train_dataset,
-        offset=offset,
-        batch_size=args.batchsize)
-    validation_provider = WindowGenerator(
-        dataset=val_dataset,
-        offset=offset,
-        batch_size=args.batchsize,
-        shuffle=False)
+    # Init window generator to provide samples and targets.
+    training_provider = WindowGenerator(dataset=train_dataset)
+    validation_provider = WindowGenerator(dataset=val_dataset, shuffle=False)
 
     early_stopping = tf.keras.callbacks.EarlyStopping(
         monitor='val_mse',
@@ -231,14 +221,16 @@ if __name__ == '__main__':
     if args.train:
         log('Training model from scratch.')
 
-        window_length = params_appliance[appliance_name]['windowlength']
-        model = create_model(window_length=window_length)
+        model = create_model()
 
-        steps_per_epoch = training_provider.__len__()
+        model.summary()
 
+        # Decay lr at 1/t every 5 epochs.
+        batches_per_epoch = training_provider.__len__()
+        epochs_per_decay_step = 5
         lr_schedule = tf.keras.optimizers.schedules.InverseTimeDecay(
             0.001,
-            decay_steps=steps_per_epoch*5,
+            decay_steps=batches_per_epoch * epochs_per_decay_step,
             decay_rate=1,
             staircase=False)
 
@@ -252,12 +244,12 @@ if __name__ == '__main__':
             metrics=['mse', 'msle', 'mae'])
 
         checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
-        filepath = checkpoint_filepath,
-        monitor='val_mse',
-        verbose=1,
-        save_best_only=True,
-        mode='auto',
-        save_freq='epoch')
+            filepath = checkpoint_filepath,
+            monitor='val_mse',
+            verbose=1,
+            save_best_only=True,
+            mode='auto',
+            save_freq='epoch')
 
         callbacks = [early_stopping, checkpoint_callback]
 
@@ -270,8 +262,6 @@ if __name__ == '__main__':
             validation_steps=None,
             workers=24,
             use_multiprocessing=True)
-
-        model.summary()
 
         plot(
             history,
