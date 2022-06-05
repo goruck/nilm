@@ -160,10 +160,8 @@ if __name__ == '__main__':
 
     test_provider = WindowGenerator(
         dataset=(test_set_x, None),
-        offset=offset,
         train=False,
-        shuffle=False,
-        batch_size=args.batch_size)
+        shuffle=False)
 
     # Load best checkpoint from saved trained model for appliance.
     model_file_path = os.path.join(
