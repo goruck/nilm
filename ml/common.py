@@ -3,7 +3,6 @@ Various utilities and common modules.
 """
 
 import os
-import tensorflow as tf
 import pandas as pd
 import numpy as np
 
@@ -74,81 +73,98 @@ def load_dataset(file_name, crop=None) -> np.array:
 
     return df_np[:, 0], df_np[:, 1]
 
-class WindowGenerator(tf.keras.utils.Sequence):
-    """ Generates windowed timeseries samples and targets as a Keras Sequence.
+def get_window_generator(keras_sequence=True):
+    """Wrapper to conditionally sublass WindowGenerator as Keras sequence.
 
-    This is a subclass of a Keras Sequence class. 
+    The WindowGenerator is used in keras and non-keras applications and
+    so to make it useable across both it can be a subclass of a keras
+    sequence. This increases reusability throughout codebase. 
+
+    Arguments:
+        keras_sequence: If true make WindowGenerator a subclass of
+        the keras sequence class.
     
-    Attributes:
-        dataset: input samples, targets timeseries data.
-        batch_size: mini batch size used in training model.
-        window_length: number of samples in a window of timeseries data.
-        train: if True returns samples and targets else just samples.
-        shuffle: if True shuffles dataset initially and every epoch.
+    Returns:
+        WindowGenerator class.
     """
+    if keras_sequence:
+        from tensorflow import keras
 
-    def __init__(
-        self,
-        dataset,
-        batch_size=1000,
-        window_length=599,
-        train=True,
-        shuffle=True) -> None:
-        """Inits WindowGenerator."""
+    class WindowGenerator(keras.utils.Sequence if keras_sequence else object):
+        """ Generates windowed timeseries samples and targets.
+        
+        Attributes:
+            dataset: input samples, targets timeseries data.
+            batch_size: mini batch size used in training model.
+            window_length: number of samples in a window of timeseries data.
+            train: if True returns samples and targets else just samples.
+            shuffle: if True shuffles dataset initially and every epoch.
+        """
 
-        self.X, self.y = dataset
-        self.batch_size = batch_size
-        self.shuffle = shuffle
-        self.window_length = window_length
-        self.train = train
+        def __init__(
+            self,
+            dataset,
+            batch_size=1000,
+            window_length=599,
+            train=True,
+            shuffle=True) -> None:
+            """Inits WindowGenerator."""
 
-        # Total number of samples in dataset.
-        self.total_samples=self.X.size
+            self.X, self.y = dataset
+            self.batch_size = batch_size
+            self.shuffle = shuffle
+            self.window_length = window_length
+            self.train = train
 
-        # Number of samples from end of window to center.
-        self.offset = int(0.5 * (window_length - 1.0))
+            # Total number of samples in dataset.
+            self.total_samples=self.X.size
 
-        # Number of input samples adjusted for windowing.
-        # This prevents partial window generation.
-        self.num_samples = self.total_samples - 2 * self.offset
+            # Number of samples from end of window to center.
+            self.offset = int(0.5 * (window_length - 1.0))
 
-        # Indices of adjusted input sample array.
-        self.indices = np.arange(self.num_samples)
+            # Number of input samples adjusted for windowing.
+            # This prevents partial window generation.
+            self.num_samples = self.total_samples - 2 * self.offset
 
-        self.rng = np.random.default_rng()
+            # Indices of adjusted input sample array.
+            self.indices = np.arange(self.num_samples)
 
-        # Initial shuffle. 
-        if self.shuffle:
-            self.rng.shuffle(self.indices)
+            self.rng = np.random.default_rng()
 
-    def on_epoch_end(self) -> None:
-        """Shuffle at end of each epoch.""" 
-        if self.shuffle:
-            self.rng.shuffle(self.indices)
+            # Initial shuffle. 
+            if self.shuffle:
+                self.rng.shuffle(self.indices)
 
-    def __len__(self) -> int:
-        """Returns number batches in an epoch."""
-        return(int(np.ceil(self.num_samples / self.batch_size)))
+        def on_epoch_end(self) -> None:
+            """Shuffle at end of each epoch.""" 
+            if self.shuffle:
+                self.rng.shuffle(self.indices)
 
-    def __getitem__(self, index) -> np.ndarray:
-        """Returns windowed samples and targets."""
-        # Row indices for current batch. 
-        rows = self.indices[
-            index * self.batch_size:(index + 1) * self.batch_size]
+        def __len__(self) -> int:
+            """Returns number batches in an epoch."""
+            return(int(np.ceil(self.num_samples / self.batch_size)))
 
-        # Create a batch of windowed samples.
-        samples = np.array(
-            [self.X[row:row + 2 * self.offset + 1] for row in rows])
+        def __getitem__(self, index) -> np.ndarray:
+            """Returns windowed samples and targets."""
+            # Row indices for current batch. 
+            rows = self.indices[
+                index * self.batch_size:(index + 1) * self.batch_size]
 
-        # Reshape samples to match model's input tensor format.
-        # Starting shape = (batch_size, window_length)
-        # Desired shape = (batch_size, 1, window_length)
-        samples = samples[:, np.newaxis, :]
+            # Create a batch of windowed samples.
+            samples = np.array(
+                [self.X[row:row + 2 * self.offset + 1] for row in rows])
 
-        if self.train:
-            # Create batch of single point targets offset from window start.
-            targets = np.array([self.y[row + self.offset] for row in rows])
-            return samples, targets
-        else:
-            # Return only samples if in test mode.
-            return samples
+            # Reshape samples to match model's input tensor format.
+            # Starting shape = (batch_size, window_length)
+            # Desired shape = (batch_size, 1, window_length)
+            samples = samples[:, np.newaxis, :]
+
+            if self.train:
+                # Create batch of single point targets offset from window start.
+                targets = np.array([self.y[row + self.offset] for row in rows])
+                return samples, targets
+            else:
+                # Return only samples if in test mode.
+                return samples
+
+    return WindowGenerator

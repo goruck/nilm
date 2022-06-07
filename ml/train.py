@@ -25,7 +25,7 @@ import matplotlib.pyplot as plt
 
 from define_models import create_model
 from logger import log
-from common import load_dataset, WindowGenerator
+from common import load_dataset, get_window_generator
 
 def smooth_curve(points, factor=0.8):
     """Smooth a series of points given a smoothing factor."""
@@ -210,6 +210,7 @@ if __name__ == '__main__':
     log(f'There are {num_val_samples/10**6:.3f}M validation samples.')
 
     # Init window generator to provide samples and targets.
+    WindowGenerator = get_window_generator()
     training_provider = WindowGenerator(dataset=train_dataset)
     validation_provider = WindowGenerator(dataset=val_dataset, shuffle=False)
 

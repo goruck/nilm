@@ -25,7 +25,7 @@ import matplotlib.pyplot as plt
 
 from logger import log
 import nilm_metric as nm
-from common import WindowGenerator, load_dataset, params_appliance
+from common import get_window_generator, load_dataset, params_appliance
 
 def normalize(test_set_x, test_set_y):
     """Normalize or standardize datasets.
@@ -158,6 +158,7 @@ if __name__ == '__main__':
     # Ground truth is center of test target (y) windows.
     ground_truth = test_set_y[offset:-offset]
 
+    WindowGenerator = get_window_generator()
     test_provider = WindowGenerator(
         dataset=(test_set_x, None),
         train=False,

@@ -283,9 +283,6 @@ if __name__ == '__main__':
     original_model = tf.keras.models.load_model(model_filepath)
     original_model.summary()
 
-    # Calculate offset parameter from window length.
-    window_length = common.params_appliance[appliance_name]['windowlength']
-
     # Change loaded model batch size from None to 1.
     # This will make the batch size static for use in tpu compilation.
     # The edge tpu compiler accepts only static batch sizes.
@@ -303,9 +300,9 @@ if __name__ == '__main__':
     log(f'Loaded {num_samples/10**6:.3f}M samples from dataset.')
 
     # Provider of windowed dataset samples and single point targets.
-    provider = common.WindowGenerator(
+    WindowGenerator = common.get_window_generator()
+    provider = WindowGenerator(
         dataset=dataset,
-        window_length=window_length,
         batch_size=1,
         shuffle=False)
 
