@@ -4,6 +4,8 @@ Various utilities and common modules.
 
 import os
 import pandas as pd
+import time
+
 import numpy as np
 
 params_appliance = {
@@ -168,3 +170,56 @@ def get_window_generator(keras_sequence=True):
                 return samples
 
     return WindowGenerator
+
+def tflite_infer(interpreter, provider, num_eval, log) -> list:
+    """Perform inference using a tflite model"""
+    rng = np.random.default_rng()
+
+    interpreter.allocate_tensors()
+
+    input_details = interpreter.get_input_details()
+    log(f'interpreter input details: {input_details}')
+    output_details = interpreter.get_output_details()
+    log(f'interpreter output details: {output_details}')
+    # Check I/O tensor type.
+    floating_input = input_details[0]['dtype'] == np.float32
+    log(f'tflite model floating input: {floating_input}')
+    floating_output = output_details[0]['dtype'] == np.float32
+    log(f'tflite model floating output: {floating_output}')
+    # Get I/O indices.
+    input_index = input_details[0]['index']
+    output_index = output_details[0]['index']
+    # If model has int I/O get quantization information.
+    if not floating_input:
+        input_scale, input_zero_point = input_details[0]['quantization']
+    if not floating_output:
+        output_scale, output_zero_point = output_details[0]['quantization']
+
+    # Calculate num_eval sized indices of random locations in provider.
+    eval_indices = rng.integers(low=0, high=provider.__len__(), size=num_eval)
+
+    log(f'Running inference on {num_eval} samples...')
+    start = time.time()
+    def infer(i):
+        sample, target = provider.__getitem__(i)
+        # Add axis to match model InputLayer. 
+        sample = sample[:, :, :, np.newaxis]
+        if not sample.any(): return # ignore missing data
+        ground_truth = np.squeeze(target)
+        if not floating_input: # convert to float to int8
+            sample = sample / input_scale + input_zero_point
+            sample = sample.astype(np.int8)
+        interpreter.set_tensor(input_index, sample)
+        interpreter.invoke() # run inference
+        result = interpreter.get_tensor(output_index)
+        prediction = np.squeeze(result)
+        if not floating_output: # convert int8 to float
+            prediction = (prediction - output_zero_point) * output_scale
+        #print(f'sample index: {i} ground_truth: {ground_truth:.3f} prediction: {prediction:.3f}')
+        return ground_truth, prediction
+    results = [infer(i) for i in eval_indices]
+    end = time.time()
+    log('Inference run complete.')
+    log(f'Inference rate: {num_eval / (end - start):.3f} Hz')
+
+    return results
