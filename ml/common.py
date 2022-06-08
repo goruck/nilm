@@ -171,7 +171,7 @@ def get_window_generator(keras_sequence=True):
 
     return WindowGenerator
 
-def tflite_infer(interpreter, provider, num_eval, log) -> list:
+def tflite_infer(interpreter, provider, num_eval, log=print) -> list:
     """Perform inference using a tflite model"""
     rng = np.random.default_rng()
 
@@ -202,7 +202,7 @@ def tflite_infer(interpreter, provider, num_eval, log) -> list:
     start = time.time()
     def infer(i):
         sample, target = provider.__getitem__(i)
-        # Add axis to match model InputLayer. 
+        # Add axis to match model InputLayer shape.
         sample = sample[:, :, :, np.newaxis]
         if not sample.any(): return # ignore missing data
         ground_truth = np.squeeze(target)
