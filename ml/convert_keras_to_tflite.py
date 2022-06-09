@@ -11,7 +11,6 @@ from functools import partial
 import os
 import argparse
 import socket
-import time
 
 import tensorflow as tf
 import numpy as np
