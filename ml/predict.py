@@ -14,10 +14,10 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 from logger import log
-from common import WindowGenerator, params_appliance
+from common import get_window_generator, params_appliance
 from nilm_metric import get_Epd
 
-WINDOW_LENGTH = 599
+WINDOW_LENGTH = 599 # Aggregate window length.
 AGGREGATE_MEAN = 522
 AGGREGATE_STD = 814
 SAMPLE_PERIOD = 8 # Mains sample period in seconds.
@@ -31,7 +31,7 @@ if __name__ == '__main__':
     default_model_dir = '/home/lindo/Develop/nilm/ml/models'
     default_ckpt_dir = 'checkpoints'
     default_results_dir = '/home/lindo/Develop/nilm/ml/results'
-    default_rt_preds_dataset_dir = '/home/lindo/Develop/nilm-datasets/my-house/garage/samples_5_10_22.csv'
+    default_rt_preds_dataset_dir = '/home/lindo/Develop/nilm-datasets/my-house/garage/samples_6_7_22.csv'
 
     parser = argparse.ArgumentParser(description='Predict appliance\
                                      given a trained neural network\
@@ -94,20 +94,16 @@ if __name__ == '__main__':
     # offset parameter from window length
     offset = int(0.5 * (WINDOW_LENGTH - 1.0))
 
-    def load_dataset(file_name, crop=None) -> np.array:
-        """Load input dataset file and return as np array.."""
-        df = pd.read_csv(file_name, header=None, nrows=crop)
+    # Load mains samples.
+    file_name = os.path.join(args.datadir, f'{args.panel}.csv')
+    test_set_x = pd.read_csv(file_name, header=None, nrows=args.crop)
+    test_set_x = np.array(test_set_x, dtype=np.float32)
+    log(f'There are {test_set_x.size/10**6:.3f}M test samples.')
 
-        return np.array(df, dtype=np.float32)
-
-    test_set_x = load_dataset(os.path.join(
-        args.datadir, f'{args.panel}.csv'), args.crop)
-    ts_size = test_set_x.size
-    log(f'There are {ts_size/10**6:.3f}M test samples.')
-
+    # Generate windowed samples.
+    WindowGenerator = get_window_generator()
     test_provider = WindowGenerator(
         dataset=(test_set_x.flatten(), None),
-        offset=offset,
         train=False,
         shuffle=False,
         batch_size=args.batch_size)
@@ -132,8 +128,9 @@ if __name__ == '__main__':
         log(f'appliance_std: {str(std)}')
         prediction = prediction * std + mean
         # Apply on-power thresholds.
-        threshold = params_appliance[appliance]['on_power_threshold']
-        prediction[prediction <= threshold] = 0.0
+        if args.threshold_rt_preds:
+            threshold = params_appliance[appliance]['on_power_threshold']
+            prediction[prediction <= threshold] = 0.0
         return prediction
     predictions = {
         appliance : prediction(
