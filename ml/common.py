@@ -1,5 +1,5 @@
 """
-Various common modules and parameters.
+Various common functions and parameters.
 """
 
 import os
