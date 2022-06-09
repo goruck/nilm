@@ -1,5 +1,5 @@
 """
-Various utilities and common modules.
+Various common modules and parameters.
 """
 
 import os
@@ -47,7 +47,7 @@ params_appliance = {
     }
 
 def find_test_filename(test_dir, appliance, test_type) -> str:
-    """TBA"""
+    """Find test file name given a datset name."""
     for filename in os.listdir(os.path.join(test_dir, appliance)):
         if test_type == 'train' and 'TRAIN' in filename.upper():
             test_filename = filename
@@ -223,3 +223,32 @@ def tflite_infer(interpreter, provider, num_eval, log=print) -> list:
     log(f'Inference rate: {num_eval / (end - start):.3f} Hz')
 
     return results
+
+def normalize(dataset):
+    """Normalize or standardize a dataset."""
+    import numpy as np
+    # Compute aggregate statistics.
+    agg_mean = np.mean(dataset[0])
+    agg_std = np.std(dataset[0])
+    print(f'agg mean: {agg_mean}, agg std: {agg_std}')
+    agg_median = np.percentile(dataset[0], 50)
+    agg_quartile1 = np.percentile(dataset[0], 25)
+    agg_quartile3 = np.percentile(dataset[0], 75)
+    print(f'agg median: {agg_median}, agg q1: {agg_quartile1}, agg q3: {agg_quartile3}')
+    # Compute appliance statistics.
+    app_mean = np.mean(dataset[1])
+    app_std = np.std(dataset[1])
+    print(f'app mean: {app_mean}, app std: {app_std}')
+    app_median = np.percentile(dataset[1], 50)
+    app_quartile1 = np.percentile(dataset[1], 25)
+    app_quartile3 = np.percentile(dataset[1], 75)
+    print(f'app median: {app_median}, app q1: {app_quartile1}, app q3: {app_quartile3}')
+    def z_norm(dataset, mean, std):
+        return (dataset - mean) / std
+    def robust_scaler(dataset, median, quartile1, quartile3):
+        return (dataset - median) / (quartile3 - quartile1)
+    return (
+        z_norm(
+            dataset[0], agg_mean, agg_std),
+        z_norm(
+            dataset[1], app_mean, app_std))
