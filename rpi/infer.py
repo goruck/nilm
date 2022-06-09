@@ -17,9 +17,9 @@ from signal import signal, SIGINT
 import tflite_runtime.interpreter as tflite
 import numpy as np
 
-sys.path.append('../ml/')
-import nilm_metric as nm
+sys.path.append('../ml')
 from logger import log
+from common import params_appliance
 
 # Rpi serial port where the Arduino is connected.
 SER_PORT = '/dev/ttyACM0'
@@ -42,34 +42,6 @@ WINDOW_LENGTH = 599
 AGGREGATE_MEAN = 522
 AGGREGATE_STD = 814
 
-params_appliance = {
-    'kettle': {
-        'on_power_threshold': 2000,
-        'max_on_power': 3998,
-        'mean': 700,
-        'std': 1000},
-    'microwave': {
-        'on_power_threshold': 200,
-        'max_on_power': 3969,
-        'mean': 500,
-        'std': 800},
-    'fridge': {
-        'on_power_threshold': 50,
-        'max_on_power': 3323,
-        'mean': 200,
-        'std': 400},
-    'dishwasher': {
-        'on_power_threshold': 10,
-        'max_on_power': 3964,
-        'mean': 700,
-        'std': 1000},
-    'washingmachine': {
-        'on_power_threshold': 20,
-        'max_on_power': 3999,
-        'mean': 400,
-        'std': 700}
-    }
-
 def infer(appliance, input, args):
     """Perform inference using a tflite model."""
     log(f'Predicting power for {appliance}.', level='debug')
@@ -86,8 +58,10 @@ def infer(appliance, input, args):
         log(e, level='error')
         return np.NaN
 
-    # Add batch dimension to match model input shape.
-    input = np.expand_dims(input, axis=0)
+    # Expand input dimensions to match model InputLayer shape.
+    # Starting shape = (WINDOW_LENGTH,)
+    # Desired shape = (1, 1, WINDOW_LENGTH, 1)
+    input = input[np.newaxis, np.newaxis, :, np.newaxis]
 
     interpreter.allocate_tensors()
     input_details = interpreter.get_input_details()
