@@ -25,83 +25,62 @@ import matplotlib.pyplot as plt
 
 from logger import log
 import nilm_metric as nm
-from common import get_window_generator, load_dataset, params_appliance
+import common
+
+AGGREGATE_MEAN = 522
+AGGREGATE_STD = 814
+SAMPLE_PERIOD = 8 # Mains sample period in seconds.
 
 def get_arguments():
     parser = argparse.ArgumentParser(description='Predict appliance\
-                                     given a trained neural network\
-                                     for energy disaggregation -\
-                                     network input = mains window;\
-                                     network target = the states of\
-                                     the target appliance.')
+        given a trained neural network for energy disaggregation -\
+        network input = mains window; network target = the states of\
+        the target appliance.')
     parser.add_argument('--appliance_name',
-                        type=str,
-                        default='kettle',
-                        help='the name of target appliance')
+        type=str,
+        default='kettle',
+        help='the name of target appliance')
     parser.add_argument('--datadir',
-                        type=str,
-                        default='./dataset_management/refit',
-                        help='this is the directory to the test data')
+        type=str,
+        default='./dataset_management/refit',
+        help='this is the directory to the test data')
     parser.add_argument('--trained_model_dir',
-                        type=str,
-                        default='./models',
-                        help='this is the directory to the trained models')
+        type=str,
+        default='./models',
+        help='this is the directory to the trained models')
     parser.add_argument('--ckpt_dir',
-                        type=str,
-                        default='checkpoints',
-                        help='directory name of model checkpoint')
+        type=str,
+        default='checkpoints',
+        help='directory name of model checkpoint')
     parser.add_argument('--save_results_dir',
-                        type=str,
-                        default='./results',
-                        help='this is the directory to save the predictions')
+        type=str,
+        default='./results',
+        help='this is the directory to save the predictions')
     parser.add_argument('--test_type',
-                        type=str,
-                        default='test',
-                        help='Type of the test set to load: \
-                            test -- test on the proper test set;\
-                            train -- test on a already prepared slice of the train set;\
-                            val -- test on the validation set;\
-                            uk -- test on UK-DALE;\
-                            redd -- test on REDD.')
-    parser.add_argument("--transfer", action='store_true',
-                        help="If set, use a pre-trained CNN (True) or not (False).")
+        type=str,
+        default='test',
+        help='Type of the test set to load: \
+            test -- test on the proper test set;\
+            train -- test on a already prepared slice of the train set;\
+            val -- test on the validation set;\
+            uk -- test on UK-DALE;\
+            redd -- test on REDD.')
     parser.add_argument('--plot', action='store_true',
-                        help='If set, plot the predicted appliance against ground truth.')
+        help='If set, plot the predicted appliance against ground truth.')
     parser.add_argument('--cnn',
-                        type=str,
-                        default='kettle',
-                        help='The trained CNN for the appliance to load.')
+        type=str,
+        default='kettle',
+        help='The trained CNN for the appliance to load.')
     parser.add_argument('--crop',
-                        type=int,
-                        default=None,
-                        help='To use part of the dataset for testing.')
+        type=int,
+        default=None,
+        help='To use part of the dataset for testing.')
     parser.add_argument('--batch_size',
-                        type=int,
-                        default=1000,
-                        help='Sets mini-batch size.')
+        type=int,
+        default=1000,
+        help='Sets mini-batch size.')
     parser.set_defaults(plot=False)
-    parser.set_defaults(transfer=False)
     return parser.parse_args()
-
-def find_test_filename(datadir, appliance_name) -> str:
-    for filename in os.listdir(os.path.join(datadir, appliance_name)):
-        if args.test_type == 'train' and 'TRAIN' in filename.upper():
-            test_filename = filename
-            break
-        elif args.test_type == 'uk' and 'UK' in filename.upper():
-            test_filename = filename
-            break
-        elif args.test_type == 'redd' and 'REDD' in filename.upper():
-            test_filename = filename
-            break
-        elif args.test_type == 'test' and 'TEST' in\
-                filename.upper() and 'TRAIN' not in filename.upper() and 'UK' not in filename.upper():
-            test_filename = filename
-            break
-        elif args.test_type == 'val' and 'VALIDATION' in filename.upper():
-            test_filename = filename
-            break
-    return test_filename
 
 if __name__ == '__main__':
     log(f'Machine name: {socket.gethostname()}')
@@ -112,24 +91,22 @@ if __name__ == '__main__':
     appliance_name = args.appliance_name
     log('Appliance target is: ' + appliance_name)
 
-    test_filename = find_test_filename(args.datadir, appliance_name)
+    test_filename = common.find_test_filename(args.datadir, appliance_name)
     log('File for test: ' + test_filename)
     test_file_path = os.path.join(args.datadir, appliance_name, test_filename)
     log('Loading from: ' + test_file_path)
 
     # offset parameter from window length
-    offset = int(0.5 * (params_appliance[appliance_name]['windowlength'] - 1.0))
+    offset = int(
+        0.5 * (common.params_appliance[appliance_name]['windowlength'] - 1.0))
 
-    test_set_x, test_set_y = load_dataset(test_file_path, args.crop)
-    ts_size = test_set_x.size
-    log(f'There are {ts_size/10**6:.3f}M test samples.')
-    #if args.crop > ts_size:
-        #log('(crop larger than dataset size, ignoring it)')
+    test_set_x, test_set_y = common.load_dataset(test_file_path, args.crop)
+    log(f'There are {test_set_x.size/10**6:.3f}M test samples.')
 
     # Ground truth is center of test target (y) windows.
     ground_truth = test_set_y[offset:-offset]
 
-    WindowGenerator = get_window_generator()
+    WindowGenerator = common.get_window_generator()
     test_provider = WindowGenerator(
         dataset=(test_set_x, None),
         train=False,
@@ -150,16 +127,13 @@ if __name__ == '__main__':
         use_multiprocessing=True)
 
     # Parameters.
-    max_power = params_appliance[appliance_name]['max_on_power']
-    threshold = params_appliance[appliance_name]['on_power_threshold']
-    aggregate_mean = 522
-    aggregate_std = 814
+    max_power = common.params_appliance[appliance_name]['max_on_power']
+    threshold = common.params_appliance[appliance_name]['on_power_threshold']
+    appliance_mean = common.params_appliance[appliance_name]['mean']
+    appliance_std = common.params_appliance[appliance_name]['std']
 
-    appliance_mean = params_appliance[appliance_name]['mean']
-    appliance_std = params_appliance[appliance_name]['std']
-
-    log('aggregate_mean: ' + str(aggregate_mean))
-    log('aggregate_std: ' + str(aggregate_std))
+    log('aggregate_mean: ' + str(AGGREGATE_MEAN))
+    log('aggregate_std: ' + str(AGGREGATE_STD))
     log('appliance_mean: ' + str(appliance_mean))
     log('appliance_std: ' + str(appliance_std))
 
@@ -168,23 +142,19 @@ if __name__ == '__main__':
     ground_truth = ground_truth * appliance_std + appliance_mean
 
     # Metric evaluation.
-    sample_second = 8.0  # sample period is 8 seconds
     log('F1:{0}'.format(nm.get_F1(ground_truth.flatten(), prediction.flatten(), threshold)))
     log('NDE:{0}'.format(nm.get_nde(ground_truth.flatten(), prediction.flatten())))
     log('\nMAE: {:}\n    -std: {:}\n    -min: {:}\n    -max: {:}\n    -q1: {:}\n    -median: {:}\n    -q2: {:}'
         .format(*nm.get_abs_error(ground_truth.flatten(), prediction.flatten())))
-    log('SAE: {:}'.format(nm.get_sae(ground_truth.flatten(), prediction.flatten(), sample_second)))
-    log('Energy per Day: {:}'.format(nm.get_Epd(ground_truth.flatten(), prediction.flatten(), sample_second)))
+    log('SAE: {:}'.format(nm.get_sae(ground_truth.flatten(), prediction.flatten(), SAMPLE_PERIOD)))
+    log('Energy per Day: {:}'.format(nm.get_Epd(ground_truth.flatten(), prediction.flatten(), SAMPLE_PERIOD)))
 
     # Save results.
-    savemains = test_set_x.flatten() * aggregate_std + aggregate_mean
+    savemains = test_set_x.flatten() * AGGREGATE_STD + AGGREGATE_MEAN
     savegt = ground_truth
     savepred = prediction.flatten()
 
-    if args.transfer:
-        save_name = args.save_results_dir + '/' + appliance_name + '/' + test_filename + '_transf_' + args.cnn
-    else:
-        save_name = args.save_results_dir + '/' + appliance_name + '/' + test_filename
+    save_name = args.save_results_dir + '/' + appliance_name + '/' + test_filename
     if not os.path.exists(save_name):
         os.makedirs(save_name)
 
