@@ -4,7 +4,7 @@ Continually sends the following over the serial port:
   RMS line voltage (one phase only)
   RMS current (both phases)
   Calculated real power (both phases)
-  Calcuated apparent power (both phases).
+  Calculated apparent power (both phases).
 
 Copyright (c) 2022 Lindo St. Angel
 
