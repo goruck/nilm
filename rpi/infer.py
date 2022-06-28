@@ -58,11 +58,6 @@ def infer(appliance, input, args):
         log(e, level='error')
         return np.NaN
 
-    # Expand input dimensions to match model InputLayer shape.
-    # Starting shape = (WINDOW_LENGTH,)
-    # Desired shape = (1, 1, WINDOW_LENGTH, 1)
-    input = input[np.newaxis, np.newaxis, :, np.newaxis]
-
     interpreter.allocate_tensors()
     input_details = interpreter.get_input_details()
     log(f'interpreter input details: {input_details}', level='debug')
@@ -192,6 +187,11 @@ if __name__ == '__main__':
                                 f'Running inference on windowed data...'
                             )
 
+                            # Expand input dimensions to match model InputLayer shape.
+                            # Starting shape = (WINDOW_LENGTH,)
+                            # Desired shape = (1, 1, WINDOW_LENGTH, 1)
+                            mains_power = np.expand_dims(mains_power, axis=(0, 1, 3))
+
                             # Run inference when enough samples are captured to fill a window.
                             # A single inference takes about 100 ms on this machine from cold start.
                             # This is much faster than sample period (default 8 s) so running
@@ -253,4 +253,4 @@ if __name__ == '__main__':
                         csv_writer.writerow(sample)
                         sample_num +=1
 
-                    time.sleep(0.01) # avoids maxing out cpu wating for Arduino data
+                    time.sleep(0.01) # avoids maxing out cpu waiting for Arduino data
