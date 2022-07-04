@@ -1,1 +1,1 @@
-# Placeholder for ml README.md
+# This folder contains all machine learning related code. See main README for more information. 

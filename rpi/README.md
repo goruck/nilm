@@ -1,1 +1,1 @@
-# placeholder readme for raspberry pi code
+# This folder contains all Raspberry Pi related code. See main README for more information. 

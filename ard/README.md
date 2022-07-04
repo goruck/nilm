@@ -1,1 +1,1 @@
-# placeholder readme for arduino firmare
+# This folder contains all Arduino related code. See main README for more information.

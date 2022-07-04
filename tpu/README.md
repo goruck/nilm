@@ -1,1 +1,1 @@
-# placeholder readme for Google Coral Edge TPU code
+# This folder contains all Google Coral Edge TPU related code. See main README for more information. 
