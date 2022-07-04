@@ -17,9 +17,9 @@ This Project will show you how NILM works by taking you through the steps I used
 The following first two diagrams illustrate the NILM concept and process steps at a high level. The last diagram shows my prototype system which is based on these concepts and is implemented using Arduino- and Raspberry Pi-based compute.
 
 
-![Alt text](./img/Screenshot%20from%202022-06-17%2019-26-30.png?raw=true "General NILM Concept (R. Gopinath, et al.¹)")
+![Alt text](./img/nilm-general-concept.png?raw=true "General NILM Concept (R. Gopinath, et al.¹)")
 
-![Alt text](./img/Screenshot%20from%202022-06-17%2019-24-15.png?raw=true "NILM Process Steps (R. Gopinath, et al.¹)")
+![Alt text](./img/nilm-scheme.png?raw=true "NILM Process Steps (R. Gopinath, et al.¹)")
 
 ![Alt text](./img/system-blk-dia.png?raw=true "NILM Prototype System Block Diagram")
 
@@ -39,7 +39,7 @@ I selected the seq2point learning approach for my prototype system and my implem
 
 There are a number of large-scale publicly available datasets specifically designed to address the NILM problem which were captured in household buildings from various countries. The table⁷ below shows several of the most widely used.
 
-![Alt text](./img/Screenshot%20from%202022-06-20%2004-56-13.png?raw=true "NILM Datasets (Oliver Parson, et al.⁷)")
+![Alt text](./img/nilm-datasets.png?raw=true "NILM Datasets (Oliver Parson, et al.⁷)")
 
 The datasets generally include many 10’s of millions of active power, reactive power, current, and voltage samples but with different sampling frequencies which requires you to pre-process the data before use. Most NILM algorithms utilize only active or apparent power data. Five appliances are usually considered for energy disaggregation research which are kettle, microwave, fridge, dish washer and washing machine. These are the appliances I considered for my prototype and following the work of Michele DIncecco, et al.⁵, I mainly focused on the REFIT⁸ data et but will eventually include UK-DALE and REDD.
 
@@ -110,9 +110,9 @@ The actual energy disaggregation computations are hosted on a Raspberry Pi 4 whi
 
 Typical disaggregated energy prediction results from my home are shown in the figures below using tflite models trained on another machine from the dataset as described above.
 
-![Alt text](./img/garage%20prediction%20results.png?raw=true "Garage Prediction Results")
+![Alt text](./img/garage-prediction-results.png?raw=true "Garage Prediction Results")
 
-![Alt text](./img/garage%20prediction%20zoomed.png?raw=true "Zoomed Garage Prediction Results")
+![Alt text](./img/garage-prediction-zoomed.png?raw=true "Zoomed Garage Prediction Results")
 
 No fine-tuning was done on local data. The horizontal axis is time measured by the number of eight-second samples (the sampling interval is eight seconds), which span about eight and half days in this case. The vertical axis is energy consumption in Watts. The top trace is total (both phases) mains apparent power. The following traces are the predicted energy for each appliance. Only a refrigerator and a microwave from the reference set of appliances were in use during this time although there were other devices supplied by the same sub-panel such as computers and heaters.
 
@@ -147,13 +147,13 @@ Please also see this project's companion Medium article [Energy Management Using
 
 A photograph of an early version of my prototype system is shown below.
 
-![Alt text](./img/early%20prototype.png?raw=true "Early Prototype")
+![Alt text](./img/early-prototype.png?raw=true "Early Prototype")
 
 ### Analog Signal Conditioning Schematic
 
 The schematic for the Analog Signal Conditioning circuitry is shown below.
 
-![Alt text](./img/analog%20signal%20conditioning.jpg?raw=true "Analog Signal Conditioning Schematic")
+![Alt text](./img/analog-signal-conditioning.jpg?raw=true "Analog Signal Conditioning Schematic")
 
 ### Model Training Results
 
