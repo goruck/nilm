@@ -3,7 +3,7 @@
 This folder contains material related to the interface between the electrical panel and the Arduino hardware interface. See main README for a general overview and below for additional details.
 
 ## Design Considerations
-[OpenEnergyMonitor](https://openenergymonitor.org/) in general was a great resource for this project and in particular the information found in [How to build an Arduino energy monitor - measuring mains voltage and current](https://learn.openenergymonitor.org/electricity-monitoring/ctac) was used to guilde the deisgn of this interface and the analog signal conditioning circuitry.
+[OpenEnergyMonitor](https://openenergymonitor.org/) in general was a great resource for this project and in particular the information found in [How to build an Arduino energy monitor - measuring mains voltage and current](https://learn.openenergymonitor.org/electricity-monitoring/ctac) was used to guide the design of this interface and the analog signal conditioning circuitry.
 
 There are two main parts to this interface:
 * An op-amp based circuit that buffers a bias line (AREF) from the Arduino that is used to set the midpoint of the voltages going into its analog-to-digital (ADC) converters.
