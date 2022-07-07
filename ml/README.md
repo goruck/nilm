@@ -2,7 +2,7 @@
 
 This folder contains most of the machine learning related code for training and testing the models. See main README for a general overview and the below for a brief description for each item in this folder.
 
-**dataset_management/** - Folder that contains various scripts for generating and visualizing REDD, REFIT, UKDALE and locally captured datasets. The generated data includes training, validation and test sets for training and testing the seq2point learnings models.
+**dataset_management/** - Folder that contains various scripts for generating and visualizing REDD, REFIT, UKDALE and locally captured datasets. The generated data includes training, validation and test sets for training and testing the seq2point deep learning models.
 
 **images/** - Folder that contains various visualizations and test results as image files.
 
