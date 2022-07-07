@@ -4,11 +4,11 @@ This folder contains most of the machine learning related code for training and 
 
 **dataset_management/** - Folder that contains various scripts for generating and visualizing REDD, REFIT, UKDALE and locally captured datasets. The generated data includes training, validation and test sets for training and testing the seq2point learnings models.
 
-**images** - Folder that contains various visualizations and test results as image files.
+**images/** - Folder that contains various visualizations and test results as image files.
 
-**models** - Folder that contains the fitted models per appliance with images of their loss curves.
+**models/** - Folder that contains the fitted models per appliance with images of their loss curves.
 
-**plots** - Folder that contains various scripts used in interpreting and visualizing the models. 
+**plots/** - Folder that contains various scripts used in interpreting and visualizing the models. 
 
 `cnn_model.py` - Deprecated and replaced by `define_models.py`.
 
