@@ -5,15 +5,13 @@ This folder contains material related to the interface between the electrical pa
 ## Design Considerations
 [OpenEnergyMonitor](https://openenergymonitor.org/) in general was a great resource for this project and in particular the information found in [How to build an Arduino energy monitor - measuring mains voltage and current](https://learn.openenergymonitor.org/electricity-monitoring/ctac) was used to guide the design of this interface and the analog signal conditioning circuitry.
 
-There are two main parts to this interface:
-* An op-amp based circuit that buffers a bias line (AREF) from the Arduino that is used to set the midpoint of the voltages going into its analog-to-digital (ADC) converters.
-* Voltage scaling and filtering RC circuits for each current phase and the mains voltage signals. Each signal is scaled to match the ADC range, level shifted to match the midpoint of the ADC range and bandlimited to prevent aliasing.
+The current sensing circuitry includes a variable gain stage that is controlled by an automatic gain loop running on the Arduino. 
 
 This subsystem was calibrated with an external power meter, yielding parameters which are used in the Arduino code that extracts the metrics used in downstream processing.
 
 ## Current Schematic
 
-![Alt text](../img/analog-signal-conditioning.jpg?raw=true "Analog Signal Conditioning Schematic")
+![Alt text](../img/pan-ard-inf-v1.1.jpg?raw=true "Analog Signal Conditioning Schematic")
 
 ## References
 
