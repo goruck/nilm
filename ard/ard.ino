@@ -1,27 +1,25 @@
-/*
-
-Continually sends the following over the serial port:
-  RMS line voltage (one phase only)
-  RMS current (both phases)
-  Calculated real power (both phases)
-  Calculated apparent power (both phases).
-
-Automatic gain control of the analog front end is done every sample period.
-
-Copyright (c) 2022 Lindo St. Angel
-
-*/
+//  Main NILM Arduino sketch.
+//
+//  Continually sends the following over the serial port:
+//    RMS line voltage (one phase only)
+//    RMS current (both phases)
+//    Calculated real power (both phases)
+//    Calculated apparent power (both phases).
+//
+//  Automatic gain control of the analog front end is done every sample period.
+//
+//  Copyright (c) 2022 Lindo St. Angel
 
 #include <Arduino.h>
 #include "emonLibCM.h"
 
-// Define MCU GPIOs for gain control bits
+// Define MCU GPIOs for gain control bits.
 #define CT1_G0 (byte) 42 // ATMEGA2560 pin 42 (PL7) - GPIO42 - CT1 GAIN0
 #define CT1_G1 (byte) 43 // ATMEGA2560 pin 41 (PL6) - GPIO43 - CT1 GAIN1
 #define CT2_G0 (byte) 49 // ATMEGA2560 pin 35 (PL0) - GPIO49 - CT2 GAIN0
 #define CT2_G1 (byte) 48 // ATMEGA2560 pin 36 (PL1) - GPIO48 - CT2 GAIN1
 
-// Define ADC channels
+// Define ADC channels.
 #define NUM_ADC_I_CHAN 2 // Number of ADC channels used for current sensing
 #define V_CHAN  (byte) 0 // Voltage sense
 #define I1_CHAN (byte) 1 // Current sense 1
@@ -54,16 +52,6 @@ Copyright (c) 2022 Lindo St. Angel
 #define UPPER_THRESHOLD (double) 0.95
 #define LOWER_THRESHOLD (double) 0.85
 
-// Define gain setters for analog front end.
-#define SET_LOW_GAIN(x) (digitalWrite(x.g1, LOW), digitalWrite(x.g0, LOW))    // -1.3
-#define SET_MID_GAIN(x) (digitalWrite(x.g1, LOW), digitalWrite(x.g0, HIGH))   // -10.2
-#define SET_HIGH_GAIN(x) (digitalWrite(x.g1, HIGH), digitalWrite(x.g0, HIGH)) // -63
-
-// Define gain getters for analog front end.
-#define GET_LOW_GAIN(x) ((digitalRead(x.g1) == LOW) && (digitalRead(x.g0) == LOW))
-#define GET_MID_GAIN(x) ((digitalRead(x.g1) == LOW) && (digitalRead(x.g0) == HIGH))
-#define GET_HIGH_GAIN(x) ((digitalRead(x.g1) == HIGH) && (digitalRead(x.g0) == HIGH))
-
 // Define current transformer gain control bit tuple
 typedef struct gainBits
 {
@@ -94,12 +82,60 @@ typedef struct agc
 } agcType;
 
 // Function prototypes.
-gainSettingType getGainSettings(gainBitsType gainCtrl);
-double getThreshold(gainSettingType gain, double voltage);
-void agc(agcType *agcData);
+gainSettingType GetGainSettings(gainBitsType gainCtrl);
+double GetThreshold(gainSettingType gain, double voltage);
+void AutomaticGainControl(agcType *agcData);
+inline void SetLowGain(gainBitsType gainCtrl);
+inline void SetMidGain(gainBitsType gainCtrl);
+inline void SetHighGain(gainBitsType gainCtrl);
+inline bool GetLowGain(gainBitsType gainCtrl);
+inline bool GetMidGain(gainBitsType gainCtrl);
+inline bool GetHighGain(gainBitsType gainCtrl);
+
+// Set analog gain to -1.3.
+inline void SetLowGain(gainBitsType gainCtrl)
+{
+  digitalWrite(gainCtrl.g1, LOW);
+  digitalWrite(gainCtrl.g0, LOW);
+  return;
+}
+
+// Set analog gain to -10.2.
+inline void SetMidGain(gainBitsType gainCtrl)
+{
+  digitalWrite(gainCtrl.g1, LOW);
+  digitalWrite(gainCtrl.g0, HIGH);
+  return;
+}
+
+// Set analog gain to -63.
+inline void SetHighGain(gainBitsType gainCtrl)
+{
+  digitalWrite(gainCtrl.g1, HIGH);
+  digitalWrite(gainCtrl.g0, HIGH);
+  return;
+}
+
+// Return true if analog gain is set to -1.3.
+inline bool GetLowGain(gainBitsType gainCtrl)
+{
+  return (digitalRead(gainCtrl.g1) == LOW) && (digitalRead(gainCtrl.g0) == LOW);
+}
+
+// Return true if analog gain is set to -10.2
+inline bool GetMidGain(gainBitsType gainCtrl)
+{
+  return (digitalRead(gainCtrl.g1) == LOW) && (digitalRead(gainCtrl.g0) == HIGH);
+}
+
+// Return true if analog gain is set to -63.
+inline bool GetHighGain(gainBitsType gainCtrl)
+{
+  return (digitalRead(gainCtrl.g1) == HIGH) && (digitalRead(gainCtrl.g0) == HIGH);
+}
 
 // Calculate threshold for switching analog front end gain.
-double getThreshold(gainSettingType gain, double voltage)
+double GetThreshold(gainSettingType gain, double voltage)
 {
   double threshold = CT_MAX * voltage; // Max Apparent Power = max mains Irms * mains Vrms
 
@@ -123,17 +159,17 @@ double getThreshold(gainSettingType gain, double voltage)
 }
 
 // Get current analog front end gain setings.
-gainSettingType getGainSettings(gainBitsType gainCtrl)
+gainSettingType GetGainSettings(gainBitsType gainCtrl)
 {
-  if (GET_LOW_GAIN(gainCtrl))
+  if (GetLowGain(gainCtrl))
   {
     return lowGain;
   }
-  else if (GET_MID_GAIN(gainCtrl))
+  else if (GetMidGain(gainCtrl))
   {
     return midGain;
   }
-  else if (GET_HIGH_GAIN(gainCtrl))
+  else if (GetHighGain(gainCtrl))
   {
     return highGain;
   }
@@ -143,17 +179,15 @@ gainSettingType getGainSettings(gainBitsType gainCtrl)
   }
 }
 
-/* Automatic gain control of analog front end.
-
-Apparent power is compared against a threshold to change gain.
-The threshold is set by the maximum apparent power of the current
-transformer and mains voltage. Before a new gain is applied, a check
-is done to ensure the ADC input is not overloaded. This would cause
-incorrect readings, potentially preventing agc loop closure. The current
-channels are recalibrated each time the gain is adjusted. 
-
-*/
-void agc(agcType *agcData)
+// Automatic gain control of analog front end.
+//
+// Apparent power is compared against a threshold to change gain.
+// The threshold is set by the maximum apparent power of the current
+// transformer and mains voltage. Before a new gain is applied, a check
+// is done to ensure the ADC input is not overloaded. This would cause
+// incorrect readings, potentially preventing agc loop closure. The current
+// channels are recalibrated each time the gain is adjusted. 
+void AutomaticGainControl(agcType *agcData)
 {
   double vADC;
   double ampCalLow, ampCalMid, ampCalHigh, phaseCal;
@@ -183,20 +217,20 @@ void agc(agcType *agcData)
     /* invalid */
   }
 
-  gain = getGainSettings(gainControl);
-  threshold = getThreshold(gain, agcData->vRMS);
+  gain = GetGainSettings(gainControl);
+  threshold = GetThreshold(gain, agcData->vRMS);
 
   if (agcData->apparentPower > threshold * UPPER_THRESHOLD)
   {
     // Decrement gains.
     if (gain == highGain)
     {
-      SET_MID_GAIN(gainControl);
+      SetMidGain(gainControl);
       EmonLibCM_ReCalibrate_IChannel(adcInput, ampCalMid, phaseCal);
     }
     else if (gain == midGain)
     {
-      SET_LOW_GAIN(gainControl);
+      SetLowGain(gainControl);
       EmonLibCM_ReCalibrate_IChannel(adcInput, ampCalLow, phaseCal);
     }
     else
@@ -210,7 +244,7 @@ void agc(agcType *agcData)
       vADC = agcData->iRMS / ampCalLow;   // approx rms voltage at ADC input
       if (vADC * -MID_GAIN < ADC_FS_VRMS) // validity check
       {
-        SET_MID_GAIN(gainControl);
+        SetMidGain(gainControl);
         EmonLibCM_ReCalibrate_IChannel(adcInput, ampCalMid, phaseCal);
       }
     }
@@ -219,7 +253,7 @@ void agc(agcType *agcData)
       vADC = agcData->iRMS / ampCalMid;     // approx rms voltage at ADC input
       if (vADC * -HIGH_GAIN < ADC_FS_VRMS)  // validity check
       {
-        SET_HIGH_GAIN(gainControl);
+        SetHighGain(gainControl);
         EmonLibCM_ReCalibrate_IChannel(adcInput, ampCalHigh, phaseCal);
       }
     }
@@ -237,8 +271,8 @@ void setup()
   pinMode(CT2_G1, OUTPUT);
 
   // Set initial analog front end gains.
-  SET_LOW_GAIN(ct1GainCtrl);
-  SET_LOW_GAIN(ct2GainCtrl);
+  SetLowGain(ct1GainCtrl);
+  SetLowGain(ct2GainCtrl);
 
   Serial.begin(115200);
 
