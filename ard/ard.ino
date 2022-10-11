@@ -119,19 +119,19 @@ inline void SetHighGain(gainBitsType gainCtrl)
 // Return true if analog gain is set to -1.3.
 inline bool GetLowGain(gainBitsType gainCtrl)
 {
-  return (digitalRead(gainCtrl.g1) == LOW) && (digitalRead(gainCtrl.g0) == LOW);
+  return ((digitalRead(gainCtrl.g1) == LOW) && (digitalRead(gainCtrl.g0) == LOW));
 }
 
 // Return true if analog gain is set to -10.2
 inline bool GetMidGain(gainBitsType gainCtrl)
 {
-  return (digitalRead(gainCtrl.g1) == LOW) && (digitalRead(gainCtrl.g0) == HIGH);
+  return ((digitalRead(gainCtrl.g1) == LOW) && (digitalRead(gainCtrl.g0) == HIGH));
 }
 
 // Return true if analog gain is set to -63.
 inline bool GetHighGain(gainBitsType gainCtrl)
 {
-  return (digitalRead(gainCtrl.g1) == HIGH) && (digitalRead(gainCtrl.g0) == HIGH);
+  return ((digitalRead(gainCtrl.g1) == HIGH) && (digitalRead(gainCtrl.g0) == HIGH));
 }
 
 // Calculate threshold for switching analog front end gain.
@@ -317,7 +317,7 @@ void loop()
       agcDataPtr->vRMS = vRMS;
       agcDataPtr->iRMS = iRMS;
       agcDataPtr->apparentPower = appPower;
-      agc(agcDataPtr);
+      AutomaticGainControl(agcDataPtr);
     }
 
     Serial.println(); // Outputs one sample.
