@@ -47,108 +47,103 @@
 #define I2_AMP_CAL_HIGH (double) 2.29
 #define I2_PH_CAL       (double) 4.2
 
-// Constants for determining thresholds to switch gains. 
-#define ADC_FS_VRMS (ADC_FS / (2.0 * sqrt(2.0))) // 0.905 Vrms
-#define UPPER_THRESHOLD (double) 0.95
-#define LOWER_THRESHOLD (double) 0.85
-
 // Define current transformer gain control bit tuple
-typedef struct gainBits
+typedef struct gain_tuple
 {
   int g1;
   int g0; // LSB
-} gainBitsType;
+} GainTuple;
 
 // Create a gain control tuple for each current transformer
-gainBitsType const ct1GainCtrl = {.g1 = CT1_G1, .g0 = CT1_G0};
-gainBitsType const ct2GainCtrl = {.g1 = CT2_G1, .g0 = CT2_G0};
+GainTuple constexpr kCt1GainCtrl = {.g1 = CT1_G1, .g0 = CT1_G0};
+GainTuple constexpr kCt2GainCtrl = {.g1 = CT2_G1, .g0 = CT2_G0};
 
 // Analog front end gain settings.
-typedef enum gainSettings
+typedef enum gain_settings
 {
-  lowGain,
-  midGain,
-  highGain,
-  invalidGain
-} gainSettingType;
+  kLowGain,
+  kMidGain,
+  kHighGain,
+  kInvalidGain
+} GainSettings;
 
 // AGC inputs.
-typedef struct agc
+typedef struct agc_params
 {
   byte channel;
   double vRMS;
   double iRMS;
   double apparentPower;
-} agcType;
+} AgcParams;
 
 // Function prototypes.
-gainSettingType GetGainSettings(gainBitsType gainCtrl);
-double GetThreshold(gainSettingType gain, double voltage);
-void AutomaticGainControl(agcType *agcData);
-inline void SetLowGain(gainBitsType gainCtrl);
-inline void SetMidGain(gainBitsType gainCtrl);
-inline void SetHighGain(gainBitsType gainCtrl);
-inline bool GetLowGain(gainBitsType gainCtrl);
-inline bool GetMidGain(gainBitsType gainCtrl);
-inline bool GetHighGain(gainBitsType gainCtrl);
+GainSettings GetGainSettings(GainTuple gainCtrl);
+double GetThreshold(GainSettings gain, double voltage);
+void AutomaticGainControl(AgcParams *agcData);
+inline void SetLowGain(GainTuple gainCtrl);
+inline void SetMidGain(GainTuple gainCtrl);
+inline void SetHighGain(GainTuple gainCtrl);
+inline bool GetLowGain(GainTuple gainCtrl);
+inline bool GetMidGain(GainTuple gainCtrl);
+inline bool GetHighGain(GainTuple gainCtrl);
 
-// Set analog gain to -1.3.
-inline void SetLowGain(gainBitsType gainCtrl)
+// Set analog gain to low.
+inline void SetLowGain(GainTuple gainCtrl)
 {
   digitalWrite(gainCtrl.g1, LOW);
   digitalWrite(gainCtrl.g0, LOW);
   return;
 }
 
-// Set analog gain to -10.2.
-inline void SetMidGain(gainBitsType gainCtrl)
+// Set analog gain to mid.
+inline void SetMidGain(GainTuple gainCtrl)
 {
   digitalWrite(gainCtrl.g1, LOW);
   digitalWrite(gainCtrl.g0, HIGH);
   return;
 }
 
-// Set analog gain to -63.
-inline void SetHighGain(gainBitsType gainCtrl)
+// Set analog gain to high.
+inline void SetHighGain(GainTuple gainCtrl)
 {
   digitalWrite(gainCtrl.g1, HIGH);
   digitalWrite(gainCtrl.g0, HIGH);
   return;
 }
 
-// Return true if analog gain is set to -1.3.
-inline bool GetLowGain(gainBitsType gainCtrl)
+// Return true if analog gain is set to low.
+inline bool GetLowGain(GainTuple gainCtrl)
 {
   return ((digitalRead(gainCtrl.g1) == LOW) && (digitalRead(gainCtrl.g0) == LOW));
 }
 
-// Return true if analog gain is set to -10.2
-inline bool GetMidGain(gainBitsType gainCtrl)
+// Return true if analog gain is set to mid.
+inline bool GetMidGain(GainTuple gainCtrl)
 {
   return ((digitalRead(gainCtrl.g1) == LOW) && (digitalRead(gainCtrl.g0) == HIGH));
 }
 
-// Return true if analog gain is set to -63.
-inline bool GetHighGain(gainBitsType gainCtrl)
+// Return true if analog gain is set to high.
+inline bool GetHighGain(GainTuple gainCtrl)
 {
   return ((digitalRead(gainCtrl.g1) == HIGH) && (digitalRead(gainCtrl.g0) == HIGH));
 }
 
 // Calculate threshold for switching analog front end gain.
-double GetThreshold(gainSettingType gain, double voltage)
+double GetThreshold(GainSettings gain, double voltage)
 {
   double threshold = CT_MAX * voltage; // Max Apparent Power = max mains Irms * mains Vrms
 
   // Adjust for analog front end gain. 
   switch (gain)
   {
-  case lowGain:
+  case kLowGain:
     threshold /= -LOW_GAIN;
     break;
-  case midGain:
+  case kMidGain:
     threshold /= -MID_GAIN;
     break;
-  case highGain:
+  case kHighGain:
     threshold /= -HIGH_GAIN;
     break;
   default:
@@ -159,23 +154,23 @@ double GetThreshold(gainSettingType gain, double voltage)
 }
 
 // Get current analog front end gain setings.
-gainSettingType GetGainSettings(gainBitsType gainCtrl)
+GainSettings GetGainSettings(GainTuple gainCtrl)
 {
   if (GetLowGain(gainCtrl))
   {
-    return lowGain;
+    return kLowGain;
   }
   else if (GetMidGain(gainCtrl))
   {
-    return midGain;
+    return kMidGain;
   }
   else if (GetHighGain(gainCtrl))
   {
-    return highGain;
+    return kHighGain;
   }
   else
   {
-    return invalidGain;
+    return kInvalidGain;
   }
 }
 
@@ -187,14 +182,21 @@ gainSettingType GetGainSettings(gainBitsType gainCtrl)
 // is done to ensure the ADC input is not overloaded. This would cause
 // incorrect readings, potentially preventing agc loop closure. The current
 // channels are recalibrated each time the gain is adjusted. 
-void AutomaticGainControl(agcType *agcData)
+void AutomaticGainControl(AgcParams *agcData)
 {
   double vADC;
   double ampCalLow, ampCalMid, ampCalHigh, phaseCal;
   double threshold;
-  gainBitsType gainControl;
-  gainSettingType gain;
+  GainTuple gainControl;
+  GainSettings gain;
   byte adcInput = agcData->channel + 1;
+
+  // ADC full scale RMS voltage, 0.905 Vrms @2.56V FS.
+  double constexpr kAdcFsVrms (ADC_FS / 2.828427125);
+
+  // Threshold scale factors for switching analog gain settings.
+  double const kUpperThreshold = 0.95;
+  double const kLowerThreshold = 0.85;
 
   if (adcInput == I1_CHAN)
   {
@@ -202,7 +204,7 @@ void AutomaticGainControl(agcType *agcData)
     ampCalMid = I1_AMP_CAL_MID;
     ampCalHigh = I1_AMP_CAL_HIGH;
     phaseCal = I1_PH_CAL;
-    gainControl = ct1GainCtrl;
+    gainControl = kCt1GainCtrl;
   }
   else if (adcInput == I2_CHAN)
   {
@@ -210,7 +212,7 @@ void AutomaticGainControl(agcType *agcData)
     ampCalMid = I2_AMP_CAL_MID;
     ampCalHigh = I2_AMP_CAL_HIGH;
     phaseCal = I2_PH_CAL;
-    gainControl = ct2GainCtrl;
+    gainControl = kCt2GainCtrl;
   }
   else
   {
@@ -220,15 +222,15 @@ void AutomaticGainControl(agcType *agcData)
   gain = GetGainSettings(gainControl);
   threshold = GetThreshold(gain, agcData->vRMS);
 
-  if (agcData->apparentPower > threshold * UPPER_THRESHOLD)
+  if (agcData->apparentPower > threshold * kUpperThreshold)
   {
     // Decrement gains.
-    if (gain == highGain)
+    if (gain == kHighGain)
     {
       SetMidGain(gainControl);
       EmonLibCM_ReCalibrate_IChannel(adcInput, ampCalMid, phaseCal);
     }
-    else if (gain == midGain)
+    else if (gain == kMidGain)
     {
       SetLowGain(gainControl);
       EmonLibCM_ReCalibrate_IChannel(adcInput, ampCalLow, phaseCal);
@@ -236,22 +238,22 @@ void AutomaticGainControl(agcType *agcData)
     else
     {/* already at low gain, do nothing */}
   }
-  else if (agcData->apparentPower < threshold * LOWER_THRESHOLD)
+  else if (agcData->apparentPower < threshold * kLowerThreshold)
   {
     // Increment gains.
-    if (gain == lowGain)
+    if (gain == kLowGain)
     {
       vADC = agcData->iRMS / ampCalLow;   // approx rms voltage at ADC input
-      if (vADC * -MID_GAIN < ADC_FS_VRMS) // validity check
+      if (vADC * -MID_GAIN < kAdcFsVrms)  // validity check
       {
         SetMidGain(gainControl);
         EmonLibCM_ReCalibrate_IChannel(adcInput, ampCalMid, phaseCal);
       }
     }
-    else if (gain == midGain)
+    else if (gain == kMidGain)
     {
-      vADC = agcData->iRMS / ampCalMid;     // approx rms voltage at ADC input
-      if (vADC * -HIGH_GAIN < ADC_FS_VRMS)  // validity check
+      vADC = agcData->iRMS / ampCalMid;   // approx rms voltage at ADC input
+      if (vADC * -HIGH_GAIN < kAdcFsVrms) // validity check
       {
         SetHighGain(gainControl);
         EmonLibCM_ReCalibrate_IChannel(adcInput, ampCalHigh, phaseCal);
@@ -271,8 +273,8 @@ void setup()
   pinMode(CT2_G1, OUTPUT);
 
   // Set initial analog front end gains.
-  SetLowGain(ct1GainCtrl);
-  SetLowGain(ct2GainCtrl);
+  SetLowGain(kCt1GainCtrl);
+  SetLowGain(kCt2GainCtrl);
 
   Serial.begin(115200);
 
@@ -292,8 +294,8 @@ void setup()
 
 void loop()
 {
-  agcType agcData;
-  agcType *agcDataPtr = &agcData;
+  AgcParams agcData;
+  AgcParams *agcDataPtr = &agcData;
   double iRMS, vRMS;
   double appPower;
 
