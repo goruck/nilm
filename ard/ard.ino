@@ -14,38 +14,38 @@
 #include "emonLibCM.h"
 
 // Define MCU GPIOs for gain control bits.
-const byte kCt1G0 = 42; // ATMEGA2560 pin 42 (PL7) - GPIO42 - CT1 GAIN0
-const byte kCt1G1 = 43; // ATMEGA2560 pin 41 (PL6) - GPIO43 - CT1 GAIN1
-const byte kCt2G0 = 49; // ATMEGA2560 pin 35 (PL0) - GPIO49 - CT2 GAIN0
-const byte kCt2G1 = 48; // ATMEGA2560 pin 36 (PL1) - GPIO48 - CT2 GAIN1
+constexpr byte kCt1G0 = 42; // ATMEGA2560 pin 42 (PL7) - GPIO42 - CT1 GAIN0
+constexpr byte kCt1G1 = 43; // ATMEGA2560 pin 41 (PL6) - GPIO43 - CT1 GAIN1
+constexpr byte kCt2G0 = 49; // ATMEGA2560 pin 35 (PL0) - GPIO49 - CT2 GAIN0
+constexpr byte kCt2G1 = 48; // ATMEGA2560 pin 36 (PL1) - GPIO48 - CT2 GAIN1
 
-// Define ADC channels.
-#define NUM_ADC_I_CHAN 2 // Number of ADC channels used for current sensing
-#define V_CHAN  (byte) 0 // Voltage sense
-#define I1_CHAN (byte) 1 // Current sense 1
-#define I2_CHAN (byte) 2 // Current sense 2
+// ADC channel to signal sense mapping.
+constexpr byte kVChan = 0;       // Voltage sense
+constexpr byte kNumAdcIChan = 2; // #ADC channels for current sensing
+constexpr byte kI1Chan = 1;      // Current sense 1
+constexpr byte kI2Chan = 2;      // Current sense 2
 
 // Set ADC full scale range to 2.56 Volts.
-#define ADC_FS (double) 2.56
+constexpr double kAdcFs = 2.56;
 
 // Analog front end gains.
-#define LOW_GAIN  (double) -1.3
-#define MID_GAIN  (double) -10.2
-#define HIGH_GAIN (double) -63.0
+constexpr double kLowGain = -1.3;
+constexpr double kMidGain = -10.2;
+constexpr double kHighGain = -63.0;
 
 // Define current transformer max reading. 
-#define CT_MAX (double) 100 // 100 Amps rms.
+constexpr double kCtMax = 100.0; // 100 Amps rms.
 
 // Define calibration constants for Emon lib power calculations. 
-#define V_AMP_CAL       (double) 180.0
-#define I1_AMP_CAL_LOW  (double) 110.9
-#define I1_AMP_CAL_MID  (double) 14.0
-#define I1_AMP_CAL_HIGH (double) 2.29
-#define I1_PH_CAL       (double) 4.6
-#define I2_AMP_CAL_LOW  (double) 110.9 // was 144.0
-#define I2_AMP_CAL_MID  (double) 14.0
-#define I2_AMP_CAL_HIGH (double) 2.29
-#define I2_PH_CAL       (double) 4.2
+constexpr double kVAmpCal = 180.0;
+constexpr double kI1AmpCalLow = 110.9;
+constexpr double kI1AmpCalMid = 14.0;
+constexpr double kI1AmpCalHigh = 2.29;
+constexpr double kI1PhCal = 4.6;
+constexpr double kI2AmpCalLow = 110.9; // was 144.0
+constexpr double kI2AmpCalMid = 14.0;
+constexpr double kI2AmpCalHigh = 2.29;
+constexpr double kI2PhCal = 4.2;
 
 // Define current transformer gain control bit tuple
 typedef struct gain_tuple
@@ -58,14 +58,14 @@ typedef struct gain_tuple
 GainTuple constexpr kCt1GainCtrl = {.g1 = kCt1G1, .g0 = kCt1G0};
 GainTuple constexpr kCt2GainCtrl = {.g1 = kCt2G1, .g0 = kCt2G0};
 
-// Analog front end gain settings.
-typedef enum gain_settings
+// Analog front end gain states.
+typedef enum gain_states
 {
-  kLowGain,
-  kMidGain,
-  kHighGain,
-  kInvalidGain
-} GainSettings;
+  kLow,
+  kMid,
+  kHigh,
+  kInvalid
+} GainState;
 
 // AGC inputs.
 typedef struct agc_params
@@ -77,8 +77,8 @@ typedef struct agc_params
 } AgcParams;
 
 // Function prototypes.
-GainSettings GetGainSettings(GainTuple gain_control);
-double GetThreshold(GainSettings gain, double voltage);
+GainState GetGainState(GainTuple gain_control);
+double GetThreshold(GainState gain_state, double voltage);
 void AutomaticGainControl(AgcParams *agcData);
 inline void SetLowGain(GainTuple gain_control);
 inline void SetMidGain(GainTuple gain_control);
@@ -130,21 +130,21 @@ inline bool GetHighGain(GainTuple gain_control)
 }
 
 // Calculate threshold for switching analog front end gain.
-double GetThreshold(GainSettings gain, double voltage)
+double GetThreshold(GainState gain_state, double voltage)
 {
-  double threshold = CT_MAX * voltage; // Max Apparent Power = max mains Irms * mains Vrms
+  double threshold = kCtMax * voltage; // Max Apparent Power = max mains Irms * mains Vrms
 
   // Adjust for analog front end gain. 
-  switch (gain)
+  switch (gain_state)
   {
-  case kLowGain:
-    threshold /= -LOW_GAIN;
+  case kLow:
+    threshold /= -kLowGain;
     break;
-  case kMidGain:
-    threshold /= -MID_GAIN;
+  case kMid:
+    threshold /= -kMidGain;
     break;
-  case kHighGain:
-    threshold /= -HIGH_GAIN;
+  case kHigh:
+    threshold /= -kHighGain;
     break;
   default:
     break;
@@ -154,23 +154,23 @@ double GetThreshold(GainSettings gain, double voltage)
 }
 
 // Get current analog front end gain setings.
-GainSettings GetGainSettings(GainTuple gain_control)
+GainState GetGainSettings(GainTuple gain_control)
 {
   if (GetLowGain(gain_control))
   {
-    return kLowGain;
+    return kLow;
   }
   else if (GetMidGain(gain_control))
   {
-    return kMidGain;
+    return kMid;
   }
   else if (GetHighGain(gain_control))
   {
-    return kHighGain;
+    return kHigh;
   }
   else
   {
-    return kInvalidGain;
+    return kInvalid;
   }
 }
 
@@ -188,49 +188,45 @@ void AutomaticGainControl(AgcParams *AgcData)
   double amp_cal_low, amp_cal_mid, amp_cal_high, phase_cal;
   double threshold;
   GainTuple gain_control;
-  GainSettings gain;
+  GainState gain_state;
   byte adc_input = AgcData->channel + 1;
 
   // ADC full scale RMS voltage, 0.905 Vrms @2.56V FS.
-  double constexpr kAdcFsVrms (ADC_FS / 2.828427125);
+  double constexpr kAdcFsVrms = kAdcFs / 2.828427125;
 
   // Threshold scale factors for switching analog gain settings.
-  double const kUpperThreshold = 0.95;
-  double const kLowerThreshold = 0.85;
+  double constexpr kUpperThreshold = 0.95;
+  double constexpr kLowerThreshold = 0.85;
 
-  if (adc_input == I1_CHAN)
+  if (adc_input == kI1Chan)
   {
-    amp_cal_low = I1_AMP_CAL_LOW;
-    amp_cal_mid = I1_AMP_CAL_MID;
-    amp_cal_high = I1_AMP_CAL_HIGH;
-    phase_cal = I1_PH_CAL;
+    amp_cal_low = kI1AmpCalLow;
+    amp_cal_mid = kI1AmpCalMid;
+    amp_cal_high = kI1AmpCalHigh;
+    phase_cal = kI1PhCal;
     gain_control = kCt1GainCtrl;
   }
-  else if (adc_input == I2_CHAN)
+  else if (adc_input == kI2Chan)
   {
-    amp_cal_low = I2_AMP_CAL_LOW;
-    amp_cal_mid = I2_AMP_CAL_MID;
-    amp_cal_high = I2_AMP_CAL_HIGH;
-    phase_cal = I2_PH_CAL;
+    amp_cal_low = kI2AmpCalLow;
+    amp_cal_mid = kI2AmpCalMid;
+    amp_cal_high = kI2AmpCalHigh;
+    phase_cal = kI2PhCal;
     gain_control = kCt2GainCtrl;
   }
-  else
-  {
-    /* invalid */
-  }
 
-  gain = GetGainSettings(gain_control);
-  threshold = GetThreshold(gain, AgcData->v_rms);
+  gain_state = GetGainSettings(gain_control);
+  threshold = GetThreshold(gain_state, AgcData->v_rms);
 
   if (AgcData->apparent_power > threshold * kUpperThreshold)
   {
     // Decrement gains.
-    if (gain == kHighGain)
+    if (gain_state == kHigh)
     {
       SetMidGain(gain_control);
       EmonLibCM_ReCalibrate_IChannel(adc_input, amp_cal_mid, phase_cal);
     }
-    else if (gain == kMidGain)
+    else if (gain_state == kMid)
     {
       SetLowGain(gain_control);
       EmonLibCM_ReCalibrate_IChannel(adc_input, amp_cal_low, phase_cal);
@@ -241,19 +237,19 @@ void AutomaticGainControl(AgcParams *AgcData)
   else if (AgcData->apparent_power < threshold * kLowerThreshold)
   {
     // Increment gains.
-    if (gain == kLowGain)
+    if (gain_state == kLow)
     {
-      v_adc = AgcData->i_rms / amp_cal_low;   // approx rms voltage at ADC input
-      if (v_adc * -MID_GAIN < kAdcFsVrms)  // validity check
+      v_adc = AgcData->i_rms / amp_cal_low; // approx rms voltage at ADC input
+      if (v_adc * -kMidGain < kAdcFsVrms)   // validity check
       {
         SetMidGain(gain_control);
         EmonLibCM_ReCalibrate_IChannel(adc_input, amp_cal_mid, phase_cal);
       }
     }
-    else if (gain == kMidGain)
+    else if (gain_state == kMid)
     {
-      v_adc = AgcData->i_rms / amp_cal_mid;   // approx rms voltage at ADC input
-      if (v_adc * -HIGH_GAIN < kAdcFsVrms) // validity check
+      v_adc = AgcData->i_rms / amp_cal_mid; // approx rms voltage at ADC input
+      if (v_adc * -kHighGain < kAdcFsVrms)  // validity check
       {
         SetHighGain(gain_control);
         EmonLibCM_ReCalibrate_IChannel(adc_input, amp_cal_high, phase_cal);
@@ -266,6 +262,9 @@ void AutomaticGainControl(AgcParams *AgcData)
 
 void setup()
 {
+  constexpr unsigned int kLineFreq = 60; // AC line frequency in Hz
+  constexpr float kDataLogPeriod = 8.0;  // Interval in seconds over which data is reported
+
   // Set GPIOs as outputs.
   pinMode(kCt1G0, OUTPUT);
   pinMode(kCt1G1, OUTPUT);
@@ -278,18 +277,14 @@ void setup()
 
   Serial.begin(115200);
 
-  EmonLibCM_SetADC_VChannel(V_CHAN, V_AMP_CAL);                   // ADC Input channel, voltage calibration
-  EmonLibCM_SetADC_IChannel(I1_CHAN, I1_AMP_CAL_LOW, I1_PH_CAL);  // ADC Input channel, current calibration, phase calibration
-  EmonLibCM_SetADC_IChannel(I2_CHAN, I2_AMP_CAL_LOW, I2_PH_CAL);  // The current channels will be read in this order
-
-  EmonLibCM_setADC_VRef(INTERNAL2V56);                            // ADC Reference voltage (set to 2.56V)
-  EmonLibCM_ADCCal(ADC_FS);                                       // ADC Cal voltage (set to 2.56V)
-  
-  EmonLibCM_cycles_per_second(60);                                // Line frequency (set to 60 Hz)
-
-  EmonLibCM_datalog_period(8.0);                                  // Interval over which stats are reported (in secs)
-
-  EmonLibCM_Init();                                               // Start continuous monitoring
+  EmonLibCM_SetADC_VChannel(kVChan, kVAmpCal);                // ADC Input channel, voltage calibration
+  EmonLibCM_SetADC_IChannel(kI1Chan, kI1AmpCalLow, kI1PhCal); // ADC Input channel, current calibration, phase calibration
+  EmonLibCM_SetADC_IChannel(kI2Chan, kI2AmpCalLow, kI2PhCal); // The current channels will be read in this order
+  EmonLibCM_setADC_VRef(INTERNAL2V56);                        // ADC Reference voltage (set to 2.56V)
+  EmonLibCM_ADCCal(kAdcFs);                                   // ADC Cal voltage (set to 2.56V)
+  EmonLibCM_cycles_per_second(kLineFreq);
+  EmonLibCM_datalog_period(kDataLogPeriod);
+  EmonLibCM_Init();                                           // Start continuous monitoring
 }
 
 void loop()
@@ -304,7 +299,7 @@ void loop()
     v_rms = EmonLibCM_getVrms();
     Serial.print(v_rms);Serial.print(",");
 
-    for (size_t i = 0; i < NUM_ADC_I_CHAN; i++)
+    for (size_t i = 0; i < kNumAdcIChan; i++)
     {
       i_rms = EmonLibCM_getIrms(i);
       apparent_power = EmonLibCM_getApparentPower(i);
@@ -312,7 +307,7 @@ void loop()
       Serial.print(i_rms,3);Serial.print(",");
       Serial.print(EmonLibCM_getRealPower(i));Serial.print(",");
       Serial.print(apparent_power);
-      if (i < NUM_ADC_I_CHAN - 1) Serial.print(",");
+      if (i < kNumAdcIChan - 1) Serial.print(",");
 
       // Run automatic gain control of analog front end.
       AgcDataPtr->channel = i;
