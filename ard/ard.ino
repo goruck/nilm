@@ -59,7 +59,7 @@ GainTuple constexpr kCt1GainCtrl = {.g1 = kCt1G1, .g0 = kCt1G0};
 GainTuple constexpr kCt2GainCtrl = {.g1 = kCt2G1, .g0 = kCt2G0};
 
 // Analog front end gain states.
-typedef enum gain_states
+typedef enum gain_state
 {
   kLow,
   kMid,
@@ -75,17 +75,6 @@ typedef struct agc_params
   double i_rms;
   double apparent_power;
 } AgcParams;
-
-// Function prototypes.
-GainState GetGainState(GainTuple gain_control);
-double GetThreshold(GainState gain_state, double voltage);
-void AutomaticGainControl(AgcParams *agcData);
-inline void SetLowGain(GainTuple gain_control);
-inline void SetMidGain(GainTuple gain_control);
-inline void SetHighGain(GainTuple gain_control);
-inline bool GetLowGain(GainTuple gain_control);
-inline bool GetMidGain(GainTuple gain_control);
-inline bool GetHighGain(GainTuple gain_control);
 
 // Set analog gain to low.
 inline void SetLowGain(GainTuple gain_control)
@@ -114,19 +103,19 @@ inline void SetHighGain(GainTuple gain_control)
 // Return true if analog gain is set to low.
 inline bool GetLowGain(GainTuple gain_control)
 {
-  return ((digitalRead(gain_control.g1) == LOW) && (digitalRead(gain_control.g0) == LOW));
+  return (digitalRead(gain_control.g1) == LOW) && (digitalRead(gain_control.g0) == LOW);
 }
 
 // Return true if analog gain is set to mid.
 inline bool GetMidGain(GainTuple gain_control)
 {
-  return ((digitalRead(gain_control.g1) == LOW) && (digitalRead(gain_control.g0) == HIGH));
+  return (digitalRead(gain_control.g1) == LOW) && (digitalRead(gain_control.g0) == HIGH);
 }
 
 // Return true if analog gain is set to high.
 inline bool GetHighGain(GainTuple gain_control)
 {
-  return ((digitalRead(gain_control.g1) == HIGH) && (digitalRead(gain_control.g0) == HIGH));
+  return (digitalRead(gain_control.g1) == HIGH) && (digitalRead(gain_control.g0) == HIGH);
 }
 
 // Calculate threshold for switching analog front end gain.
@@ -191,7 +180,8 @@ void AutomaticGainControl(AgcParams *AgcData)
   GainState gain_state;
   byte adc_input = AgcData->channel + 1;
 
-  // ADC full scale RMS voltage, 0.905 Vrms @2.56V FS.
+  // Compute ADC full scale RMS voltage, 0.905 Vrms @2.56V FS.
+  // NB: This is an approximation since waveforms are not pure sinusoids.
   double constexpr kAdcFsVrms = kAdcFs / 2.828427125;
 
   // Threshold scale factors for switching analog gain settings.
@@ -265,7 +255,7 @@ void setup()
   constexpr unsigned int kLineFreq = 60; // AC line frequency in Hz
   constexpr float kDataLogPeriod = 8.0;  // Interval in seconds over which data is reported
 
-  // Set GPIOs as outputs.
+  // Set GPIOs as outputs to control analog front end gain.
   pinMode(kCt1G0, OUTPUT);
   pinMode(kCt1G1, OUTPUT);
   pinMode(kCt2G0, OUTPUT);
@@ -277,6 +267,7 @@ void setup()
 
   Serial.begin(115200);
 
+  // Configure Emon lib.
   EmonLibCM_SetADC_VChannel(kVChan, kVAmpCal);                // ADC Input channel, voltage calibration
   EmonLibCM_SetADC_IChannel(kI1Chan, kI1AmpCalLow, kI1PhCal); // ADC Input channel, current calibration, phase calibration
   EmonLibCM_SetADC_IChannel(kI2Chan, kI2AmpCalLow, kI2PhCal); // The current channels will be read in this order
