@@ -98,7 +98,7 @@ I built a NILM prototype at my home to test the energy disaggregation algorithms
 
 ### Analog Signal Conditioning
 
-I used two clip-on current transformers in one of the home’s sub-panels to sense the current flowing through each of split voltage phases and a voltage transformer plugged into an outlet near the circuit breaker panel that provides the voltage of one of the phases. These signals are level-shifted, amplified and low-passed filtered by this subsystem before being passed on to the analog-to-digital converters inside an Arduino MEGA 2560 that performs aggregate metrics computation. You can see a schematic for the Analog Signal Conditioning Subsystem in the Appendix.
+I used two clip-on current transformers in one of the home’s sub-panels to sense the current flowing through each of split voltage phases and a voltage transformer plugged into an outlet near the circuit breaker panel that provides the voltage of one of the phases. These signals are level-shifted, amplified and low-passed filtered by this subsystem before being passed on to the analog-to-digital converters inside an Arduino MEGA 2560 that performs aggregate metrics computation. You can see a schematic for the Analog Signal Conditioning Subsystem in the Appendix and find more details in the [Panel to Arduino section](./pan-ard-inf/README.md).
 
 ### Aggregate Metrics Computation
 
@@ -153,7 +153,7 @@ A photograph of an early version of my prototype system is shown below.
 
 The schematic for the Analog Signal Conditioning circuitry is shown below.
 
-![Alt text](./img/analog-signal-conditioning.jpg?raw=true "Analog Signal Conditioning Schematic")
+![Alt text](./img/pan-ard-inf-v1.1.jpg?raw=true "Analog Signal Conditioning Schematic")
 
 ### Model Training Results
 
