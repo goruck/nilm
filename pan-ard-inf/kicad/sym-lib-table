@@ -1,0 +1,4 @@
+(sym_lib_table
+  (lib (name "RASM722X")(type "KiCad")(uri "${KIPRJMOD}/RASM722X/RASM722X.kicad_sym")(options "")(descr "barrel connector"))
+  (lib (name "SJ1-3534N")(type "KiCad")(uri "${KIPRJMOD}/SJ1-3534N/SJ1-3534N.kicad_sym")(options "")(descr ""))
+)

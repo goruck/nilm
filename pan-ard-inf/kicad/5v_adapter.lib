@@ -1,0 +1,8 @@
+* 5V ac adapter ideal model
+.SUBCKT 5v_adapter 1 2 3 4
+RS 1 5 1
+RI 2 4 100MEG
+L1 2 5 11520
+L2 3 4 20
+K L1 L2 0.99999
+.ENDS 5v_adapter

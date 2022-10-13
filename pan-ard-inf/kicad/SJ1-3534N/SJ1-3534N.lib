@@ -1,0 +1,47 @@
+EESchema-LIBRARY Version 2.3
+#encoding utf-8
+#(c) SnapEDA 2016 (snapeda.com)
+#This work is licensed under a Creative Commons Attribution-ShareAlike 4.0 International License (CC BY-SA) with Design Exception 1.0
+#
+# SJ1-3534N
+#
+DEF SJ1-3534N J 0 40 Y N 1 L N
+F0 "J" -400 300 50 H V L BNN
+F1 "SJ1-3534N" -401 -501 50 H V L BNN
+F2 "CUI_SJ1-3534N" 0 0 50 H I L BNN
+F3 "" 0 0 50 H I L BNN
+F4 "Unavailable" 0 0 50 H I L BNN "AVAILABILITY"
+F5 "None" 0 0 50 H I L BNN "PACKAGE"
+F6 "SJ1-3534N" 0 0 50 H I L BNN "MP"
+F7 "None" 0 0 50 H I L BNN "PRICE"
+F8 "https://www.cuidevices.com/product/interconnect/connectors/audio-connectors/jacks/sj1-353xn-series?utm_source=snapeda.com&utm_medium=referral&utm_campaign=snapedaBOM" 0 0 50 H I L BNN "CUI_PURCHASE_URL"
+F9 "3.5 mm, Stereo, Right Angle, Through Hole, Audio Jack Connector" 0 0 50 H I L BNN "DESCRIPTION"
+F10 "CUI Devices" 0 0 50 H I L BNN "MF"
+DRAW
+P 2 0 0 10 400 -300 400 200 N
+P 2 0 0 6 400 100 -250 100 N
+P 2 0 0 6 -250 100 -250 50 N
+P 2 0 0 6 -250 50 -225 50 N
+P 2 0 0 6 -225 50 -225 -175 N
+P 2 0 0 6 -225 -175 -275 -175 N
+P 2 0 0 6 -275 -175 -275 50 N
+P 2 0 0 6 -275 50 -250 50 N
+P 2 0 0 6 400 0 -75 0 N
+P 2 0 0 6 -75 0 -125 -50 N
+P 2 0 0 6 -125 -50 -175 0 N
+P 2 0 0 6 400 -200 125 -200 N
+P 2 0 0 6 125 -200 0 -200 N
+P 2 0 0 6 0 -200 -50 -150 N
+P 2 0 0 6 -50 -150 -100 -200 N
+P 2 0 0 6 400 -100 125 -100 N
+P 2 0 0 6 125 -100 125 -200 N
+P 4 0 0 6 125 -200 100 -150 150 -150 125 -200 f
+S -400 -300 400 200 0 0 10 f
+X ~ 1 600 100 200 L 40 40 0 0 P 
+X ~ 2 600 -200 200 L 40 40 0 0 P 
+X ~ 3 600 0 200 L 40 40 0 0 P 
+X ~ 4 600 -100 200 L 40 40 0 0 P 
+ENDDRAW
+ENDDEF
+#
+# End Library

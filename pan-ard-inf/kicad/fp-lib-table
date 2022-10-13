@@ -1,0 +1,7 @@
+(fp_lib_table
+  (lib (name "Arduino_MountingHole")(type "KiCad")(uri "${KICAD6_TEMPLATE_DIR}/Arduino_Mega/Arduino_MountingHole.pretty")(options "")(descr ""))
+  (lib (name "RASM722X")(type "KiCad")(uri "${KIPRJMOD}/RASM722X/")(options "")(descr ""))
+  (lib (name "PJ-037A")(type "KiCad")(uri "${KIPRJMOD}/PJ-037A")(options "")(descr ""))
+  (lib (name "SJ1-3534N")(type "KiCad")(uri "${KIPRJMOD}/SJ1-3534N")(options "")(descr ""))
+  (lib (name "PJ-037B")(type "KiCad")(uri "${KIPRJMOD}/PJ-037B")(options "")(descr ""))
+)
