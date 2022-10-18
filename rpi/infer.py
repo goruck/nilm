@@ -171,11 +171,11 @@ if __name__ == '__main__':
                     if ser.in_waiting > 0:
                         # Get mains power data from Arduino.
                         sample = get_arduino_data(ser)
-                        # Sum apparent powers and add to mains window.
-                        total_power = sample[5] + sample[8]
+                        # Sum real powers and add to mains window.
+                        total_power = sample[4] + sample[7]
                         # Normalize sample.
                         total_power = (total_power - AGGREGATE_MEAN) / AGGREGATE_STD
-                        log(f'Total apparent power: {total_power:.3f} Watts.', level='debug')
+                        log(f'Total real power: {total_power:.3f} Watts.', level='debug')
                         # Add sample to window.
                         mains_power = np.append(mains_power, total_power)
                         log(f'Window length: {mains_power.size}', level='debug')
