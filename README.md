@@ -41,7 +41,7 @@ There are a number of large-scale publicly available datasets specifically desig
 
 ![Alt text](./img/nilm-datasets.png?raw=true "NILM Datasets (Oliver Parson, et al.⁷)")
 
-The datasets generally include many 10’s of millions of active power, reactive power, current, and voltage samples but with different sampling frequencies which requires you to pre-process the data before use. Most NILM algorithms utilize only active or apparent power data. Five appliances are usually considered for energy disaggregation research which are kettle, microwave, fridge, dish washer and washing machine. These are the appliances I considered for my prototype and following the work of Michele DIncecco, et al.⁵, I mainly focused on the REFIT⁸ data et but will eventually include UK-DALE and REDD.
+The datasets generally include many 10’s of millions of active power, reactive power, current, and voltage samples but with different sampling frequencies which requires you to pre-process the data before use. Most NILM algorithms utilize only real (aka active or true) power data. Five appliances are usually considered for energy disaggregation research which are kettle, microwave, fridge, dish washer and washing machine. These are the appliances I considered for my prototype and following the work of Michele DIncecco, et al.⁵, I mainly focused on the REFIT⁸ data et but will eventually include UK-DALE and REDD.
 
 ### Model Training
 
@@ -56,7 +56,7 @@ The seq2point learning models for the appliances were trained individually on z 
 
 I created the seq2point learning model `create_model` using the Keras Functional API as shown in the Python module [define_models.py](./ml/define_models.py). You can find alternative model architectures there as well but this one currently gives the best results.
 
-A sliding window of 599 samples of the aggregate apparent power consumption signal is used as inputs to seq2point model and the midpoints of the corresponding windows of the appliances are used as targets. You can see how the samples and targets are generated in the `get_window_generator` function in the [common.py](./ml/common.py) module.
+A sliding window of 599 samples of the aggregate real power consumption signal is used as inputs to seq2point model and the midpoints of the corresponding windows of the appliances are used as targets. You can see how the samples and targets are generated in the `get_window_generator` function in the [common.py](./ml/common.py) module.
 
 You can see the code I used to train the model in [train.py](./ml/train.py). I used the Keras Adam optimizer and to reduce over-fitting I used EarlyStopping and InverseTimeDecay. The training code can be configured to train the seq2point model from scratch, or given a fitted model, prune it or fine tune it with quantization aware training (QAT), both of which can improve inference performance especially on edge hardware.
 
@@ -102,11 +102,11 @@ I used two clip-on current transformers in one of the home’s sub-panels to sen
 
 ### Aggregate Metrics Computation
 
-I used an Arduino MEGA 2560 to host the signal processing algorithms that takes the voltage signals from the Analog Signal Conditioning Subsystem and generates aggregate RMS voltage, RMS current, Real Power and Apparent Power metrics in real-time. Presently, only Apparent Power is used in downstream processing. I leveraged emonLibCM<sup>10</sup> for these signal processing algorithms. emonLibCM runs continuously in the background and digitizes the analog input channels of the Arduino, calculates these metrics and then informs the Arduino sketch that the measurements are available and should be read and processed by downstream processing. The sketch is configured to update the metrics every eight seconds and can be found in [ard.ino](./ard/ard.ino)
+I used an Arduino MEGA 2560 to host the signal processing algorithms that takes the voltage signals from the Analog Signal Conditioning Subsystem and generates aggregate RMS voltage, RMS current, Real Power and Apparent Power metrics in real-time. Presently, only Real Power is used in downstream processing. I leveraged emonLibCM<sup>10</sup> for these signal processing algorithms. emonLibCM runs continuously in the background and digitizes the analog input channels of the Arduino, calculates these metrics and then informs the Arduino sketch that the measurements are available and should be read and processed by downstream processing. The sketch is configured to update the metrics every eight seconds and can be found in [ard.ino](./ard/ard.ino)
 
 ### Disaggregated Energy Consumption Computation
 
-The actual energy disaggregation computations are hosted on a Raspberry Pi 4 which is connected over USB to the Arduino to fetch the aggregate metrics. The computations are comprised of running the tflite appliance inference models, trained and quantized per the steps described above, with pre- and post-processing steps. See the [infer.py](./rpi/infer.py) module for the code that performs these computations. The inference models output predicted energy for each appliance from 599-sample sized windows of the aggregate apparent power input signal. These predictions are stored in a local CSV file and made available for downstream reporting and analysis.
+The actual energy disaggregation computations are hosted on a Raspberry Pi 4 which is connected over USB to the Arduino to fetch the aggregate metrics. The computations are comprised of running the tflite appliance inference models, trained and quantized per the steps described above, with pre- and post-processing steps. See the [infer.py](./rpi/infer.py) module for the code that performs these computations. The inference models output predicted energy for each appliance from 599-sample sized windows of the aggregate real power input signal. These predictions are stored in a local CSV file and made available for downstream reporting and analysis.
 
 Typical disaggregated energy prediction results from my home are shown in the figures below using tflite models trained on another machine from the dataset as described above.
 
@@ -114,7 +114,7 @@ Typical disaggregated energy prediction results from my home are shown in the fi
 
 ![Alt text](./img/garage-prediction-zoomed.png?raw=true "Zoomed Garage Prediction Results")
 
-No fine-tuning was done on local data. The horizontal axis is time measured by the number of eight-second samples (the sampling interval is eight seconds), which span about eight and half days in this case. The vertical axis is energy consumption in Watts. The top trace is total (both phases) mains apparent power. The following traces are the predicted energy for each appliance. Only a refrigerator and a microwave from the reference set of appliances were in use during this time although there were other devices supplied by the same sub-panel such as computers and heaters.
+No fine-tuning was done on local data. The horizontal axis is time measured by the number of eight-second samples (the sampling interval is eight seconds), which span about eight and half days in this case. The vertical axis is energy consumption in Watts. The top trace is total (both phases) mains real power. The following traces are the predicted energy for each appliance. Only a refrigerator and a microwave from the reference set of appliances were in use during this time although there were other devices supplied by the same sub-panel such as computers and heaters.
 
 You can see both the Float32 and tflite versions algorithm detect the refrigerator and microwave but there is an energy offset between the two which probably indicates the need for better calibration. I used a power meter to ground truth the RMS power consumption of the refrigerator and microwave; it matches the Float32 predictions to within about +/- 15%.
 
