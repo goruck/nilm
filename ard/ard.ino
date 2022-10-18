@@ -37,7 +37,7 @@ constexpr double kHighGain = -63.0;
 constexpr double kCtMax = 100.0; // 100 Amps rms.
 
 // Define calibration constants for Emon lib power calculations. 
-constexpr double kVAmpCal = 180.0;
+constexpr double kVAmpCal = 198.0;
 constexpr double kI1AmpCalLow = 110.9;
 constexpr double kI1AmpCalMid = 14.0;
 constexpr double kI1AmpCalHigh = 2.29;
@@ -252,6 +252,7 @@ void AutomaticGainControl(AgcParams *AgcData)
 
 void setup()
 {
+  constexpr double kAssumedVrms= 120.0;  // Assumed line voltage when none is detected
   constexpr unsigned int kLineFreq = 60; // AC line frequency in Hz
   constexpr float kDataLogPeriod = 8.0;  // Interval in seconds over which data is reported
 
@@ -268,11 +269,12 @@ void setup()
   Serial.begin(115200);
 
   // Configure Emon lib.
+  EmonLibCM_setAssumedVrms(kAssumedVrms);
   EmonLibCM_SetADC_VChannel(kVChan, kVAmpCal);                // ADC Input channel, voltage calibration
   EmonLibCM_SetADC_IChannel(kI1Chan, kI1AmpCalLow, kI1PhCal); // ADC Input channel, current calibration, phase calibration
   EmonLibCM_SetADC_IChannel(kI2Chan, kI2AmpCalLow, kI2PhCal); // The current channels will be read in this order
-  EmonLibCM_setADC_VRef(INTERNAL2V56);                        // ADC Reference voltage (set to 2.56V)
-  EmonLibCM_ADCCal(kAdcFs);                                   // ADC Cal voltage (set to 2.56V)
+  EmonLibCM_setADC_VRef(INTERNAL2V56);                        // ADC Reference voltage
+  EmonLibCM_ADCCal(kAdcFs);                                   // ADC Cal voltage
   EmonLibCM_cycles_per_second(kLineFreq);
   EmonLibCM_datalog_period(kDataLogPeriod);
   EmonLibCM_Init();                                           // Start continuous monitoring
