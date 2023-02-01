@@ -8,43 +8,68 @@ import time
 
 import numpy as np
 
+# Average of all appliance aggregate training dataset means and std's.
+#AGGREGATE_MEAN = 545.0
+#AGGREGATE_STD = 820.0
+
+# Various parameters used for training, validation and testing.
 params_appliance = {
     'kettle': {
         'windowlength': 599,
-        'on_power_threshold': 2000,
-        'max_on_power': 3998,
-        'mean': 700,
-        'std': 1000,
-        's2s_length': 128, },
+        'on_power_threshold': 2000.0,
+        'max_on_power': 3998.0,
+        'train_agg_mean': 501.32453633286167,   #training aggregate mean
+        'train_agg_std': 783.0367822932175,     #training aggregate standard deviation
+        'train_app_mean': 16.137261776311778,   #training appliance mean
+        'train_app_std': 196.89790951996966,    #training appliance standard deviation
+        'test_app_mean': 23.155018918550294,    #test appliance mean
+        'test_agg_mean': 465.10226795866976     #test aggregate mean
+    },
     'microwave': {
         'windowlength': 599,
-        'on_power_threshold': 200,
-        'max_on_power': 3969,
-        'mean': 500,
-        'std': 800,
-        's2s_length': 128},
+        'on_power_threshold': 200.0,
+        'max_on_power': 3969.0,
+        'train_agg_mean': 495.0447502551665,
+        'train_agg_std': 704.1066664964247,
+        'train_app_mean': 3.4617193220425304,
+        'train_app_std': 64.22826568216946,
+        'test_app_mean': 9.577146165430394,
+        'test_agg_mean': 381.2162070293207
+    },
     'fridge': {
         'windowlength': 599,
-        'on_power_threshold': 50,
-        'max_on_power': 3323,
-        'mean': 200,
-        'std': 400,
-        's2s_length': 512},
+        'on_power_threshold': 50.0,
+        'max_on_power': 3323.0,
+        'train_agg_mean': 605.4483277115743,
+        'train_agg_std': 952.1533235759814,
+        'train_app_mean': 48.55206460642049,
+        'train_app_std': 62.114631485397986,
+        'test_app_mean': 24.40792692094185,
+        'test_agg_mean': 254.83458540217833
+    },
     'dishwasher': {
         'windowlength': 599,
-        'on_power_threshold': 10,
-        'max_on_power': 3964,
-        'mean': 700,
-        'std': 1000,
-        's2s_length': 1536},
+        'on_power_threshold': 10.0,
+        'max_on_power': 3964.0,
+        'train_agg_mean': 606.3228537145152,
+        'train_agg_std': 833.611776395652,
+        'train_app_mean': 46.040618889481905,
+        'train_app_std': 305.87980576285474,
+        'test_app_mean': 11.299554135013219,
+        'test_agg_mean': 377.9968064884045
+    },
     'washingmachine': {
         'windowlength': 599,
-        'on_power_threshold': 20,
-        'max_on_power': 3999,
-        'mean': 400,
-        'std': 700,
-        's2s_length': 2000}
+        'on_power_threshold': 20.0,
+        'max_on_power': 3999.0,
+        'train_agg_mean': 517.5859340919116,
+        'train_agg_std': 827.1565574135092,
+        'train_app_mean': 22.22078550102201,
+        'train_app_std': 189.70389890256996,
+        'test_app_mean': 29.433812118685246,
+        'test_agg_mean': 685.6151694157477
     }
+}
 
 def find_test_filename(test_dir, appliance, test_type) -> str:
     """Find test file name given a datset name."""
