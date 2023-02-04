@@ -36,12 +36,9 @@ CSV_ROW_NAMES = [
     'V', # rms main voltage
     'I1','W1','VA1', # mains phase 1 rms current, real power, apparent power
     'I2','W2','VA2', # mains phase 2 rms current, real power, apparent power
-] + APPLIANCES # predicted appliance apparent powers
+] + APPLIANCES # predicted appliance powers
 # Number of power mains samples to run inference on.
 WINDOW_LENGTH = 599
-# Aggregate statistics used to normalize mains power.
-AGGREGATE_MEAN = 545.0#522
-AGGREGATE_STD = 820.0#814
 
 def infer(appliance: str, input: np.ndarray, args) -> np.ndarray:
     """Perform inference using a tflite model."""
@@ -82,10 +79,10 @@ def infer(appliance: str, input: np.ndarray, args) -> np.ndarray:
         output_scale, output_zero_point = output_details[0]['quantization']
 
     # Normalize input with its mean and aggregate std used during training.
-    input_mean = input.mean()
-    agg_std = params_appliance[appliance]['agg_std']
-    log(f'Input norm params mean: {input_mean}, std: {agg_std}', level='debug')
-    input = (input - input_mean) / agg_std
+    input_mean = np.mean(input)
+    train_agg_std = params_appliance[appliance]['train_agg_std']
+    log(f'Input norm params mean: {input_mean}, std: {train_agg_std}', level='debug')
+    input = (input - input_mean) / train_agg_std
 
     # Convert input type.
     if not floating_input:
@@ -193,8 +190,6 @@ if __name__ == '__main__':
                         sample = get_arduino_data(ser)
                         # Sum real powers and add to mains window.
                         total_power = sample[4] + sample[7]
-                        # Normalize sample.
-                        #total_power = (total_power - AGGREGATE_MEAN) / AGGREGATE_STD
                         log(f'Total real power: {total_power:.3f} Watts.', level='debug')
                         # Add sample to window.
                         mains_power = np.append(mains_power, total_power)
@@ -206,18 +201,6 @@ if __name__ == '__main__':
                                 f'at sample number {sample_num}. '
                                 f'Running inference on windowed data...'
                             )
-
-                            # Normalize windowed data.
-                            #window_mean = mains_power.mean()
-                            #window_std = mains_power.std()
-                            #log(f'Window mean: {window_mean}, std: {window_std}')
-                            #mains_power = (mains_power - window_mean) / window_std
-
-                            # Expand input dimensions to match model InputLayer shape.
-                            # Starting shape = (WINDOW_LENGTH,)
-                            # Desired shape = (1, 1, WINDOW_LENGTH, 1)
-                            #mains_power = np.expand_dims(mains_power, axis=(0, 1, 3))
-
                             # Run inference when enough samples are captured to fill a window.
                             # A single inference takes about 100 ms on this machine from cold start.
                             # This is much faster than sample period (default 8 s) so running
@@ -252,8 +235,8 @@ if __name__ == '__main__':
                                     sample.append(prediction)
                                     continue
                                 # De-normalize.
-                                mean = params_appliance[appliance]['mean']
-                                std = params_appliance[appliance]['std']
+                                mean = params_appliance[appliance]['train_app_mean']
+                                std = params_appliance[appliance]['train_app_std']
                                 log(f'Appliance mean: {mean}', level='debug')
                                 log(f'Appliance std: {std}', level='debug')
                                 prediction = prediction * std + mean
