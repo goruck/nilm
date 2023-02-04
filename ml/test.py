@@ -18,6 +18,7 @@ Copyright (c) 2022 Lindo St. Angel
 import os
 import argparse
 import socket
+from math import isclose
 
 import numpy as np
 import tensorflow as tf
@@ -27,8 +28,6 @@ from logger import log
 import nilm_metric as nm
 import common
 
-AGGREGATE_MEAN = 522
-AGGREGATE_STD = 814
 SAMPLE_PERIOD = 8 # Mains sample period in seconds.
 
 def get_arguments():
@@ -91,7 +90,8 @@ if __name__ == '__main__':
     appliance_name = args.appliance_name
     log('Appliance target is: ' + appliance_name)
 
-    test_filename = common.find_test_filename(args.datadir, appliance_name)
+    test_filename = common.find_test_filename(
+        args.datadir, appliance_name, args.test_type)
     log('File for test: ' + test_filename)
     test_file_path = os.path.join(args.datadir, appliance_name, test_filename)
     log('Loading from: ' + test_file_path)
@@ -126,20 +126,22 @@ if __name__ == '__main__':
         workers=24,
         use_multiprocessing=True)
 
-    # Parameters.
     max_power = common.params_appliance[appliance_name]['max_on_power']
     threshold = common.params_appliance[appliance_name]['on_power_threshold']
-    appliance_mean = common.params_appliance[appliance_name]['mean']
-    appliance_std = common.params_appliance[appliance_name]['std']
+    train_app_std = common.params_appliance[appliance_name]['train_app_std']
+    train_agg_std = common.params_appliance[appliance_name]['train_agg_std']
+    test_app_mean = common.params_appliance[appliance_name]['test_app_mean']
+    test_agg_mean = common.params_appliance[appliance_name]['test_agg_mean']
 
-    log('aggregate_mean: ' + str(AGGREGATE_MEAN))
-    log('aggregate_std: ' + str(AGGREGATE_STD))
-    log('appliance_mean: ' + str(appliance_mean))
-    log('appliance_std: ' + str(appliance_std))
+    log(f'train appliance std: {train_app_std}')
+    log(f'train aggregate std: {train_agg_std}')
+    log(f'test appliance mean: {test_app_mean}')
+    log(f'test aggregate mean: {test_agg_mean}')
 
-    prediction = test_prediction * appliance_std + appliance_mean
-    prediction[prediction <= 0.0] = 0.0
-    ground_truth = ground_truth * appliance_std + appliance_mean
+    # De-normalize.
+    prediction = test_prediction * train_app_std + test_app_mean
+    prediction[prediction <= 0.0] = 0.0 #remove negative energy predictions
+    ground_truth = ground_truth * train_app_std + test_app_mean
 
     # Metric evaluation.
     log('F1:{0}'.format(nm.get_F1(ground_truth.flatten(), prediction.flatten(), threshold)))
@@ -150,7 +152,7 @@ if __name__ == '__main__':
     log('Energy per Day: {:}'.format(nm.get_Epd(ground_truth.flatten(), prediction.flatten(), SAMPLE_PERIOD)))
 
     # Save results.
-    savemains = test_set_x.flatten() * AGGREGATE_STD + AGGREGATE_MEAN
+    savemains = test_set_x.flatten() * train_agg_std + test_agg_mean
     savegt = ground_truth
     savepred = prediction.flatten()
 

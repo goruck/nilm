@@ -1,26 +1,27 @@
 """
 Predict appliance type and power using novel data from my home.
 
-Copyright (c) 2022 Lindo St. Angel
+Copyright (c) 2022~2023 Lindo St. Angel
 """
 
 import os
 import argparse
 import socket
+from collections import OrderedDict
 
 import numpy as np
 import tensorflow as tf
 import matplotlib.pyplot as plt
+import matplotlib.colors as mcolors
+from matplotlib.dates import AutoDateLocator, AutoDateFormatter
 import pandas as pd
 
 from logger import log
 from common import get_window_generator, params_appliance
 from nilm_metric import get_Epd
 
-WINDOW_LENGTH = 599 # Aggregate window length.
-AGGREGATE_MEAN = 522
-AGGREGATE_STD = 814
-SAMPLE_PERIOD = 8 # Mains sample period in seconds.
+WINDOW_LENGTH = 599 # input sample window length
+SAMPLE_PERIOD = 8 # input sample period in seconds
 
 if __name__ == '__main__':
     default_appliances = [
@@ -89,26 +90,20 @@ if __name__ == '__main__':
     log('Arguments: ')
     log(args)
 
-    log(f'Target appliance(s): {args.appliances}')
-
     # offset parameter from window length
     offset = int(0.5 * (WINDOW_LENGTH - 1.0))
 
-    # Load mains samples.
+    # Load mains real power samples and datetimes.
     file_name = os.path.join(args.datadir, f'{args.panel}.csv')
-    test_set_x = pd.read_csv(file_name, header=None, nrows=args.crop)
-    test_set_x = np.array(test_set_x, dtype=np.float32)
-    log(f'There are {test_set_x.size/10**6:.3f}M test samples.')
+    df = pd.read_csv(file_name, nrows=args.crop,
+        parse_dates=['date_time'], infer_datetime_format=True)
+    date_times = df['date_time']
+    aggregate = np.array(df['real_power'], dtype=np.float32)
+    log(f'There are {aggregate.size/10**6:.3f}M test samples.')
 
-    # Generate windowed samples.
     WindowGenerator = get_window_generator()
-    test_provider = WindowGenerator(
-        dataset=(test_set_x.flatten(), None),
-        train=False,
-        shuffle=False,
-        batch_size=args.batch_size)
     
-    def prediction(appliance) -> np.array:
+    def prediction(appliance: str, input: np.ndarray) -> np.ndarray:
         """Make appliance prediction and return post-processed result."""
         log(f'Making prediction for {appliance}.')
         model_file_path = os.path.join(
@@ -116,36 +111,55 @@ if __name__ == '__main__':
         log(f'Loading saved model from {model_file_path}.')
         model = tf.keras.models.load_model(model_file_path)
         model.summary()
+
+        # Normalize aggregate input with its own mean and training std.
+        mean = np.mean(input)
+        train_agg_std = params_appliance[appliance]['train_agg_std']
+        log('Normalizing aggregate input with:')
+        log(f'mean: {mean}')
+        log(f'train aggregate std: {train_agg_std}')
+        input = (input - mean) / train_agg_std
+
+        test_provider = WindowGenerator(
+            dataset=(input.flatten(), None),
+            train=False,
+            shuffle=False,
+            batch_size=args.batch_size)
+
         prediction = model.predict(
             x=test_provider,
             verbose=1,
             workers=24,
             use_multiprocessing=True)
-        # De-normalize.
-        mean = params_appliance[appliance]['mean']
-        std = params_appliance[appliance]['std']
-        log(f'appliance_mean: {str(mean)}')
-        log(f'appliance_std: {str(std)}')
-        prediction = prediction * std + mean
+
+        # De-normalize prediction output with training appliance mean and std.
+        train_app_std = params_appliance[appliance]['train_app_std']
+        train_app_mean = params_appliance[appliance]['train_app_mean']
+        log(f'De-normalizing {appliance} prediction with:')
+        log(f'train appliance mean: {train_app_mean}')
+        log(f'train appliance std: {train_app_std}')
+        prediction = prediction * train_app_std + train_app_mean
+
+        # Zero out negative power predictions.
+        prediction[prediction <= 0.0] = 0.0
+
         # Apply on-power thresholds.
         if args.threshold_rt_preds:
             threshold = params_appliance[appliance]['on_power_threshold']
             prediction[prediction <= threshold] = 0.0
         return prediction
+
     predictions = {
         appliance : prediction(
-            appliance
+            appliance, aggregate
         ) for appliance in args.appliances
     }
 
-    log('aggregate_mean: ' + str(AGGREGATE_MEAN))
-    log('aggregate_std: ' + str(AGGREGATE_STD))
-    aggregate = test_set_x.flatten() * AGGREGATE_STD + AGGREGATE_MEAN
-
-    # Calculate metrics. 
+    # Calculate metrics.
     # get_Epd returns a relative metric between two powers, so zero out one.
     target = np.zeros_like(aggregate)
     aggregate_epd = get_Epd(target, aggregate, SAMPLE_PERIOD)
+    log('*** Metric Summary ***')
     log(f'Aggregate energy: {aggregate_epd/1000:.3f} kWh per day')
     for appliance in args.appliances:
         epd = get_Epd(target, predictions[appliance], SAMPLE_PERIOD)
@@ -170,10 +184,7 @@ if __name__ == '__main__':
         rt_preds_to_appliances = {
             appliance: np.array(
                 df[[appliance]][WINDOW_LENGTH:], dtype=np.float32
-            ) for appliance in args.appliances
-        }
-
-        # Apply power on thresholds.
+            ) for appliance in args.appliances}
         if args.threshold_rt_preds:
             for appliance in args.appliances:
                 threshold = params_appliance[appliance]['on_power_threshold']
@@ -207,4 +218,48 @@ if __name__ == '__main__':
     plt.savefig(fname=plot_savepath)
     if args.plot:
         plt.show()
+    plt.close()
+
+    # Show mains power and appliance power predictions on one plot.
+    linestyles = OrderedDict(
+        [('solid',               (0, ())),
+        ('loosely dotted',      (0, (1, 10))),
+        ('dotted',              (0, (1, 5))),
+        ('densely dotted',      (0, (1, 1))),
+
+        ('loosely dashed',      (0, (5, 10))),
+        ('dashed',              (0, (5, 5))),
+        ('densely dashed',      (0, (5, 1))),
+
+        ('loosely dashdotted',  (0, (3, 10, 1, 10))),
+        ('dashdotted',          (0, (3, 5, 1, 5))),
+        ('densely dashdotted',  (0, (3, 1, 1, 1))),
+
+        ('loosely dashdotdotted', (0, (3, 10, 1, 10, 1, 10))),
+        ('dashdotdotted',         (0, (3, 5, 1, 5, 1, 5))),
+        ('densely dashdotdotted', (0, (3, 1, 1, 1, 1, 1)))])
+    color_names = list(mcolors.TABLEAU_COLORS)
+    line_styles = list(linestyles.values())
+    fig, ax = plt.subplots()
+    fig.suptitle(f'Prediction results for {args.panel}',
+        fontsize=16, fontweight='bold')
+    ax.set_ylabel('Watts')
+    ax.set_xlabel('Date-Time')
+    # Plot mains power.
+    ax.plot(date_times[offset:-offset], aggregate[offset:-offset],
+        color=color_names[0], linewidth=1.8, linestyle=line_styles[0],
+        label='Aggregate')
+    # Set friendly looking date and times on x-axis. 
+    locator = AutoDateLocator()
+    ax.xaxis.set_major_locator(locator=locator)
+    ax.xaxis.set_major_formatter(AutoDateFormatter(locator=locator))
+    fig.autofmt_xdate()
+    # Plot appliance powers.
+    for i, appliance in enumerate(args.appliances):
+        ax.plot(date_times[offset:-offset], predictions[appliance],
+            color=color_names[i+1], linewidth=1.5,
+            linestyle = line_styles[i+1], label=appliance)
+    # Actually show plot.
+    ax.legend()
+    plt.show()
     plt.close()
