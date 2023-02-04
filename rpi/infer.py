@@ -7,11 +7,12 @@ Copyright (c) 2022 Lindo St. Angel.
 import os
 import argparse
 import socket
-import time
 import sys
-import datetime
 import serial
 import csv
+import pytz
+from datetime import datetime
+from time import time, sleep
 from signal import signal, SIGINT
 
 import tflite_runtime.interpreter as tflite
@@ -39,10 +40,10 @@ CSV_ROW_NAMES = [
 # Number of power mains samples to run inference on.
 WINDOW_LENGTH = 599
 # Aggregate statistics used to normalize mains power.
-AGGREGATE_MEAN = 522
-AGGREGATE_STD = 814
+AGGREGATE_MEAN = 545.0#522
+AGGREGATE_STD = 820.0#814
 
-def infer(appliance, input, args):
+def infer(appliance: str, input: np.ndarray, args) -> np.ndarray:
     """Perform inference using a tflite model."""
     log(f'Predicting power for {appliance}.', level='debug')
 
@@ -69,25 +70,43 @@ def infer(appliance, input, args):
     log(f'tflite model floating input: {floating_input}', level='debug')
     floating_output = output_details[0]['dtype'] == np.float32
     log(f'tflite model floating output: {floating_output}', level='debug')
+
     # Get I/O indices.
     input_index = input_details[0]['index']
     output_index = output_details[0]['index']
+
     # If model has int I/O get quantization information.
     if not floating_input:
         input_scale, input_zero_point = input_details[0]['quantization']
     if not floating_output:
         output_scale, output_zero_point = output_details[0]['quantization']
 
-    if not floating_input: # convert to float to int8
+    # Normalize input with its mean and aggregate std used during training.
+    input_mean = input.mean()
+    agg_std = params_appliance[appliance]['agg_std']
+    log(f'Input norm params mean: {input_mean}, std: {agg_std}', level='debug')
+    input = (input - input_mean) / agg_std
+
+    # Convert input type.
+    if not floating_input:
         input = input / input_scale + input_zero_point
         input = input.astype(np.int8)
     else:
         input = input.astype(np.float32)
+
+    # Expand input dimensions to match model InputLayer shape.
+    # Starting shape = (WINDOW_LENGTH,)
+    # Desired shape = (1, 1, WINDOW_LENGTH, 1)
+    input = np.expand_dims(input, axis=(0, 1, 3))
+
+    # Actually run inference.
     interpreter.set_tensor(input_index, input)
-    interpreter.invoke() # run inference
+    interpreter.invoke()
     result = interpreter.get_tensor(output_index)
     prediction = np.squeeze(result)
-    if not floating_output: # convert int8 to float
+
+    # Convert output type.
+    if not floating_output:
         prediction = (prediction - output_zero_point) * output_scale
 
     return prediction
@@ -104,10 +123,10 @@ def get_arduino_data(port) -> list:
     #   rms current, real power, apparent power for phase 0,
     #   rms current, real power, apparent power for phase 1
     sample = [float(d) for d in decoded_bytes.split(',')]
-    # Insert datetime.
-    sample.insert(0, datetime.datetime.now())
+    # Insert UTC datetime.
+    sample.insert(0, datetime.now(pytz.utc))
     # Insert timestamp.
-    sample.insert(1, round(time.time(), 2))
+    sample.insert(1, round(time(), 2))
     log(f'Sample = {sample}', level='debug')
     return sample
 
@@ -153,7 +172,7 @@ if __name__ == '__main__':
 
     with serial.Serial(SER_PORT, SER_BAUDRATE, timeout=1) as ser:
         if ser.isOpen():
-            time.sleep(1.0) # wait for port to be ready
+            sleep(1.0) # wait for port to be ready
             log(f'Connected to port {ser.port}.')
             with open(args.csv_file_name, 'w') as csv_file:
                 log(f'Opened {args.csv_file_name} for writing samples.')
@@ -166,6 +185,7 @@ if __name__ == '__main__':
                 # Initialize sample counter. The sampling rate is set by the Arduino code.
                 # E.g., 5 days of samples is 5 * 24 * 60 * 60 / 8 @ 8 sec sampling period.
                 sample_num = 0
+                log(f'Sample number {sample_num}', level='debug')
                 log('Gathering initial window of samples...')
                 while True:
                     if ser.in_waiting > 0:
@@ -174,7 +194,7 @@ if __name__ == '__main__':
                         # Sum real powers and add to mains window.
                         total_power = sample[4] + sample[7]
                         # Normalize sample.
-                        total_power = (total_power - AGGREGATE_MEAN) / AGGREGATE_STD
+                        #total_power = (total_power - AGGREGATE_MEAN) / AGGREGATE_STD
                         log(f'Total real power: {total_power:.3f} Watts.', level='debug')
                         # Add sample to window.
                         mains_power = np.append(mains_power, total_power)
@@ -187,10 +207,16 @@ if __name__ == '__main__':
                                 f'Running inference on windowed data...'
                             )
 
+                            # Normalize windowed data.
+                            #window_mean = mains_power.mean()
+                            #window_std = mains_power.std()
+                            #log(f'Window mean: {window_mean}, std: {window_std}')
+                            #mains_power = (mains_power - window_mean) / window_std
+
                             # Expand input dimensions to match model InputLayer shape.
                             # Starting shape = (WINDOW_LENGTH,)
                             # Desired shape = (1, 1, WINDOW_LENGTH, 1)
-                            mains_power = np.expand_dims(mains_power, axis=(0, 1, 3))
+                            #mains_power = np.expand_dims(mains_power, axis=(0, 1, 3))
 
                             # Run inference when enough samples are captured to fill a window.
                             # A single inference takes about 100 ms on this machine from cold start.
@@ -200,13 +226,13 @@ if __name__ == '__main__':
                             # latency will be incurred for each prediction. The models should be combined
                             # so cold start latency is incurred only on the first prediction. This will be
                             # done at some point in the future.
-                            start = time.time()
+                            start = time()
                             predictions = {
                                 appliance : infer(
                                     appliance, mains_power, args
                                 ) for appliance in APPLIANCES
                             }
-                            end = time.time()
+                            end = time()
                             log('Inference run complete.')
                             num_valid_predictions = np.count_nonzero(
                                 ~np.isnan(list(predictions.values())))
@@ -253,4 +279,4 @@ if __name__ == '__main__':
                         csv_writer.writerow(sample)
                         sample_num +=1
 
-                    time.sleep(0.01) # avoids maxing out cpu waiting for Arduino data
+                    sleep(0.01) # avoids maxing out cpu waiting for Arduino data
