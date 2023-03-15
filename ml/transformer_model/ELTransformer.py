@@ -8,11 +8,18 @@ import numpy as np
 import tensorflow as tf
 from tensorflow import matmul, reshape, shape, transpose, cast, float32, tanh, pow
 from tensorflow import keras
-from keras.layers import LayerNormalization, Layer, Dense, Flatten, Dropout, Embedding, Dropout, MultiHeadAttention, Conv1D, MaxPooling1D, Reshape
+from keras.layers import LayerNormalization, Layer, Dense, Flatten, Dropout, Embedding, Dropout, MultiHeadAttention, Conv1D, MaxPooling1D, Reshape, Concatenate, Conv1DTranspose
 from keras.backend import softmax
-from keras.models import Functional
+from keras.activations import gelu
+from keras.initializers import TruncatedNormal
 from keras import Model
+from tensorflow_models import nlp
+import keras_nlp
 
+# Speed up training by running most of our computations with 16-bit
+# (instead of 32-bit) floating point numbers.
+#policy = keras.mixed_precision.Policy('mixed_float16')
+#keras.mixed_precision.set_global_policy(policy)
 
 class GELU(Layer):
     def __init__(self, name='GELU', **kwargs):
@@ -21,43 +28,88 @@ class GELU(Layer):
     def call(self, x):
         return 0.5 * x * (1 + tanh(math.sqrt(2 / math.pi) * (x + 0.044715 * pow(x, 3))))
 
+class PositionEmbedding(tf.keras.layers.Layer):
+  """Creates a positional embedding.
+  Example:
+  ```python
+  position_embedding = PositionEmbedding(max_length=100)
+  inputs = tf.keras.Input((100, 32), dtype=tf.float32)
+  outputs = position_embedding(inputs)
+  ```
+  Args:
+    max_length: The maximum size of the dynamic sequence.
+    initializer: The initializer to use for the embedding weights. Defaults to
+      "glorot_uniform".
+    seq_axis: The axis of the input tensor where we add the embeddings.
+  Reference: This layer creates a positional embedding as described in
+  [BERT: Pre-training of Deep Bidirectional Transformers for Language
+  Understanding](https://arxiv.org/abs/1810.04805).
+  """
+
+  def __init__(self,
+               max_length,
+               initializer="glorot_uniform",
+               seq_axis=1,
+               **kwargs):
+
+    super().__init__(**kwargs)
+    if max_length is None:
+      raise ValueError(
+          "`max_length` must be an Integer, not `None`."
+      )
+    self._max_length = max_length
+    self._initializer = tf.keras.initializers.get(initializer)
+    self._seq_axis = seq_axis
+
+  def get_config(self):
+    config = {
+        "max_length": self._max_length,
+        "initializer": tf.keras.initializers.serialize(self._initializer),
+        "seq_axis": self._seq_axis,
+    }
+    base_config = super(PositionEmbedding, self).get_config()
+    return dict(list(base_config.items()) + list(config.items()))
+
+  def build(self, input_shape):
+    print(input_shape)
+    dimension_list = input_shape.as_list()
+    width = dimension_list[-1]
+    weight_sequence_length = self._max_length
+    print(f'width: {width} weight_seq_len: {weight_sequence_length}')
+    exit()
+
+    self._position_embeddings = self.add_weight(
+        "embeddings",
+        shape=[weight_sequence_length, width],
+        initializer=self._initializer)
+
+    super().build(input_shape)
+
+  def call(self, inputs):
+    input_shape = tf.shape(inputs)
+    actual_seq_len = input_shape[self._seq_axis]
+    position_embeddings = self._position_embeddings[:actual_seq_len, :]
+    new_shape = [1 for _ in inputs.get_shape().as_list()]
+    new_shape[self._seq_axis] = actual_seq_len
+    new_shape[-1] = position_embeddings.get_shape().as_list()[-1]
+    position_embeddings = tf.reshape(position_embeddings, new_shape)
+    return tf.broadcast_to(position_embeddings, input_shape)
+
 
 class PositionalEmbedding(Layer):
     def __init__(self, max_len, d_model, **kwargs):
         super().__init__(*kwargs)
-        #print(f'max_len: {max_len}')
-        #print(f'd_model: {d_model}')
+        self.max_len = max_len
         self.pe = Embedding(input_dim=max_len, output_dim=d_model)
 
     def call(self, x):
-        #print(f'pos x shape: {tf.shape(x)}')
         batch = tf.shape(x)[0]
-        #print(f'pos x batch size: {batch}')
 
-        #x = tf.reshape(x, [1000, 599])
-        #print(f'pos x shape: {tf.shape(x)}')
-        #batch = tf.shape(x)[0]
-        #print(f'pos x batch size: {batch}')
-
-        position_indices = tf.range(tf.shape(x)[1])
-        #print(f'pos indices shape: {tf.shape(position_indices)}')
-        #print(f'pos indices: {position_indices}')
+        position_indices = tf.range(self.max_len)
 
         position_indices = tf.expand_dims(position_indices, axis=0)
 
         position_indices = tf.repeat(position_indices, batch, axis=0)
-
-        #position_indices = tf.reshape(position_indices, [batch, 599])
-        #print(f'pos indices shape: {tf.shape(position_indices)}')
-        #print(f'pos indices: {position_indices}')
-
-        #position_indices = tf.reshape(position_indices, shape=(1000, 599))
-        #print(f'pos indices shape: {tf.shape(position_indices)}')
-        #print(f'pos indices: {position_indices}')
-
-        #position_indices = np.random.randint(599, size=(1000, 299))
-        #print(f'pos indices shape: {tf.shape(position_indices)}')
-        #print(f'pos indices: {position_indices}')
 
         return self.pe(position_indices)
 
@@ -196,15 +248,21 @@ class MultiHeadedAttention(nn.Module):
 
         self.d_k = d_model // h
         self.h = h
+)
 
+        # Compute the multi-head attention output using the reshaped queri
         self.linear_layers = nn.ModuleList([nn.Linear(d_model, d_model) for _ in range(3)])
         self.output_linear = nn.Linear(d_model, d_model)
         self.attention = Attention()
 
-        self.dropout = nn.Dropout(p=dropout)
+        self.dropout = nn.Dropout(p=dropout)model.get_layer('embedding').get_weights()[0]
+
 
     def forward(self, query, key, value, mask=None):
         batch_size = query.size(0)
+    new_shape[self._seq_axis] = actual_seq_len
+    new_shape[-1] = position_embeddings.get_shape().as_list()[-1]
+    position_embeddings = tf.reshape(position_embeddings, new_shape)
 
         query, key, value = [l(x).view(batch_size, -1, self.h, self.d_k).transpose(1, 2)
                              for l, x in zip(self.linear_layers, (queryprint(f'rel pos shape: {tf.shape(rel_pos)}'), key, value))]
@@ -276,80 +334,113 @@ class TransformerBlock(Layer):
 
 
 class ELTransformerModel(Model):
-    def __init__(self, window_size, drop_out, **kwargs):
+    def __init__(self, window_length, drop_out, **kwargs):
         super().__init__(**kwargs)
 
-        self.original_len = window_size
-        self.latent_len = int(self.original_len / 2)
+        self.original_len = window_length
+        self.latent_len = self.original_len // 2
         self.dropout_rate = drop_out
 
         self.hidden = 256
+        self.decoder_hidden = 128
         self.heads = 2
         self.n_layers = 2
+        self.pool_size = 2
 
-        self.conv = Conv1D(filters=self.hidden, kernel_size=5, padding='same', input_shape=(window_size, 1))
+        # Deconvolution (aka Transposed Convolution) parameters.
+        # Note restriction on choice of parameters checked below.
+        # See "A guide to convolution arithmetic for deep learning"
+        # https://arxiv.org/abs/1603.07285
+        self.deconv_k = 2
+        self.deconv_s = 2
+        if (window_length + 2 - self.deconv_k) % self.deconv_s != 0:
+            raise ValueError('Bad deconvolution parameters.')
 
-        self.pool = MaxPooling1D()
+        self.conv = Conv1D(filters=self.hidden, kernel_size=5, padding='same')
 
-        self.position = PositionalEmbedding(max_len=self.latent_len, d_model=self.hidden)
+        self.pool = MaxPooling1D(pool_size=self.pool_size)
+
+        #self.position = PositionalEmbedding(max_len=self.original_len, d_model=self.hidden)
+        self.position = PositionEmbedding(max_length=self.original_len)
 
         self.layer_norm = LayerNormalization()
 
         self.dropout = Dropout(rate=self.dropout_rate)
+        #self.dropout2 = Dropout(rate=self.dropout_rate)
 
-        self.transformer_blocks = [TransformerBlock(
-            self.hidden, self.heads, self.hidden * 4, self.dropout_rate) for _ in range(self.n_layers)]
+        #self.transformer_blocks = [TransformerBlock(
+            #self.hidden, self.heads, self.hidden * 4, self.dropout_rate) for _ in range(self.n_layers)]
+        
+        self.transformer_layers = [nlp.layers.TransformerEncoderBlock(
+            num_attention_heads=self.heads,
+            inner_dim=self.hidden,
+            inner_activation=(lambda x: gelu(x, approximate=True)),
+            output_dropout=self.dropout_rate,
+            attention_dropout=self.dropout_rate,
+            inner_dropout=self.dropout_rate,
+            attention_initializer=TruncatedNormal(stddev=0.02)) for _ in range(self.n_layers)]
 
-        self.relative_position = RelativePositionalEmbedding(max_len=self.latent_len, d_model=self.hidden)
+        self.deconv = Conv1DTranspose(filters=self.hidden, kernel_size=self.deconv_k, strides=self.deconv_s)
 
-        self.dense1 = Dense(units=self.hidden, activation='relu')
+        self.dense1 = Dense(units=self.decoder_hidden, activation='relu')
 
         self.flatten = Flatten()
 
         self.dense2 = Dense(units=1)
 
-    def _reshape_input(self, x: tf.Tensor) -> tf.Tensor:
-            batch_size = tf.shape(x)[0]
-            return tf.reshape(x, [batch_size, self.original_len, 1])
+    def call(self, sequence:tf.Tensor, training:bool=None):
+        # Expected input sequence shape = (batch_size, original_len)
 
-    def call(self, sequence:tf.Tensor, mask:bool=None, training:bool=None):
-        #print(f'in seq shape: {tf.shape(sequence)}')
-        #print(f'seq: {sequence}')
+        # Add sequence length axis.
+        sequence = sequence[:, :, np.newaxis]
+        # Expected output shape = (batch_size, original_len, 1)
 
-        sequence = self._reshape_input(sequence)
-        #print(f'reshaped seq shape: {tf.shape(sequence)}')
-        #print(f'reshaped seq: {sequence}')
+        ### Encoder Layers ###
 
-        conv = self.conv(sequence)
-        #print(f'conv: {tf.shape(conv)}')
-        x_token = self.pool(conv)
-        #print(f'x_token shape: {tf.shape(x_token)}')
-        #print(f'x_token: {x_token}')
+        # Sequence positional encoding layer.
+        # Some position indices will have same encoding according to the
+        # "div" partition strategy since sequence length > embedding weight length.
+        # 'pool_size' entries in the embedding matrix rows are skipped to match
+        # upstream layer shape. This results in no loss of information since the
+        # partition strategy results in multiple indices having the same encoding.
+        # See tf.nn.embedding_lookup documentation for details on partition strategy.
+        #position_embeddings = self.position(sequence)[:, ::self.pool_size, :]
 
-        pos = self.position(x_token)
-        # Expected output shape = (batch_size, latent_len, d_model)
-        #print(f'pos shape: {tf.shape(pos)}')
-        #print(f'pos: {pos}')
+        # Sequence positional encoding layer.
+        # Skip 'pool_size' positional embedding weights to match upstream processing.
+        # This causes every 'pool_size 'position indices to have same encoding.
+        position_embeddings = self.position(sequence)#[:, ::self.pool_size, :]
+        # Expected output shape = (batch_size, latent_len, hidden)
 
-        embedding = x_token + pos
-        #print(f'embedding shape: {tf.shape(embedding)}')
+        extracted_features = self.conv(sequence)
+        # Expected output shape = (batch_size, original_len, hidden)
 
-        x = self.dropout(embedding, training=training)
+        embeddings = self.pool(extracted_features + position_embeddings)
+        # Expected output shape = (batch_size, latent_len, hidden)
 
-        # Pass on the positional encoded values to each transformer.
-        for _, transformer in enumerate(self.transformer_blocks):
-            x = transformer(x, mask)
+        x = self.dropout(self.layer_norm(embeddings), training=training)
 
-        rel_pos = self.relative_position(x)
+        ### Transformer Layers ###
 
-        #print(f'rel pos shape: {tf.shape(rel_pos)}')
-        #print(f'x shape before adding rel pos: {tf.shape(x)}')
+        # Assign importance weights to embeddings using back-to-back transformers.
+        for _, transformer_layer in enumerate(self.transformer_layers):
+            x = transformer_layer(x, training=training)
+        # Expected output shape = {batch_size, latent_len, hidden}
 
-        x = x + rel_pos
-        x = self.dropout(self.layer_norm(x), training=training)
-        x = self.flatten(x)
+        ### Decoder Layers ###
+
+        # Expand xformer output to original length with transposed convolution.
+        x = self.deconv(x)
+        # Expected output shape = (batch_size, original_len, hidden)
+
+        # Generate normalized power predictions over sequence length.
         x = self.dense1(x)
+        # Expected output_size = (batch_size, original_len, decoder_hidden)
+
+        x = self.flatten(x)
+        # Expected output size = (batch_size, original_len * decoder_hidden)
+
+        # Apply sequence-to-point transformation.
         x = self.dense2(x)
-        #print(f'final x shape: {tf.shape(x)}')
-        #print(f'final x: {x}')
+        # Expected output_size = (batch_size, 1)
         return x
