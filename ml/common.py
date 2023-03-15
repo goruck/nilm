@@ -146,14 +146,14 @@ def get_window_generator(keras_sequence=True):
             # Total number of samples in dataset.
             self.total_samples=self.X.size
 
-            # Number of samples from end of window to center.
-            self.offset = int(0.5 * (window_length - 1.0))
+            # Calculate window center index.
+            self.window_center = window_length // 2
 
             # Number of input samples adjusted for windowing.
             # This prevents partial window generation.
-            self.num_samples = self.total_samples - 2 * self.offset
+            self.num_samples = self.total_samples - window_length
 
-            # Indices of adjusted input sample array.
+            # Generate indices of adjusted input sample array.
             self.indices = np.arange(self.num_samples)
 
             self.rng = np.random.default_rng()
@@ -179,16 +179,17 @@ def get_window_generator(keras_sequence=True):
 
             # Create a batch of windowed samples.
             samples = np.array(
-                [self.X[row:row + 2 * self.offset + 1] for row in rows])
+                [self.X[row:row + self.window_length] for row in rows])
 
             # Reshape samples to match model's input tensor format.
             # Starting shape = (batch_size, window_length)
             # Desired shape = (batch_size, 1, window_length)
-            samples = samples[:, np.newaxis, :]
+            #samples = samples[:, np.newaxis, :]
 
             if self.train:
-                # Create batch of single point targets offset from window start.
-                targets = np.array([self.y[row + self.offset] for row in rows])
+                # Create batch of single point targets from center of window.
+                targets = np.array(
+                    [self.y[row + self.window_center] for row in rows])
                 return samples, targets
             else:
                 # Return only samples if in test mode.
