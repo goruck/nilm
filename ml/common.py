@@ -147,7 +147,7 @@ def get_window_generator(keras_sequence=True):
             self.total_samples=self.X.size
 
             # Calculate window center index.
-            self.window_center = window_length // 2
+            self.window_center = int(0.5 * (window_length - 1))
 
             # Number of input samples adjusted for windowing.
             # This prevents partial window generation.
