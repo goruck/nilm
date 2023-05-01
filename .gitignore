@@ -8,3 +8,9 @@ pruning_logs*
 *.csv
 *.npy
 __pycache__
+
+# Ignore everything in directory transformer_model
+*/transformer_model/*
+
+# Except...
+!*/transformer_model/ELTransformer.py
