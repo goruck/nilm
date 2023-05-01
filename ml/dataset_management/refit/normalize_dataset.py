@@ -1,5 +1,4 @@
-"""
-Scale datasets created by create_new_dataset.py.
+"""Scale datasets created by create_new_dataset.py.
 
 Copyright (c) 2023 Lindo St. Angel
 """
@@ -11,6 +10,9 @@ import sys
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+
+sys.path.append('../../../ml')
+import common
 
 def load(file_name, crop=None):
     """Load input dataset file."""
@@ -95,15 +97,22 @@ if __name__ == '__main__':
         print(df.iloc[:,0].describe())
         print(df.iloc[:,1].describe())
 
-        # Standardize aggregate dataset using its mean and training aggregate std.
-        mean = df.iloc[:,0].mean()
-        print(f'\nStandardizing aggregate dataset with mean = {mean} and std = {train_agg_std}.')
-        df.iloc[:,0] = (df.iloc[:,0] - mean) / train_agg_std
+        if common.USE_ALT_STANDARDIZATION:
+            print('Using alt standardization')
 
-        # Standardize appliance dataset using its mean and training appliance std.
-        mean = df.iloc[:,1].mean()
-        print(f'\nStandardizing appliance dataset with mean = {mean} and std = {train_app_std}.')
-        df.iloc[:,1] = (df.iloc[:,1] - mean) / train_app_std
+        # Standardize aggregate dataset.
+        agg_mean = common.ALT_AGGREGATE_MEAN if common.USE_ALT_STANDARDIZATION else train_agg_mean
+        agg_std = common.ALT_AGGREGATE_STD if common.USE_ALT_STANDARDIZATION else train_agg_std
+        print(f'\nStandardizing aggregate dataset with mean = {agg_mean} and std = {agg_std}.')
+        df.iloc[:,0] = (df.iloc[:,0] - agg_mean) / agg_std
+
+        # Standardize appliance dataset.
+        alt_app_mean = common.params_appliance[args.appliance]['alt_app_mean']
+        alt_app_std = common.params_appliance[args.appliance]['alt_app_std']
+        app_mean = alt_app_mean if common.USE_ALT_STANDARDIZATION else train_app_mean
+        app_std = alt_app_std if common.USE_ALT_STANDARDIZATION else train_app_std
+        print(f'\nStandardizing appliance dataset with mean = {app_mean} and std = {app_std}.')
+        df.iloc[:,1] = (df.iloc[:,1] - app_mean) / app_std
 
         ### Other ways of scaling the datasets are commented out below ###
         ### The current method seems to give the best results ###
