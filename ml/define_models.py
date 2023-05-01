@@ -1,22 +1,21 @@
-"""Creates Keras models for seq2point learning.
+"""Keras models for NILM seq2point learning.
 
 There are several different architectures defined in this module.
-All are based on CNN backbones.
+One is transformer-based, all others are based on CNN backbones.
 
-The function "create_model" generates the model that currently
-gives the best results.
-
-The models should be fitted with a subset of the training data
-because the entire dataset contains redundant information that
-leads to over-fitting in a single epoch. The size of this subset
-varies by appliance type but 10M samples is good starting place.
-
-Copyright (c) 2022 Lindo St. Angel
+Copyright (c) 2022~2023 Lindo St. Angel
 """
 
 import tensorflow as tf
 
-def create_model(window_length=599, conv_l2=0, dense_l2=0, batch_norm=False):
+from transformer_model import NILMTransformerModel
+
+def transformer(window_length=599, drop_out=0.1, **kwargs) -> tf.keras.Model:
+    """Specifies a transformer-based model."""
+    return NILMTransformerModel(
+        window_length=window_length, drop_out=drop_out, **kwargs)
+
+def cnn(window_length=599, conv_l2=0, dense_l2=0, batch_norm=False) -> tf.keras.Model:
     """Specifies a 1D seq2point model using the Keras Functional API.
 
     Returns a TF-Keras model that, once trained, can be optimized and
@@ -43,7 +42,7 @@ def create_model(window_length=599, conv_l2=0, dense_l2=0, batch_norm=False):
     Returns:
         TF-Keras model.
     """
-    input_layer = tf.keras.layers.Input(shape=(1, window_length))
+    input_layer = tf.keras.layers.Input(shape=(window_length,))
     input_layer = tf.keras.layers.Reshape(
         target_shape=(1, window_length, 1))(input_layer)
 
@@ -99,7 +98,7 @@ def create_model(window_length=599, conv_l2=0, dense_l2=0, batch_norm=False):
     return tf.keras.models.Model(
         inputs=input_layer, outputs=output_layer, name='cnn')
 
-def create_model_fcn(window_length=599, conv_l2=0, batch_norm=False):
+def fcn(window_length=599, conv_l2=0, batch_norm=False) -> tf.keras.Model:
     """Specifies a 1D seq2point model using the Keras Functional API.
 
     Returns a TF-Keras model that, once trained, can be optimized and
@@ -125,7 +124,7 @@ def create_model_fcn(window_length=599, conv_l2=0, batch_norm=False):
     Returns:
         TF-Keras model.
     """
-    input_layer = tf.keras.layers.Input(shape=(1, window_length))
+    input_layer = tf.keras.layers.Input(shape=(window_length,))
     input_layer = tf.keras.layers.Reshape(
         target_shape=(1, window_length, 1))(input_layer)
 
@@ -171,7 +170,7 @@ def create_model_fcn(window_length=599, conv_l2=0, batch_norm=False):
     return tf.keras.models.Model(
         inputs=input_layer, outputs=output_layer, name='fcn')
 
-def create_model_resnet(window_length=599, n_feature_maps=16, batch_norm=False):
+def resnet(window_length, n_feature_maps=16, batch_norm=False) -> tf.keras.Model:
     """Specifies a resnet seq2point model using the Keras Functional API.
 
     This is a resnet version of the model.
@@ -184,7 +183,7 @@ def create_model_resnet(window_length=599, n_feature_maps=16, batch_norm=False):
     Returns:
         TF-Keras model.
     """
-    input_layer = tf.keras.layers.Input(shape=(1, window_length))
+    input_layer = tf.keras.layers.Input(shape=(window_length,))
     input_layer = tf.keras.layers.Reshape(
         target_shape=(1, window_length, 1))(input_layer)
 

@@ -1,34 +1,25 @@
-"""
-Test a neural network to perform energy disaggregation,
-i.e., given a sequence of electricity mains reading,
-the algorithm separates the mains into appliances.
+"""Test a neural network to perform energy disaggregation.
 
-References:
-(1) Chaoyun Zhang, Mingjun Zhong, Zongzuo Wang, Nigel Goddard, and Charles Sutton.
-``Sequence-to-point learning with neural networks for nonintrusive load monitoring."
-Thirty-Second AAAI Conference on Artificial Intelligence (AAAI-18), Feb. 2-7, 2018.
-
-(2) https://arxiv.org/abs/1902.08835
-
-(3) https://github.com/MingjunZhong/transferNILM.
-
-Copyright (c) 2022 Lindo St. Angel
+Copyright (c) 2022, 2023 Lindo St. Angel
 """
 
 import os
 import argparse
 import socket
-from math import isclose
 
 import numpy as np
 import tensorflow as tf
 import matplotlib.pyplot as plt
 
 from logger import log
-import nilm_metric as nm
+import nilm_metric
 import common
 
-SAMPLE_PERIOD = 8 # Mains sample period in seconds.
+# Mains sample period in seconds.
+SAMPLE_PERIOD = 8
+
+# Model architecture to test.
+MODEL_ARCH = 'transformer'
 
 def get_arguments():
     parser = argparse.ArgumentParser(description='Predict appliance\
@@ -49,7 +40,7 @@ def get_arguments():
         help='this is the directory to the trained models')
     parser.add_argument('--ckpt_dir',
         type=str,
-        default='checkpoints',
+        default=f'checkpoints_{MODEL_ARCH}',
         help='directory name of model checkpoint')
     parser.add_argument('--save_results_dir',
         type=str,
@@ -96,19 +87,54 @@ if __name__ == '__main__':
     test_file_path = os.path.join(args.datadir, appliance_name, test_filename)
     log('Loading from: ' + test_file_path)
 
-    # offset parameter from window length
-    offset = int(
-        0.5 * (common.params_appliance[appliance_name]['windowlength'] - 1.0))
-
     test_set_x, test_set_y = common.load_dataset(test_file_path, args.crop)
     log(f'There are {test_set_x.size/10**6:.3f}M test samples.')
 
-    # Ground truth is center of test target (y) windows.
-    ground_truth = test_set_y[offset:-offset]
+    window_length = common.params_appliance[appliance_name]['window_length']
+    log(f'Window length: {window_length} (samples)')
+
+    sample_period = common.SAMPLE_PERIOD
+    log(f'Sample period: {sample_period} (s)')
+
+    max_power = common.params_appliance[appliance_name]['max_on_power']
+    log(f'Appliance max power: {max_power} (W)')
+
+    threshold = common.params_appliance[appliance_name]['on_power_threshold']
+    log(f'Appliance on threshold: {threshold} (W)')
+
+    train_app_std = common.params_appliance[appliance_name]['train_app_std']
+    train_agg_std = common.params_appliance[appliance_name]['train_agg_std']
+    test_app_mean = common.params_appliance[appliance_name]['test_app_mean']
+    test_agg_mean = common.params_appliance[appliance_name]['test_agg_mean']
+    train_agg_mean = common.params_appliance[appliance_name]['train_agg_mean']
+    train_app_mean = common.params_appliance[appliance_name]['train_app_mean']
+    log(f'Train aggregate mean: {train_agg_mean} (W)')
+    log(f'Train aggregate std: {train_agg_std} (W)')
+    log(f'Train appliance mean: {train_app_mean} (W)')
+    log(f'Train appliance std: {train_app_std} (W)')
+    log(f'Test appliance mean: {test_app_mean} (W)')
+    log(f'Test aggregate mean: {test_agg_mean} (W)')
+
+    alt_app_mean = common.params_appliance[appliance_name]['alt_app_mean']
+    alt_app_std = common.params_appliance[appliance_name]['alt_app_std']
+    log(f'Alternative appliance mean: {alt_app_mean} (W)')
+    log(f'Alternative appliance std: {alt_app_std} (W)')
+
+    alt_agg_mean = common.ALT_AGGREGATE_MEAN
+    alt_agg_std = common.ALT_AGGREGATE_STD
+    log(f'Alternative aggregate mean: {alt_agg_mean} (W)')
+    log(f'Alternative aggregate std: {alt_agg_std} (W)')
+
+    if common.USE_ALT_STANDARDIZATION:
+        log('Using alt standardization.')
+    else:
+        log('Using default standardization.')
 
     WindowGenerator = common.get_window_generator()
     test_provider = WindowGenerator(
         dataset=(test_set_x, None),
+        window_length=window_length,
+        batch_size=args.batch_size,
         train=False,
         shuffle=False)
 
@@ -126,63 +152,67 @@ if __name__ == '__main__':
         workers=24,
         use_multiprocessing=True)
 
-    max_power = common.params_appliance[appliance_name]['max_on_power']
-    threshold = common.params_appliance[appliance_name]['on_power_threshold']
-    train_app_std = common.params_appliance[appliance_name]['train_app_std']
-    train_agg_std = common.params_appliance[appliance_name]['train_agg_std']
-    test_app_mean = common.params_appliance[appliance_name]['test_app_mean']
-    test_agg_mean = common.params_appliance[appliance_name]['test_agg_mean']
+    # Find ground truth which is center of test target (y) windows.
+    # Calculate center sample index of a window.
+    center = int(0.5 * (window_length - 1))
+    # Calculate ground truth indices.
+    ground_truth_indices = np.arange(test_set_y.size - window_length) + center
+    # Grab only the center point of each window in target set.
+    ground_truth = test_set_y[ground_truth_indices]
+    # Adjust number of samples since predictions may not use a partial batch size.
+    #ground_truth = ground_truth[:test_prediction.size]
 
-    log(f'train appliance std: {train_app_std}')
-    log(f'train aggregate std: {train_agg_std}')
-    log(f'test appliance mean: {test_app_mean}')
-    log(f'test aggregate mean: {test_agg_mean}')
-
-    # De-normalize.
-    prediction = test_prediction * train_app_std + test_app_mean
-    prediction[prediction <= 0.0] = 0.0 #remove negative energy predictions
-    ground_truth = ground_truth * train_app_std + test_app_mean
+    # De-normalize appliance data.
+    app_mean = alt_app_mean if common.USE_ALT_STANDARDIZATION else train_app_mean
+    app_std = alt_app_std if common.USE_ALT_STANDARDIZATION else train_app_std
+    prediction = test_prediction.flatten() * app_std + app_mean
+    # Remove negative energy predictions
+    prediction[prediction <= 0.0] = 0.0
+    ground_truth = ground_truth.flatten() * app_std + app_mean
+    # De-normalize aggregate data.
+    agg_mean = alt_agg_mean if common.USE_ALT_STANDARDIZATION else train_agg_mean
+    agg_std = alt_agg_std if common.USE_ALT_STANDARDIZATION else train_agg_std
+    aggregate = test_set_x.flatten() * agg_std + agg_mean
 
     # Metric evaluation.
-    log('F1:{0}'.format(nm.get_F1(ground_truth.flatten(), prediction.flatten(), threshold)))
-    log('NDE:{0}'.format(nm.get_nde(ground_truth.flatten(), prediction.flatten())))
-    log('\nMAE: {:}\n    -std: {:}\n    -min: {:}\n    -max: {:}\n    -q1: {:}\n    -median: {:}\n    -q2: {:}'
-        .format(*nm.get_abs_error(ground_truth.flatten(), prediction.flatten())))
-    log('SAE: {:}'.format(nm.get_sae(ground_truth.flatten(), prediction.flatten(), SAMPLE_PERIOD)))
-    log('Energy per Day: {:}'.format(nm.get_Epd(ground_truth.flatten(), prediction.flatten(), SAMPLE_PERIOD)))
+    metrics = nilm_metric.NILMTestMetrics(
+        target=ground_truth, prediction=prediction,
+        threshold=threshold, sample_period=sample_period)
+    log(f'True positives: {metrics.get_tp()}')
+    log(f'True negatives: {metrics.get_tn()}')
+    log(f'False positives: {metrics.get_fp()}')
+    log(f'False negatives: {metrics.get_fn()}')
+    log(f'Accuracy: {metrics.get_accuracy()}')
+    log(f'MCC: {metrics.get_mcc()}')
+    log(f'F1: {metrics.get_f1()}')
+    log(f'MAE: {metrics.get_abs_error()["mean"]} (W)')
+    log(f'NDE: {metrics.get_nde()}')
+    log(f'SAE: {metrics.get_sae()}')
+    log(f'Ground truth EPD: {nilm_metric.get_epd(ground_truth, sample_period)} (Wh)')
+    log(f'Predicted EPD: {nilm_metric.get_epd(prediction, sample_period)} (Wh)')
 
     # Save results.
-    savemains = test_set_x.flatten() * train_agg_std + test_agg_mean
-    savegt = ground_truth
-    savepred = prediction.flatten()
-
-    save_name = args.save_results_dir + '/' + appliance_name + '/' + test_filename
-    if not os.path.exists(save_name):
-        os.makedirs(save_name)
-
-    np.save(save_name + '_pred.npy', savepred)
-    np.save(save_name + '_gt.npy', savegt)
-    np.save(save_name + '_mains.npy', savemains)
-
-    log('size: x={0}, y={0}, gt={0}'
-        .format(np.shape(savemains), np.shape(savepred), np.shape(savegt)))
+    save_path = os.path.join(
+        args.save_results_dir, appliance_name)
+    log(f'Saving mains, ground truth and predictions to {save_path}.')
+    np.save(f'{save_path}/{test_filename}_pred_{MODEL_ARCH}.npy', prediction)
+    np.save(f'{save_path}/{test_filename}_gt.npy', ground_truth)
+    np.save(f'{save_path}/{test_filename}_mains.npy', aggregate)
 
     # Plot.
+    pad = np.zeros(center)
     if args.plot:
         fig1 = plt.figure()
         ax1 = fig1.add_subplot(111)
-        ax1.plot(savemains[offset:-offset], color='#7f7f7f', linewidth=1.8)
-        ax1.plot(ground_truth, color='#d62728', linewidth=1.6)
-        ax1.plot(prediction,
-                 color='#1f77b4',
-                 #marker='o',
-                 linewidth=1.5)
+        ax1.plot(aggregate, color='#7f7f7f', linewidth=1.8)
+        ax1.plot(np.concatenate((pad, ground_truth, pad), axis=None),
+                 color='#d62728', linewidth=1.6)
+        ax1.plot(np.concatenate((pad, prediction, pad), axis=None),
+                 color='#1f77b4', linewidth=1.5)
         ax1.grid()
         ax1.set_title('Test results on {:}'
             .format(test_filename), fontsize=16, fontweight='bold', y=1.08)
         ax1.set_ylabel('W')
         ax1.legend(['aggregate', 'ground truth', 'prediction'])
-        #mng = plt.get_current_fig_manager()
-        #mng.resize(*mng.window.maxsize())
         plt.show()
         plt.close()

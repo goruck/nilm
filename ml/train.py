@@ -3,16 +3,7 @@
 Given a sequence of electricity mains reading, the algorithm
 separates the mains into appliances.
 
-References:
-(1) Chaoyun Zhang, Mingjun Zhong, Zongzuo Wang, Nigel Goddard, and Charles Sutton.
-``Sequence-to-point learning with neural networks for nonintrusive load monitoring."
-Thirty-Second AAAI Conference on Artificial Intelligence (AAAI-18), Feb. 2-7, 2018.
-
-(2) https://arxiv.org/abs/1902.08835
-
-(3) https://github.com/MingjunZhong/transferNILM.
-
-Copyright (c) 2022 Lindo St. Angel
+Copyright (c) 2022~2023 Lindo St. Angel
 """
 
 import os
@@ -21,11 +12,30 @@ import socket
 
 import tensorflow as tf
 import tensorflow_model_optimization as tfmot
+from keras import mixed_precision
 import matplotlib.pyplot as plt
 
-from define_models import create_model
+import define_models
 from logger import log
-from common import load_dataset, get_window_generator
+from common import load_dataset, get_window_generator, params_appliance
+
+# Specify model architecture to use for training.
+MODEL_ARCH = 'transformer'
+model_archs = dir(define_models)
+if MODEL_ARCH not in model_archs:
+    raise ValueError(f'Unknown model architecture: {MODEL_ARCH}!')
+else:
+    log(f'Using model architecture: {MODEL_ARCH}.')
+
+### DO NOT USE MIXED-PRECISION - CURRENTLY GIVES POOR MODEL ACCURACY ###
+# TODO: fix.
+# Run in mixed-precision mode for ~30% speedup vs TensorFloat-32
+# w/GPU compute capability = 8.6.
+#mixed_precision.set_global_policy('mixed_float16')
+
+# Uncomment below to run in TF eager mode for debugging.
+#tf.config.run_functions_eagerly(True)
+#tf.data.experimental.enable_debug_mode()
 
 def smooth_curve(points, factor=0.8):
     """Smooth a series of points given a smoothing factor."""
@@ -103,7 +113,7 @@ def get_arguments():
     parser.add_argument(
         '--batchsize',
         type=int,
-        default=1000,
+        default=1024,
         help='The batch size of training examples')
     parser.add_argument(
         '--n_epoch',
@@ -152,6 +162,13 @@ if __name__ == '__main__':
 
     # The appliance to train on.
     appliance_name = args.appliance_name
+    log(f'Appliance name: {appliance_name}')
+
+    batch_size = args.batchsize
+    log(f'Batch size: {batch_size}')
+
+    window_length = params_appliance[appliance_name]['window_length']
+    log(f'Window length: {window_length}')
 
     # Path for training data.
     training_path = os.path.join(
@@ -163,13 +180,13 @@ if __name__ == '__main__':
         if 'validation' in filename:
             val_filename = filename
     # path for validation data
-    validation_path = os.path.join(args.datadir,appliance_name,val_filename)
+    validation_path = os.path.join(args.datadir,appliance_name, val_filename)
     log(f'Validation dataset: {validation_path}')
 
     model_filepath = os.path.join(args.save_dir, appliance_name)
     log(f'Model file path: {model_filepath}')
 
-    checkpoint_filepath = os.path.join(model_filepath,'checkpoints')
+    checkpoint_filepath = os.path.join(model_filepath, f'checkpoints_{MODEL_ARCH}')
     log(f'Checkpoint file path: {checkpoint_filepath}')
 
     # Load datasets.
@@ -182,8 +199,15 @@ if __name__ == '__main__':
 
     # Init window generator to provide samples and targets.
     WindowGenerator = get_window_generator()
-    training_provider = WindowGenerator(dataset=train_dataset)
-    validation_provider = WindowGenerator(dataset=val_dataset, shuffle=False)
+    training_provider = WindowGenerator(
+        dataset=train_dataset,
+        batch_size=batch_size,
+        window_length=window_length)
+    validation_provider = WindowGenerator(
+        dataset=val_dataset,
+        batch_size=batch_size,
+        window_length=window_length,
+        shuffle=False)
 
     early_stopping = tf.keras.callbacks.EarlyStopping(
         monitor='val_mse',
@@ -193,9 +217,14 @@ if __name__ == '__main__':
     if args.train:
         log('Training model from scratch.')
 
-        model = create_model()
-
-        model.summary()
+        if MODEL_ARCH == 'transformer':
+            model = define_models.transformer(window_length=window_length)
+        elif MODEL_ARCH == 'cnn':
+            model = define_models.cnn(window_length=window_length)
+        elif MODEL_ARCH == 'fcn':
+            model = define_models.fcn(window_length=window_length)
+        elif MODEL_ARCH == 'resnet':
+            model = define_models.resnet(window_length=window_length)
 
         # Decay lr at 1/t every 5 epochs.
         batches_per_epoch = training_provider.__len__()
@@ -208,7 +237,8 @@ if __name__ == '__main__':
 
         model.compile(
             optimizer=tf.keras.optimizers.Adam(
-                learning_rate=lr_schedule,
+                #learning_rate=lr_schedule,
+                learning_rate=1e-4,
                 beta_1=0.9,
                 beta_2=0.999,
                 epsilon=1e-08),
@@ -234,10 +264,12 @@ if __name__ == '__main__':
             validation_steps=None,
             workers=24,
             use_multiprocessing=True)
+        
+        model.summary()
 
         plot(
             history,
-            plot_name='train',
+            plot_name=f'train_{MODEL_ARCH}',
             plot_display=args.plot,
             appliance_name=appliance_name)
     elif args.qat:
@@ -285,7 +317,7 @@ if __name__ == '__main__':
 
         plot(
             history,
-            plot_name='qat',
+            plot_name=f'qat_{MODEL_ARCH}',
             plot_display=args.plot,
             appliance_name=appliance_name)
     elif args.prune:
@@ -327,7 +359,7 @@ if __name__ == '__main__':
         model_for_pruning.summary()
 
         pruning_checkpoint_filepath = os.path.join(
-            model_filepath,'pruning_checkpoints')
+            model_filepath, f'pruning_checkpoints_{MODEL_ARCH}')
         log(f'Pruning checkpoint file path: {pruning_checkpoint_filepath}')
 
         pruning_checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
@@ -356,20 +388,22 @@ if __name__ == '__main__':
 
         plot(
             history,
-            plot_name='prune',
+            plot_name=f'prune_{MODEL_ARCH}',
             plot_display=args.plot,
             appliance_name=appliance_name)
 
         model_for_pruning.summary()
 
-        pruned_model_filepath = os.path.join(model_filepath,'pruned_model')
+        pruned_model_filepath = os.path.join(
+            model_filepath, f'pruned_model_{MODEL_ARCH}')
         log(f'Final pruned model file path: {pruned_model_filepath}')
         model_for_pruning.save(pruned_model_filepath)
 
         model_for_export = tfmot.sparsity.keras.strip_pruning(model_for_pruning)
         model_for_export.summary()
 
-        pruned_model_for_export_filepath = os.path.join(model_filepath,'pruned_model_for_export')
+        pruned_model_for_export_filepath = os.path.join(
+            model_filepath, f'pruned_model_for_export_{MODEL_ARCH}')
         log(f'Pruned model for export file path: {pruned_model_for_export_filepath}')
         model_for_export.save(pruned_model_for_export_filepath)
     else:

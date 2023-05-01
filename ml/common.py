@@ -1,5 +1,6 @@
-"""
-Various common functions and parameters.
+"""Various common functions and parameters.
+
+Copyright (c) 2022, 2023 Lindo St. Angel.
 """
 
 import os
@@ -8,25 +9,35 @@ import time
 
 import numpy as np
 
-# Average of all appliance aggregate training dataset means and std's.
-#AGGREGATE_MEAN = 545.0
-#AGGREGATE_STD = 820.0
+# Alternative aggregate standardization parameters used for all appliances.
+# From Michele D’Incecco, et. al., "Transfer Learning for Non-Intrusive Load Monitoring"
+ALT_AGGREGATE_MEAN = 522.0  # in Watts
+ALT_AGGREGATE_STD = 814.0   # in Watts
+
+# If True the alternative standardization parameters will be used
+# for scaling the datasets.
+USE_ALT_STANDARDIZATION = True
+
+# Power consumption sample update period in seconds.
+SAMPLE_PERIOD = 8
 
 # Various parameters used for training, validation and testing.
 params_appliance = {
     'kettle': {
-        'windowlength': 599,
-        'on_power_threshold': 2000.0,
-        'max_on_power': 3998.0,
-        'train_agg_mean': 501.32453633286167,   #training aggregate mean
-        'train_agg_std': 783.0367822932175,     #training aggregate standard deviation
-        'train_app_mean': 16.137261776311778,   #training appliance mean
-        'train_app_std': 196.89790951996966,    #training appliance standard deviation
-        'test_app_mean': 23.155018918550294,    #test appliance mean
-        'test_agg_mean': 465.10226795866976     #test aggregate mean
+        'window_length': 599,                   # in number of samples
+        'on_power_threshold': 2000.0,           # in Watts
+        'max_on_power': 3998.0,                 # in Watts
+        'train_agg_mean': 501.32453633286167,   # training aggregate mean (W)
+        'train_agg_std': 783.0367822932175,     # training aggregate standard deviation (W)
+        'train_app_mean': 16.137261776311778,   # training appliance mean (W)
+        'train_app_std': 196.89790951996966,    # training appliance standard deviation (W)
+        'test_app_mean': 23.155018918550294,    # test appliance mean (W)
+        'test_agg_mean': 465.10226795866976,    # test aggregate mean (W)
+        'alt_app_mean': 700.0,                  # alternative standardization (W)
+        'alt_app_std': 1000.0                   # alternative standardization (W)
     },
     'microwave': {
-        'windowlength': 599,
+        'window_length': 599,
         'on_power_threshold': 200.0,
         'max_on_power': 3969.0,
         'train_agg_mean': 495.0447502551665,
@@ -34,10 +45,12 @@ params_appliance = {
         'train_app_mean': 3.4617193220425304,
         'train_app_std': 64.22826568216946,
         'test_app_mean': 9.577146165430394,
-        'test_agg_mean': 381.2162070293207
+        'test_agg_mean': 381.2162070293207,
+        'alt_app_mean': 500.0,
+        'alt_app_std': 800.0
     },
     'fridge': {
-        'windowlength': 599,
+        'window_length': 599,
         'on_power_threshold': 50.0,
         'max_on_power': 3323.0,
         'train_agg_mean': 605.4483277115743,
@@ -45,10 +58,12 @@ params_appliance = {
         'train_app_mean': 48.55206460642049,
         'train_app_std': 62.114631485397986,
         'test_app_mean': 24.40792692094185,
-        'test_agg_mean': 254.83458540217833
+        'test_agg_mean': 254.83458540217833,
+        'alt_app_mean': 200.0,
+        'alt_app_std': 400.0
     },
     'dishwasher': {
-        'windowlength': 599,
+        'window_length': 599,
         'on_power_threshold': 10.0,
         'max_on_power': 3964.0,
         'train_agg_mean': 606.3228537145152,
@@ -56,10 +71,12 @@ params_appliance = {
         'train_app_mean': 46.040618889481905,
         'train_app_std': 305.87980576285474,
         'test_app_mean': 11.299554135013219,
-        'test_agg_mean': 377.9968064884045
+        'test_agg_mean': 377.9968064884045,
+        'alt_app_mean': 700.0,
+        'alt_app_std': 1000.0
     },
     'washingmachine': {
-        'windowlength': 599,
+        'window_length': 599,
         'on_power_threshold': 20.0,
         'max_on_power': 3999.0,
         'train_agg_mean': 517.5859340919116,
@@ -67,7 +84,9 @@ params_appliance = {
         'train_app_mean': 22.22078550102201,
         'train_app_std': 189.70389890256996,
         'test_app_mean': 29.433812118685246,
-        'test_agg_mean': 685.6151694157477
+        'test_agg_mean': 685.6151694157477,
+        'alt_app_mean': 400.0,
+        'alt_app_std': 700.0
     }
 }
 
@@ -131,7 +150,7 @@ def get_window_generator(keras_sequence=True):
         def __init__(
             self,
             dataset,
-            batch_size=1000,
+            batch_size=1024,
             window_length=599,
             train=True,
             shuffle=True) -> None:
@@ -169,7 +188,8 @@ def get_window_generator(keras_sequence=True):
 
         def __len__(self) -> int:
             """Returns number batches in an epoch."""
-            return(int(np.ceil(self.num_samples / self.batch_size)))
+            return(int(np.ceil(self.num_samples / self.batch_size))) # allow partial batch
+            #return self.num_samples // self.batch_size # disallow partial batch
 
         def __getitem__(self, index) -> np.ndarray:
             """Returns windowed samples and targets."""
