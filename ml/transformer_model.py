@@ -196,6 +196,8 @@ class RelativePositionEmbedding(tf.keras.layers.Layer):
   
 
 class DotProductAttention(tf.keras.layers.Layer):
+    """Dot-product attention layer, a.k.a. Luong-style attention."""
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
@@ -216,12 +218,21 @@ class DotProductAttention(tf.keras.layers.Layer):
 
 
 class MultiHeadedAttention(tf.keras.layers.Layer):
+    """MultiHeadAttention layer.
+
+    This is an implementation of multi-headed attention as described in the
+    paper "Attention is all you Need" (Vaswani et al., 2017).
+
+    If `query`, `key,` `value` are the same, then
+    this is self-attention. Each timestep in `query` attends to the
+    corresponding sequence in `key`, and returns a fixed-width vector."""
+
     def __init__(self, h, d_k, d_v, d_model, **kwargs):
         super().__init__(**kwargs)
-        self.heads = h              # Number of attention heads to use
-        self.d_model = d_model      # Dimensionality of the model
-        self.d_k = d_model // h     # Dimensionality of the linearly projected queries and keys
-        self.d_v = d_model // h     # Dimensionality of the linearly projected values
+        self.heads = h # Number of attention heads to use
+        self.d_model = d_model # Dimensionality of the model
+        self.d_k = d_k # Dimensionality of the linearly projected queries and keys
+        self.d_v = d_v # Dimensionality of the linearly projected values
         self.attention = DotProductAttention()  # Scaled dot product attention
         self.W_q = tf.keras.layers.Dense(self.d_k)  # Learned projection matrix for the queries
         self.W_k = tf.keras.layers.Dense(self.d_k)  # Learned projection matrix for the keys
@@ -269,6 +280,11 @@ class MultiHeadedAttention(tf.keras.layers.Layer):
 
 
 class PositionwiseFeedForward(tf.keras.layers.Layer):
+    """PositionwiseFeedForward layer.
+
+    This is an implementation of position wise feed-forward as described in the
+    paper "Attention is all you Need" (Vaswani et al., 2017)."""
+
     def __init__(self, d_model, d_ff, **kwargs):
         super().__init__(**kwargs)
         self.fully_connected1 = tf.keras.layers.Dense(d_ff)  # First fully connected layer
@@ -283,6 +299,8 @@ class PositionwiseFeedForward(tf.keras.layers.Layer):
 
 
 class AddNormalization(tf.keras.layers.Layer):
+    """AddNormaliztion Layer"""
+    
     def __init__(self, **kwargs):
         super(AddNormalization, self).__init__(**kwargs)
         self.layer_norm = tf.keras.layers.LayerNormalization()
