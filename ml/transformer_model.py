@@ -16,15 +16,18 @@ class GELU(tf.keras.layers.Layer):
 
     def call(self, x):
         return 0.5 * x * (1 + tf.tanh(
-           tf.math.sqrt(2 / math.pi) * (x + 0.044715 * tf.math.pow(x, 3))))
-
+           tf.sqrt(2 / math.pi) * (x + 0.044715 * tf.pow(x, 3))))
+    
 
 class L2NormPooling1D(tf.keras.layers.Layer):
-    """Applies a 1D power-average pooling over an input signal.
+    """Applies L2 norm average pooling over an input signal.
+
+    If the L2 norm pooling is zero, the gradient of this function is not defined.
+    This implementation adds `epsilon` to that quantity to maintain numerical stability.
     
     Args:
         Same as tf.keras.layers.AveragePooling1D except:
-        epsilion: A small number added to the pooled output for numerical stability.
+        epsilon: A small number added to the pooled output for numerical stability.
     """
 
     def __init__(self,
@@ -32,24 +35,23 @@ class L2NormPooling1D(tf.keras.layers.Layer):
                  strides=2,
                  padding='valid',
                  data_format='channels_last',
-                 epsilon=1e-08, # for numerical stability
+                 epsilon=1e-10,
                  **kwargs):
         
         super().__init__(**kwargs)
-        self.strides = pool_size if strides is None else strides
-        self.data_format = 'NWC' if data_format == 'channels_last' else 'NCW'
         self.pool_size = pool_size
-        self.padding = padding.upper()
+        self.strides = strides
+        self.padding = padding
+        self.data_format = data_format
         self.epsilon = epsilon
+        self.avg_pool = tf.keras.layers.AveragePooling1D(pool_size=self.pool_size,
+                                                         strides=self.strides,
+                                                         padding=self.padding,
+                                                         data_format=self.data_format)
 
     def call(self, x):
-        x = tf.math.pow(x, 2)
-        pooled = tf.nn.avg_pool(input=x,
-                                ksize=self.pool_size,
-                                strides=self.strides,
-                                padding=self.padding,
-                                data_format=self.data_format)
-        return tf.math.sqrt(pooled + self.epsilon)
+        avg_pooled_squares = self.avg_pool(tf.square(x)) #* tf.cast(self.pool_size, dtype=x.dtype)
+        return tf.sqrt(avg_pooled_squares + self.epsilon)
     
 
 class PositionEmbedding(tf.keras.layers.Layer):
@@ -121,7 +123,7 @@ class PositionEmbedding(tf.keras.layers.Layer):
 class RelativePositionEmbedding(tf.keras.layers.Layer):
   """Creates a relative positional embedding.
   Example:
-  ```python
+  ```pythontensorflow loss nan square root
   position_embedding = RelativePositionEmbedding(max_length=100)
   inputs = tf.keras.Input((100, 32), dtype=tf.float32)
   outputs = position_embedding(inputs)
@@ -300,7 +302,7 @@ class PositionwiseFeedForward(tf.keras.layers.Layer):
 
 class AddNormalization(tf.keras.layers.Layer):
     """AddNormaliztion Layer"""
-    
+
     def __init__(self, **kwargs):
         super(AddNormalization, self).__init__(**kwargs)
         self.layer_norm = tf.keras.layers.LayerNormalization()
@@ -370,7 +372,7 @@ class NILMTransformerModel(tf.keras.Model):
         training: Flag indicating training or inference (used by the call method).
     """
 
-    def __init__(self, window_length: int, drop_out: float, **kwargs) -> None:
+    def __init__(self, window_length:int, drop_out:float, **kwargs) -> None:
         super().__init__(**kwargs)
 
         self.original_len = window_length
@@ -393,15 +395,55 @@ class NILMTransformerModel(tf.keras.Model):
             self.hidden, self.heads, self.hidden * 4, self.dropout_rate)
             for _ in range(self.n_layers)]
         self.relative_position = RelativePositionEmbedding(max_length=self.latent_len)
+        self.avg_pool = tf.keras.layers.GlobalAveragePooling1D()
+        #self.max_pool = tf.keras.layers.GlobalMaxPooling1D()
         self.dense1 = tf.keras.layers.Dense(units=self.decoder_hidden, activation='relu')
-        self.flatten = tf.keras.layers.Flatten()
-        self.dropout2 = tf.keras.layers.Dropout(rate=self.dropout_rate)
+        #self.flatten = tf.keras.layers.Flatten()
+        self.dropout2 = tf.keras.layers.Dropout(rate=0.25)
         self.add_norm2 = AddNormalization()
         self.dense2 = tf.keras.layers.Dense(units=1)
         # If training with mixed-precision, ensure model output is float32.
         # This helps to avoids numerical instability.
         # See https://www.tensorflow.org/guide/mixed_precision#building_the_model
         self.output_activation = tf.keras.layers.Activation('linear', dtype=tf.float32)
+
+    def train_step(self, data):
+        """Function called by fit() that trains on every batch of data."""
+
+        # Unpack the data. Its structure depends on what is passed to `fit()`.
+        data_len = len(data)
+        if data_len == 3:
+            x, y, mask = data
+        else:
+            x, y = data
+        # x expected shape = (batch_size, original_length)
+        # y expected shape = (batch_size,)
+        # masks expected shape = (batch_size,)
+
+        with tf.GradientTape() as tape:
+            y_pred = self(x, training=True)  # Forward pass
+            # Compute the loss value using only outputs from the
+            # randomly masked input sequence elements. 
+            # (the loss function is configured in `compile()`)
+            loss = self.compiled_loss(
+                y[mask] if data_len==3 else y,
+                y_pred[mask] if data_len==3 else y_pred,
+                sample_weight=None,
+                regularization_losses=self.losses
+            )
+
+        # Compute gradients
+        trainable_vars = self.trainable_variables
+        gradients = tape.gradient(loss, trainable_vars)
+
+        # Update weights
+        self.optimizer.apply_gradients(zip(gradients, trainable_vars))
+    
+        # Update metrics (includes the metric that tracks the loss)
+        self.compiled_metrics.update_state(y, y_pred)
+
+        # Return a dict mapping metric names to current value
+        return {m.name: m.result() for m in self.metrics}
 
     def call(self, sequence:tf.Tensor, training:bool=None) -> tf.Tensor:
         # Expected input sequence shape = (batch_size, original_len)
@@ -434,12 +476,12 @@ class NILMTransformerModel(tf.keras.Model):
         # Expected output shape = (batch_size, latent_len, hidden)
         x = self.add_norm2(x, relative_positional_embeddings)
         # Expected output shape = (batch_size, latent_len, hidden)
+        x = self.avg_pool(x) #self.max_pool(x)
+        # Expected output shape = (batch_size, hidden)
         x = self.dense1(x)
-        # Expected output shape = (batch_size, latent_len, hidden)
-        x = self.flatten(x)
-        # Expected output size = (batch_size, latent_len * decoder_hidden)
+        # Expected output shape = (batch_size, decoder_hidden)
         x = self.dropout2(x, training=training)
-        # Expected output size = (batch_size, latent_len * decoder_hidden)
+        # Expected output size = (batch_size, decoder_hidden)
         # Apply sequence-to-point transformation.
         x = self.dense2(x)
         # Expected output_size = (batch_size, 1)

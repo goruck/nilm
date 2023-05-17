@@ -49,23 +49,23 @@ def smooth_curve(points, factor=0.8):
     return smoothed_points
 
 def plot(history, plot_name, plot_display, appliance_name):
-    """Save and display mse and mae plots."""
+    """Save and display loss and mae plots."""
     # Mean square error.
-    mse = history.history['mse']
-    val_mse = history.history['val_mse']
-    plot_epochs = range(1,len(mse)+1)
+    loss = history.history['loss']
+    val_loss = history.history['val_loss']
+    plot_epochs = range(1,len(loss)+1)
     plt.plot(
-        plot_epochs, smooth_curve(mse),
-        label='Smoothed Training MSE')
+        plot_epochs, smooth_curve(loss),
+        label='Smoothed Training Loss')
     plt.plot(
-        plot_epochs, smooth_curve(val_mse),
-        label='Smoothed Validation MSE')
+        plot_epochs, smooth_curve(val_loss),
+        label='Smoothed Validation Loss')
     plt.title(f'Training history for {appliance_name} ({plot_name})')
-    plt.ylabel('Mean Squared Error')
+    plt.ylabel('Loss (MSE)')
     plt.xlabel('Epoch')
     plt.legend()
     plot_filepath = os.path.join(
-        args.save_dir, appliance_name, f'{plot_name}_mse')
+        args.save_dir, appliance_name, f'{plot_name}_loss')
     log(f'Plot directory: {plot_filepath}')
     plt.savefig(fname=plot_filepath)
     if plot_display:
@@ -202,7 +202,8 @@ if __name__ == '__main__':
     training_provider = WindowGenerator(
         dataset=train_dataset,
         batch_size=batch_size,
-        window_length=window_length)
+        window_length=window_length,
+        p=0.20 if MODEL_ARCH=='transformer' else None)
     validation_provider = WindowGenerator(
         dataset=val_dataset,
         batch_size=batch_size,
@@ -210,7 +211,7 @@ if __name__ == '__main__':
         shuffle=False)
 
     early_stopping = tf.keras.callbacks.EarlyStopping(
-        monitor='val_mse',
+        monitor='val_loss',
         patience=6,
         verbose=2)
 
@@ -243,11 +244,11 @@ if __name__ == '__main__':
                 beta_2=0.999,
                 epsilon=1e-08),
             loss='mse',
-            metrics=['mse', 'msle', 'mae'])
+            metrics=['msle', 'mae'])
 
         checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
             filepath = checkpoint_filepath,
-            monitor='val_mse',
+            monitor='val_loss',
             verbose=1,
             save_best_only=True,
             mode='auto',

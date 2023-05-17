@@ -137,14 +137,23 @@ def get_window_generator(keras_sequence=True):
         from tensorflow import keras
 
     class WindowGenerator(keras.utils.Sequence if keras_sequence else object):
-        """ Generates windowed timeseries samples and targets.
+        """ Generates windowed time series samples, targets and masks.
+
+        If 'p' is not None the input samples are processed with random masking, 
+        where a proportion 'p' of input elements are randomly masked with a 
+        special token and only output results from such positions are used to 
+        compute the loss using a keras model fit() custom train step. This may be 
+        useful in training transformers in a masked language model fashion (MLM). See:
+        "BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding"
+        (https://arxiv.org/pdf/1810.04805.pdf).
         
         Attributes:
-            dataset: input samples, targets timeseries data.
+            dataset: input samples, targets time series data.
             batch_size: mini batch size used in training model.
-            window_length: number of samples in a window of timeseries data.
+            window_length: number of samples in a window of time series data.
             train: if True returns samples and targets else just samples.
             shuffle: if True shuffles dataset initially and every epoch.
+            p: proportion of input samples masked with a special token.
         """
 
         def __init__(
@@ -153,17 +162,21 @@ def get_window_generator(keras_sequence=True):
             batch_size=1024,
             window_length=599,
             train=True,
-            shuffle=True) -> None:
+            shuffle=True,
+            p=None) -> None:
             """Inits WindowGenerator."""
 
-            self.X, self.y = dataset
+            X, y = dataset
             self.batch_size = batch_size
             self.shuffle = shuffle
             self.window_length = window_length
             self.train = train
+            self.p = p
+
+            MASK_TOKEN = -1.0
 
             # Total number of samples in dataset.
-            self.total_samples=self.X.size
+            self.total_samples = X.size
 
             # Calculate window center index.
             self.window_center = int(0.5 * (window_length - 1))
@@ -176,6 +189,32 @@ def get_window_generator(keras_sequence=True):
             self.indices = np.arange(self.num_samples)
 
             self.rng = np.random.default_rng()
+            
+            if self.p is not None:
+                # Randomly mask input sequence.
+                self.tokens = []
+                self.labels = []
+                self.token_mask = []
+                for i in range(self.total_samples):
+                    prob = self.rng.random()
+                    if prob < p:
+                        prob = self.rng.random()
+                        if prob < 0.8:
+                            self.tokens.append(MASK_TOKEN)
+                        elif prob < 0.9:
+                            self.tokens.append(self.rng.normal())
+                        else:
+                            self.tokens.append(X[i])
+
+                        self.labels.append(y[i])
+                        self.token_mask.append(True)
+                    else:
+                        self.tokens.append(X[i])
+                        #self.labels.append(MASK_TOKEN)
+                        self.labels.append(y[i])
+                        self.token_mask.append(False)
+            else:
+                self.tokens, self.labels = X, y
 
             # Initial shuffle. 
             if self.shuffle:
@@ -196,21 +235,23 @@ def get_window_generator(keras_sequence=True):
             # Row indices for current batch. 
             rows = self.indices[
                 index * self.batch_size:(index + 1) * self.batch_size]
-
+            
             # Create a batch of windowed samples.
             samples = np.array(
-                [self.X[row:row + self.window_length] for row in rows])
-
-            # Reshape samples to match model's input tensor format.
-            # Starting shape = (batch_size, window_length)
-            # Desired shape = (batch_size, 1, window_length)
-            #samples = samples[:, np.newaxis, :]
+                [self.tokens[row:row + self.window_length] for row in rows])
 
             if self.train:
-                # Create batch of single point targets from center of window.
+                # Create batch of single point targets and
+                # masks (if training w/MLM) from center of window.
                 targets = np.array(
-                    [self.y[row + self.window_center] for row in rows])
-                return samples, targets
+                    [self.labels[row + self.window_center] for row in rows])
+                
+                if self.p is None:
+                    return samples, targets
+                else:
+                    mask = np.array(
+                        [self.token_mask[row + self.window_center] for row in rows])
+                    return samples, targets, mask
             else:
                 # Return only samples if in test mode.
                 return samples
