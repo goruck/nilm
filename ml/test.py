@@ -87,7 +87,8 @@ if __name__ == '__main__':
     test_file_path = os.path.join(args.datadir, appliance_name, test_filename)
     log('Loading from: ' + test_file_path)
 
-    test_set_x, test_set_y = common.load_dataset(test_file_path, args.crop)
+    test_set_x, test_set_y, test_set_y_status = common.load_dataset(test_file_path,
+                                                                    args.crop)
     log(f'There are {test_set_x.size/10**6:.3f}M test samples.')
 
     window_length = common.params_appliance[appliance_name]['window_length']
@@ -132,7 +133,7 @@ if __name__ == '__main__':
 
     WindowGenerator = common.get_window_generator()
     test_provider = WindowGenerator(
-        dataset=(test_set_x, None),
+        dataset=(test_set_x, None, None),
         window_length=window_length,
         batch_size=args.batch_size,
         train=False,
@@ -162,22 +163,41 @@ if __name__ == '__main__':
     # Adjust number of samples since predictions may not use a partial batch size.
     #ground_truth = ground_truth[:test_prediction.size]
 
-    # De-normalize appliance data.
-    app_mean = alt_app_mean if common.USE_ALT_STANDARDIZATION else train_app_mean
-    app_std = alt_app_std if common.USE_ALT_STANDARDIZATION else train_app_std
+    # De-normalize appliance power predictions.
+    if common.USE_APPLIANCE_NORMALIZATION:
+        app_mean = 0
+        app_std = common.params_appliance[appliance_name]['max_on_power']
+    else:
+        alt_app_mean = common.params_appliance[appliance_name]['alt_app_mean']
+        alt_app_std = common.params_appliance[appliance_name]['alt_app_std']
+        app_mean = alt_app_mean if common.USE_ALT_STANDARDIZATION else train_app_mean
+        app_std = alt_app_std if common.USE_ALT_STANDARDIZATION else train_app_std
+        print('Using alt standardization.' if common.USE_ALT_STANDARDIZATION 
+                else 'Using default standardization.')
+    print(f'De-normalizing predictions with mean = {app_mean} and std = {app_std}.')
     prediction = test_prediction.flatten() * app_std + app_mean
     # Remove negative energy predictions
     prediction[prediction <= 0.0] = 0.0
+
+    # De-normalize ground truth.
     ground_truth = ground_truth.flatten() * app_std + app_mean
+
     # De-normalize aggregate data.
     agg_mean = alt_agg_mean if common.USE_ALT_STANDARDIZATION else train_agg_mean
     agg_std = alt_agg_std if common.USE_ALT_STANDARDIZATION else train_agg_std
     aggregate = test_set_x.flatten() * agg_std + agg_mean
 
+    # Calculate ground truth and prediction status.
+    prediction_status = np.array(common.compute_status(prediction, appliance_name))
+    ground_truth_status = test_set_y_status[ground_truth_indices]
+    assert prediction_status.size == ground_truth_status.size
+
     # Metric evaluation.
-    metrics = nilm_metric.NILMTestMetrics(
-        target=ground_truth, prediction=prediction,
-        threshold=threshold, sample_period=sample_period)
+    metrics = nilm_metric.NILMTestMetrics(target=ground_truth,
+                                          target_status=ground_truth_status,
+                                          prediction=prediction,
+                                          prediction_status=prediction_status,
+                                          sample_period=sample_period)
     log(f'True positives: {metrics.get_tp()}')
     log(f'True negatives: {metrics.get_tn()}')
     log(f'False positives: {metrics.get_fp()}')
@@ -189,7 +209,7 @@ if __name__ == '__main__':
     log(f'NDE: {metrics.get_nde()}')
     log(f'SAE: {metrics.get_sae()}')
     log(f'Ground truth EPD: {nilm_metric.get_epd(ground_truth, sample_period)} (Wh)')
-    log(f'Predicted EPD: {nilm_metric.get_epd(prediction, sample_period)} (Wh)')
+    log(f'Predicted EPD: {nilm_metric.get_epd(prediction * prediction_status, sample_period)} (Wh)')
 
     # Save results.
     save_path = os.path.join(

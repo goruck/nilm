@@ -17,7 +17,7 @@ import matplotlib.pyplot as plt
 
 import define_models
 from logger import log
-from common import load_dataset, get_window_generator, params_appliance
+import common
 
 # Specify model architecture to use for training.
 MODEL_ARCH = 'transformer'
@@ -33,9 +33,9 @@ else:
 # w/GPU compute capability = 8.6.
 #mixed_precision.set_global_policy('mixed_float16')
 
-# Uncomment below to run in TF eager mode for debugging.
-#tf.config.run_functions_eagerly(True)
-#tf.data.experimental.enable_debug_mode()
+# Set to True run in TF eager mode for debugging.
+# May have to reduce batch size <= 512 to avoid OOM.
+RUN_EAGERLY = False
 
 def smooth_curve(points, factor=0.8):
     """Smooth a series of points given a smoothing factor."""
@@ -167,8 +167,18 @@ if __name__ == '__main__':
     batch_size = args.batchsize
     log(f'Batch size: {batch_size}')
 
-    window_length = params_appliance[appliance_name]['window_length']
+    window_length = common.params_appliance[appliance_name]['window_length']
     log(f'Window length: {window_length}')
+
+    # Calculate normalized threshold.
+    threshold = common.params_appliance[appliance_name]['on_power_threshold']
+    max_on_power = common.params_appliance[appliance_name]['max_on_power']
+    #train_agg_mean = common.params_appliance[appliance_name]['train_app_mean']
+    #train_agg_std = common.params_appliance[appliance_name]['train_agg_std']
+    #agg_mean = common.ALT_AGGREGATE_MEAN if common.USE_ALT_STANDARDIZATION else train_agg_mean
+    #agg_std = common.ALT_AGGREGATE_STD if common.USE_ALT_STANDARDIZATION else train_agg_std
+    threshold /= max_on_power
+    log(f'Normalized on power threshold: {threshold}')
 
     # Path for training data.
     training_path = os.path.join(
@@ -190,20 +200,20 @@ if __name__ == '__main__':
     log(f'Checkpoint file path: {checkpoint_filepath}')
 
     # Load datasets.
-    train_dataset = load_dataset(training_path, args.crop_train_dataset)
-    val_dataset = load_dataset(validation_path, args.crop_val_dataset)
+    train_dataset = common.load_dataset(training_path, args.crop_train_dataset)
+    val_dataset = common.load_dataset(validation_path, args.crop_val_dataset)
     num_train_samples = train_dataset[0].size
     log(f'There are {num_train_samples/10**6:.3f}M training samples.')
     num_val_samples = val_dataset[0].size
     log(f'There are {num_val_samples/10**6:.3f}M validation samples.')
 
     # Init window generator to provide samples and targets.
-    WindowGenerator = get_window_generator()
+    WindowGenerator = common.get_window_generator()
     training_provider = WindowGenerator(
         dataset=train_dataset,
         batch_size=batch_size,
         window_length=window_length,
-        p=0.20 if MODEL_ARCH=='transformer' else None)
+        p=None)# if MODEL_ARCH!='transformer' else 0.2)
     validation_provider = WindowGenerator(
         dataset=val_dataset,
         batch_size=batch_size,
@@ -219,7 +229,8 @@ if __name__ == '__main__':
         log('Training model from scratch.')
 
         if MODEL_ARCH == 'transformer':
-            model = define_models.transformer(window_length=window_length)
+            model = define_models.transformer(window_length=window_length, 
+                                              threshold=threshold)
         elif MODEL_ARCH == 'cnn':
             model = define_models.cnn(window_length=window_length)
         elif MODEL_ARCH == 'fcn':
@@ -244,7 +255,8 @@ if __name__ == '__main__':
                 beta_2=0.999,
                 epsilon=1e-08),
             loss='mse',
-            metrics=['msle', 'mae'])
+            metrics=['msle', 'mae'],
+            run_eagerly=RUN_EAGERLY)
 
         checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
             filepath = checkpoint_filepath,

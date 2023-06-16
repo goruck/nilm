@@ -68,37 +68,29 @@ class NILMTestMetrics():
 
     Attributes:
         target: ground truth power consumption samples in Watts.
+        target_status: ground truth on-off status.
         prediction: predicted power consumption samples in Watts.
-        threshold: on-off status threshold to apply to samples in Watts
+        prediction_status: prediction on-off status.
         sample_period: sample update period in seconds.
     """
     def __init__(
         self,
         target:np.ndarray,
+        target_status:np.ndarray,
         prediction:np.ndarray,
-        threshold:float,
+        prediction_status:np.ndarray,
         sample_period:int) -> None:
         
         if target.shape != prediction.shape:
             raise ValueError('Target and prediction must be same shape.')
-        
-        if threshold < 0:
-            raise ValueError('Threshold must be non-negative.')
+        if target.shape != target_status.shape or prediction.shape != prediction_status.shape:
+            raise ValueError('Status shapes must match data shapes.')
         
         self.target = target
+        self.target_status = target_status
         self.prediction = prediction
-        self.threshold = threshold
+        self.prediction_status = prediction_status
         self.sample_period = sample_period
-
-        def on_off_status(a:np.ndarray) -> np.ndarray:
-            """Computes if a value in 'a' is on or off based on a threshold."""
-            b = a.copy()
-            b[b < threshold] = 0    # set all values < threshold to off (0)
-            b[b >= threshold] = 1   # set all values >= threshold to on (1)
-            return b
-        
-        self.target_status = on_off_status(target)
-        self.prediction_status = on_off_status(prediction)
 
     def get_tp(self) -> int:
         '''Returns the number of true positives between target and prediction.
@@ -187,7 +179,7 @@ class NILMTestMetrics():
     def get_relative_error(self) -> float:
         '''Returns the relative error.'''
         return np.mean(np.nan_to_num(
-            np.abs(self.target - self.prediction) / self.target.size))
+            np.abs(self.target * self.target_status - self.prediction * self.prediction_status) / self.target.size))
 
     def get_abs_error(self) -> dict:
         """Returns absolute error statistics.
@@ -195,7 +187,7 @@ class NILMTestMetrics():
         Evaluates the absolute difference between the prediction and the
         ground truth at every time point and returns assoc. statistics.
         """
-        data = np.abs(self.target - self.prediction)
+        data = np.abs(self.target * self.target_status - self.prediction * self.prediction_status)
 
         return get_statistics(data)
 
@@ -205,7 +197,7 @@ class NILMTestMetrics():
         Evaluates the normalized error of the squared difference
         between the prediction and the ground truth.
         '''
-        return np.sum((self.target - self.prediction)**2) / np.sum((self.target**2))
+        return np.sum((self.target * self.target_status - self.prediction * self.prediction_status)**2) / np.sum((self.target**2))
 
     def get_sae(self) -> float:
         '''Returns the signal aggregate error (sae).
@@ -218,7 +210,7 @@ class NILMTestMetrics():
         rhat is the predicted total energy.
         '''
         # data[i] * sample_period / (60 * 60) is instantaneous energy in Wh.
-        r = np.sum(self.target * float(self.sample_period) / 3600.0)
-        rhat = np.sum(self.prediction * float(self.sample_period) / 3600.0)
+        r = np.sum(self.target * self.target_status * float(self.sample_period) / 3600.0)
+        rhat = np.sum(self.prediction * self.prediction_status * float(self.sample_period) / 3600.0)
 
         return np.abs(r - rhat) / r

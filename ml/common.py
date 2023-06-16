@@ -18,6 +18,10 @@ ALT_AGGREGATE_STD = 814.0   # in Watts
 # for scaling the datasets.
 USE_ALT_STANDARDIZATION = True
 
+# If True the appliance dataset will be normalized to [0, max_on_power]
+# else the appliance dataset will be standardized.
+USE_APPLIANCE_NORMALIZATION = True
+
 # Power consumption sample update period in seconds.
 SAMPLE_PERIOD = 8
 
@@ -27,6 +31,8 @@ params_appliance = {
         'window_length': 599,                   # in number of samples
         'on_power_threshold': 2000.0,           # in Watts
         'max_on_power': 3998.0,                 # in Watts
+        'min_on_duration': 12.0,                # in seconds
+        'min_off_duration': 0.0,                # in seconds
         'train_agg_mean': 501.32453633286167,   # training aggregate mean (W)
         'train_agg_std': 783.0367822932175,     # training aggregate standard deviation (W)
         'train_app_mean': 16.137261776311778,   # training appliance mean (W)
@@ -111,13 +117,15 @@ def find_test_filename(test_dir, appliance, test_type) -> str:
             break
     return test_filename
 
-def load_dataset(file_name, crop=None) -> np.array:
-    """Load CSV file, convert to np and return mains and appliance samples."""
+def load_dataset(file_name, crop=None):
+    """Load CSV file and return mains power, appliance power and status."""
     df = pd.read_csv(file_name, nrows=crop)
 
-    df_np = np.array(df, dtype=np.float32)
+    mains_power = np.array(df.iloc[:, 0], dtype=np.float32)
+    appliance_power = np.array(df.iloc[:, 1], dtype=np.float32)
+    activations = np.array(df.iloc[:, 2], dtype=np.float32)
 
-    return df_np[:, 0], df_np[:, 1]
+    return mains_power, appliance_power, activations
 
 def get_window_generator(keras_sequence=True):
     """Wrapper to conditionally sublass WindowGenerator as Keras sequence.
@@ -137,7 +145,7 @@ def get_window_generator(keras_sequence=True):
         from tensorflow import keras
 
     class WindowGenerator(keras.utils.Sequence if keras_sequence else object):
-        """ Generates windowed time series samples, targets and masks.
+        """ Generates windowed time series samples, targets and status.
 
         If 'p' is not None the input samples are processed with random masking, 
         where a proportion 'p' of input elements are randomly masked with a 
@@ -166,7 +174,7 @@ def get_window_generator(keras_sequence=True):
             p=None) -> None:
             """Inits WindowGenerator."""
 
-            X, y = dataset
+            X, y, activations = dataset
             self.batch_size = batch_size
             self.shuffle = shuffle
             self.window_length = window_length
@@ -192,29 +200,28 @@ def get_window_generator(keras_sequence=True):
             
             if self.p is not None:
                 # Randomly mask input sequence.
-                self.tokens = []
-                self.labels = []
-                self.token_mask = []
+                self.samples = []
+                self.targets = []
+                self.status = []
                 for i in range(self.total_samples):
                     prob = self.rng.random()
                     if prob < p:
                         prob = self.rng.random()
                         if prob < 0.8:
-                            self.tokens.append(MASK_TOKEN)
+                            self.samples.append(MASK_TOKEN)
                         elif prob < 0.9:
-                            self.tokens.append(self.rng.normal())
+                            self.samples.append(self.rng.normal())
                         else:
-                            self.tokens.append(X[i])
+                            self.samples.append(X[i])
 
-                        self.labels.append(y[i])
-                        self.token_mask.append(True)
+                        self.targets.append(y[i])
+                        self.status.append(activations[i])
                     else:
-                        self.tokens.append(X[i])
-                        #self.labels.append(MASK_TOKEN)
-                        self.labels.append(y[i])
-                        self.token_mask.append(False)
+                        self.samples.append(X[i])
+                        self.targets.append(MASK_TOKEN)
+                        self.status.append(MASK_TOKEN)
             else:
-                self.tokens, self.labels = X, y
+                self.samples, self.targets, self.status = X, y, activations
 
             # Initial shuffle. 
             if self.shuffle:
@@ -237,24 +244,20 @@ def get_window_generator(keras_sequence=True):
                 index * self.batch_size:(index + 1) * self.batch_size]
             
             # Create a batch of windowed samples.
-            samples = np.array(
-                [self.tokens[row:row + self.window_length] for row in rows])
+            wsam = np.array(
+                [self.samples[row:row + self.window_length] for row in rows])
 
             if self.train:
-                # Create batch of single point targets and
-                # masks (if training w/MLM) from center of window.
-                targets = np.array(
-                    [self.labels[row + self.window_center] for row in rows])
+                # Create batch of window-centered, single point targets and status.
+                wtar = np.array(
+                    [self.targets[row + self.window_center] for row in rows])
+                wsta = np.array(
+                    [self.status[row + self.window_center] for row in rows])
                 
-                if self.p is None:
-                    return samples, targets
-                else:
-                    mask = np.array(
-                        [self.token_mask[row + self.window_center] for row in rows])
-                    return samples, targets, mask
+                return wsam, wtar, wsta
             else:
                 # Return only samples if in test mode.
-                return samples
+                return wsam
 
     return WindowGenerator
 
@@ -339,3 +342,57 @@ def normalize(dataset):
             dataset[0], agg_mean, agg_std),
         z_norm(
             dataset[1], app_mean, app_std))
+
+def compute_status(appliance_power:np.ndarray, appliance:str) -> list:
+    """Compute appliance on-off status."""
+    threshold = params_appliance[appliance]['on_power_threshold']
+
+    def ceildiv(a:int, b:int) -> int:
+        """Upside-down floor division."""
+        return -(a // -b)
+
+    # Convert durations from seconds to samples.
+    min_on_duration = ceildiv(params_appliance[appliance]['min_on_duration'],
+                              SAMPLE_PERIOD)
+    min_off_duration = ceildiv(params_appliance[appliance]['min_off_duration'],
+                               SAMPLE_PERIOD)
+
+    # Apply threshold to appliance powers. 
+    initial_status = (appliance_power.copy() >= threshold)
+
+    # Find transistion indices. 
+    status_diff = np.diff(initial_status)
+    events_idx = status_diff.nonzero()
+    events_idx = np.array(events_idx).squeeze()
+    events_idx += 1
+
+    # Adjustment for first and last transition.
+    if initial_status[0]:
+        events_idx = np.insert(events_idx, 0, 0)
+    if initial_status[-1]:
+        events_idx = np.insert(events_idx, events_idx.size, initial_status.size)
+
+    # Separate out on and off events.
+    events_idx = events_idx.reshape((-1, 2))
+    on_events = events_idx[:, 0].copy()
+    off_events = events_idx[:, 1].copy()
+    assert len(on_events) == len(off_events)
+
+    # Filter out on and off transitions faster than minimum values. 
+    if len(on_events) > 0:
+        off_duration = on_events[1:] - off_events[:-1]
+        off_duration = np.insert(off_duration, 0, 1000)
+        on_events = on_events[off_duration > min_off_duration]
+        off_events = off_events[np.roll(off_duration, -1) > min_off_duration]
+
+        on_duration = off_events - on_events
+        on_events = on_events[on_duration >= min_on_duration]
+        off_events = off_events[on_duration >= min_on_duration]
+        assert len(on_events) == len(off_events)
+
+    # Generate final status.
+    status = [0] * appliance_power.size
+    for on, off in zip(on_events, off_events):
+        status[on: off] = [1] * (off - on)
+
+    return status
