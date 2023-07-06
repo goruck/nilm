@@ -153,6 +153,42 @@ def get_arguments():
     parser.set_defaults(train=False)
     return parser.parse_args()
 
+class TransformerCustomSchedule(tf.keras.optimizers.schedules.LearningRateSchedule):
+    """Learning rate scheduler per Attention Is All You Need"""
+    def __init__(self, d_model, warmup_steps=4000):
+        super().__init__()
+
+        self.d_model = d_model
+        self.d_model_f = tf.cast(self.d_model, tf.float32)
+
+        self.warmup_steps = warmup_steps
+
+    def __call__(self, step):
+        step = tf.cast(step, dtype=tf.float32)
+        arg1 = tf.math.rsqrt(step)
+        arg2 = step * (self.warmup_steps ** -1.5)
+
+        return tf.math.rsqrt(self.d_model_f) * tf.math.minimum(arg1, arg2)
+    
+    def get_config(self):
+        config = {
+            'd_model': self.d_model,
+            'warmup_steps': self.warmup_steps}
+        return config
+    
+def decay_custom_schedule(
+        batches_per_epoch:int,
+        epochs_per_decay_step:int=5) -> tf.keras.optimizers.schedules:
+    """Decay lr at 1/t every 'epochs_per_decay_step' epochs.
+    
+    Typically set batches_per_epoch = training_provider.__len__()
+    """
+    return tf.keras.optimizers.schedules.InverseTimeDecay(
+        0.001,
+        decay_steps=batches_per_epoch * epochs_per_decay_step,
+        decay_rate=1,
+        staircase=False)
+
 if __name__ == '__main__':
     log(f'Machine name: {socket.gethostname()}')
     log(f'tf version: {tf.version.VERSION}')
@@ -169,16 +205,6 @@ if __name__ == '__main__':
 
     window_length = common.params_appliance[appliance_name]['window_length']
     log(f'Window length: {window_length}')
-
-    # Calculate normalized threshold.
-    threshold = common.params_appliance[appliance_name]['on_power_threshold']
-    max_on_power = common.params_appliance[appliance_name]['max_on_power']
-    #train_agg_mean = common.params_appliance[appliance_name]['train_app_mean']
-    #train_agg_std = common.params_appliance[appliance_name]['train_agg_std']
-    #agg_mean = common.ALT_AGGREGATE_MEAN if common.USE_ALT_STANDARDIZATION else train_agg_mean
-    #agg_std = common.ALT_AGGREGATE_STD if common.USE_ALT_STANDARDIZATION else train_agg_std
-    threshold /= max_on_power
-    log(f'Normalized on power threshold: {threshold}')
 
     # Path for training data.
     training_path = os.path.join(
@@ -229,28 +255,35 @@ if __name__ == '__main__':
         log('Training model from scratch.')
 
         if MODEL_ARCH == 'transformer':
+            # Calculate normalized threshold for appliance status determination.
+            threshold = common.params_appliance[appliance_name]['on_power_threshold']
+            max_on_power = common.params_appliance[appliance_name]['max_on_power']
+            threshold /= max_on_power
+            log(f'Normalized on power threshold: {threshold}')
+
+            # Get L1 loss multiplier.
+            c0 = common.params_appliance[appliance_name]['c0']
+            log(f'L1 loss multiplier: {c0}')
+
+            model_depth = 256
             model = define_models.transformer(window_length=window_length, 
-                                              threshold=threshold)
+                                              threshold=threshold,
+                                              d_model=model_depth,
+                                              c0=c0)
+            lr_schedule = TransformerCustomSchedule(d_model=model_depth)
         elif MODEL_ARCH == 'cnn':
             model = define_models.cnn(window_length=window_length)
+            lr_schedule = 1e-4
         elif MODEL_ARCH == 'fcn':
             model = define_models.fcn(window_length=window_length)
+            lr_schedule = 1e-4
         elif MODEL_ARCH == 'resnet':
             model = define_models.resnet(window_length=window_length)
-
-        # Decay lr at 1/t every 5 epochs.
-        batches_per_epoch = training_provider.__len__()
-        epochs_per_decay_step = 5
-        lr_schedule = tf.keras.optimizers.schedules.InverseTimeDecay(
-            0.001,
-            decay_steps=batches_per_epoch * epochs_per_decay_step,
-            decay_rate=1,
-            staircase=False)
+            lr_schedule = 1e-4
 
         model.compile(
             optimizer=tf.keras.optimizers.Adam(
-                #learning_rate=lr_schedule,
-                learning_rate=1e-4,
+                learning_rate=lr_schedule,
                 beta_1=0.9,
                 beta_2=0.999,
                 epsilon=1e-08),

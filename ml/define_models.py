@@ -10,10 +10,21 @@ import tensorflow as tf
 
 from transformer_model import NILMTransformerModel
 
-def transformer(window_length=599, drop_out=0.1, **kwargs) -> tf.keras.Model:
+def transformer(
+        window_length=599,
+        drop_out=0.1,
+        threshold=0.0,
+        d_model=256,
+        c0=1.0,
+        **kwargs) -> tf.keras.Model:
     """Specifies a transformer-based model."""
     return NILMTransformerModel(
-        window_length=window_length, drop_out=drop_out, **kwargs)
+        window_length=window_length,
+        drop_out=drop_out,
+        threshold=threshold,
+        hidden=d_model,
+        c0=c0,
+        **kwargs)
 
 def cnn(window_length=599, conv_l2=0, dense_l2=0, batch_norm=False) -> tf.keras.Model:
     """Specifies a 1D seq2point model using the Keras Functional API.

@@ -352,13 +352,12 @@ class TwoClassLogisticLoss(tf.keras.losses.Loss):
   """Two-class classification logistic loss.
   
   Creates a criterion that optimizes a two-class classification logistic loss
-  between ground truth tensor y_true (containing 1 or -1) and target tensor
+  between ground truth tensor y_true (containing 1. or -1.) and target tensor
   y_pred (a logit, i.e., any real number).
   """
 
   def call(self, y_true, y_pred):
-    #print(f'SM y_true: {y_true}')
-    #print(f'SM y_pred: {y_pred}')
+    # Generally the input tensors can be sequences so return result mean.
     return tf.reduce_mean(tf.math.log(1.0 + tf.math.exp(-y_pred * y_true)), axis=-1)
 
 
@@ -384,9 +383,10 @@ class NILMTransformerModel(tf.keras.Model):
 
     Args:
         window_length: The length of the input sequence of aggregate power samples.
-        drop_out: Drop out rate used in all drop out layers.
+        drop_out: Drop out rate used in encoder and transformer drop out layers.
         sequence: The input sequence (used by the call method).
         threshold: Appliance on-threshold to determine prediction on-off status.
+        hidden: Dimensionality of transformer output and input representations (aka d_model).
         training: Flag indicating training or inference (used by the call method).
     """
 
@@ -394,6 +394,8 @@ class NILMTransformerModel(tf.keras.Model):
                  window_length:int,
                  drop_out:float,
                  threshold:float,
+                 hidden:int,
+                 c0:float,
                  **kwargs) -> None:
         super().__init__(**kwargs)
 
@@ -401,9 +403,9 @@ class NILMTransformerModel(tf.keras.Model):
         self.latent_len = self.original_len // 2
         self.dropout_rate = drop_out
         self.threshold = threshold
-        self.l1_loss_c0 = 1.0
+        self.hidden = hidden
+        self.l1_loss_c0 = c0
 
-        self.hidden = 256
         self.decoder_hidden = 1024
         self.heads = 2
         self.n_layers = 2
@@ -433,26 +435,21 @@ class NILMTransformerModel(tf.keras.Model):
 
         self.loss_tracker = tf.keras.metrics.Mean(name='loss')
         self.mse = tf.keras.losses.MeanSquaredError(name='mse')
-        self.kl = tf.keras.losses.KLDivergence(name='kl')
-        self.l1_on = tf.keras.losses.MeanAbsoluteError(
-           reduction=tf.keras.losses.Reduction.AUTO, name='l1_on')
-        self.ll = TwoClassLogisticLoss(name='ll')
+        #self.kl = tf.keras.losses.KLDivergence(name='kl')
+        self.l1_on = tf.keras.losses.MeanAbsoluteError(name='l1_on')
+        #self.ll = TwoClassLogisticLoss(name='ll')
+        self.bce = tf.keras.losses.BinaryCrossentropy(name='bce')
 
         self.mae_metric = tf.keras.metrics.MeanAbsoluteError(name='mae')
         self.msle_metric = tf.keras.metrics.MeanSquaredLogarithmicError(name='msle')
 
     def compute_l1_loss(self, y, y_status, y_pred, y_pred_status):
-        """Compute masked L1 Loss."""
+        """Compute L1 Loss if appliance is on or status is incorrect."""
         y_on = (y_status > 0)
-        #print(f'\nL1 y_on: {y_on}')
         wrong = (y_status != y_pred_status)
-        #print(f'\nL1 wrong: {wrong}')
         mask = y_on | wrong
-        #print(f'\nL1 mask: {mask}')
         y = y[mask]
-        #print(f'\nL1 y: {y}')
         y_pred = y_pred[mask]
-        #print(f'\nL1 y_pred: {y_pred}')
         # masked_batch_size = tf.math.count_nonzero(mask)
         # Expected output shape = (masked_batch_size,)
         return tf.where(tf.reduce_any(mask), self.l1_on(y, y_pred), 0.0)
@@ -489,20 +486,22 @@ class NILMTransformerModel(tf.keras.Model):
             #y_pred = tf.where(y_pred < 0.0, 0.0, y_pred)
 
             # [0, 1] -> [-1, 1]
-            y_status = y_status * 2.0 - 1.0
+            #y_status = y_status * 2.0 - 1.0
             
             # Compute prediction status.
-            y_pred_status = tf.where(y_pred >= self.threshold, 1.0, -1.0)
+            #y_pred_status = tf.where(y_pred >= self.threshold, 1.0, -1.0)
+            y_pred_status = tf.where(y_pred >= self.threshold, 1.0, 0.0)
             # Expected output shape = (masked_batch_size,)
             
             # Calculate loss for current batch.
             mse_loss = self.mse(y, y_pred)
-            log_loss = self.ll(y_status, y_pred_status)
+            bce_loss = self.bce(y_true=y_status, y_pred=y_pred_status)
             l1_loss = self.compute_l1_loss(y, y_status, y_pred, y_pred_status)
-            loss = mse_loss + log_loss + self.l1_loss_c0 * l1_loss
+            loss = mse_loss + bce_loss + self.l1_loss_c0 * l1_loss
             # Expected output shape = ()
 
             """
+            # Run in Eager mode if debugging.
             debug_mask = tf.ones(tf.shape(y), dtype=tf.bool)
             if tf.reduce_any(debug_mask):
                 print(f'\nx:{x[debug_mask]}')
@@ -553,17 +552,18 @@ class NILMTransformerModel(tf.keras.Model):
             #y_pred = tf.where(y_pred < 0.0, 0.0, y_pred)
 
             # [0, 1] -> [-1, 1]
-            y_status = y_status * 2.0 - 1.0
-
+            #y_status = y_status * 2.0 - 1.0
+            
             # Compute prediction status.
-            y_pred_status = tf.where(y_pred >= self.threshold, 1.0, -1.0)
-            # Expected output shape = (batch_size, 1)
-
-            # Compute loss values.
+            #y_pred_status = tf.where(y_pred >= self.threshold, 1.0, -1.0)
+            y_pred_status = tf.where(y_pred >= self.threshold, 1.0, 0.0)
+            # Expected output shape = (masked_batch_size,)
+            
+            # Calculate loss for current batch.
             mse_loss = self.mse(y, y_pred)
-            log_loss = self.ll(y_status, y_pred_status)
+            bce_loss = self.bce(y_true=y_status, y_pred=y_pred_status)
             l1_loss = self.compute_l1_loss(y, y_status, y_pred, y_pred_status)
-            loss = mse_loss + log_loss + self.l1_loss_c0 * l1_loss
+            loss = mse_loss + bce_loss + self.l1_loss_c0 * l1_loss
             # Expected output shape = ()
 
         # Update loss and metrics

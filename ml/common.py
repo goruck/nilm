@@ -40,7 +40,8 @@ params_appliance = {
         'test_app_mean': 23.155018918550294,    # test appliance mean (W)
         'test_agg_mean': 465.10226795866976,    # test aggregate mean (W)
         'alt_app_mean': 700.0,                  # alternative standardization (W)
-        'alt_app_std': 1000.0                   # alternative standardization (W)
+        'alt_app_std': 1000.0,                  # alternative standardization (W)
+        'c0': 1.0                               # L1 loss multiplier
     },
     'microwave': {
         'window_length': 599,
@@ -53,7 +54,8 @@ params_appliance = {
         'test_app_mean': 9.577146165430394,
         'test_agg_mean': 381.2162070293207,
         'alt_app_mean': 500.0,
-        'alt_app_std': 800.0
+        'alt_app_std': 800.0,
+        'c0': 1.0
     },
     'fridge': {
         'window_length': 599,
@@ -66,7 +68,8 @@ params_appliance = {
         'test_app_mean': 24.40792692094185,
         'test_agg_mean': 254.83458540217833,
         'alt_app_mean': 200.0,
-        'alt_app_std': 400.0
+        'alt_app_std': 400.0,
+        'c0': 1e-06
     },
     'dishwasher': {
         'window_length': 599,
@@ -79,7 +82,8 @@ params_appliance = {
         'test_app_mean': 11.299554135013219,
         'test_agg_mean': 377.9968064884045,
         'alt_app_mean': 700.0,
-        'alt_app_std': 1000.0
+        'alt_app_std': 1000.0,
+        'c0': 1.0
     },
     'washingmachine': {
         'window_length': 599,
@@ -92,7 +96,8 @@ params_appliance = {
         'test_app_mean': 29.433812118685246,
         'test_agg_mean': 685.6151694157477,
         'alt_app_mean': 400.0,
-        'alt_app_std': 700.0
+        'alt_app_std': 700.0,
+        'c0': 1e-02
     }
 }
 
