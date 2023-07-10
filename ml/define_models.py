@@ -13,7 +13,7 @@ from transformer_model import NILMTransformerModel
 def transformer(
         window_length=599,
         drop_out=0.1,
-        threshold=0.0,
+        threshold=0.5,
         d_model=256,
         c0=1.0,
         **kwargs) -> tf.keras.Model:
@@ -31,8 +31,6 @@ def cnn(window_length=599, conv_l2=0, dense_l2=0, batch_norm=False) -> tf.keras.
 
     Returns a TF-Keras model that, once trained, can be optimized and
     quantized by TF-Lite for the edge.
-
-    Primary model used in training and currently gives best results.
 
     This uses 2D convolutions as 1D equivalents to ensure maximum
     compatibility with Tensorflow downstream processing such as 

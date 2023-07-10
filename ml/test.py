@@ -143,7 +143,7 @@ if __name__ == '__main__':
     model_file_path = os.path.join(
         args.trained_model_dir, appliance_name, args.ckpt_dir)
     log(f'Loading saved model from {model_file_path}.')
-    model = tf.keras.models.load_model(model_file_path)
+    model = tf.keras.models.load_model(model_file_path, compile=False)
 
     model.summary()
 
@@ -208,7 +208,7 @@ if __name__ == '__main__':
     log(f'MAE: {metrics.get_abs_error()["mean"]} (W)')
     log(f'NDE: {metrics.get_nde()}')
     log(f'SAE: {metrics.get_sae()}')
-    log(f'Ground truth EPD: {nilm_metric.get_epd(ground_truth, sample_period)} (Wh)')
+    log(f'Ground truth EPD: {nilm_metric.get_epd(ground_truth * ground_truth_status, sample_period)} (Wh)')
     log(f'Predicted EPD: {nilm_metric.get_epd(prediction * prediction_status, sample_period)} (Wh)')
 
     # Save results.

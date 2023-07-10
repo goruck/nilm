@@ -270,7 +270,8 @@ if __name__ == '__main__':
                                               threshold=threshold,
                                               d_model=model_depth,
                                               c0=c0)
-            lr_schedule = TransformerCustomSchedule(d_model=model_depth)
+            #lr_schedule = TransformerCustomSchedule(d_model=model_depth)
+            lr_schedule = 1e-4
         elif MODEL_ARCH == 'cnn':
             model = define_models.cnn(window_length=window_length)
             lr_schedule = 1e-4

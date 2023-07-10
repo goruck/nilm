@@ -387,7 +387,9 @@ class NILMTransformerModel(tf.keras.Model):
         sequence: The input sequence (used by the call method).
         threshold: Appliance on-threshold to determine prediction on-off status.
         hidden: Dimensionality of transformer output and input representations (aka d_model).
+        c0: Per-appliance L1 loss multiplier.
         training: Flag indicating training or inference (used by the call method).
+        data: A batch of data (used by the train_step and test_step methods).
     """
 
     def __init__(self,
