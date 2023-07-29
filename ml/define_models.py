@@ -8,17 +8,29 @@ Copyright (c) 2022~2023 Lindo St. Angel
 
 import tensorflow as tf
 
-from transformer_model import NILMTransformerModel
+from transformer_model import NILMTransformerModel, NILMTransformerModelFit
 
 def transformer(
+        window_length=599,
+        drop_out=0.1,
+        d_model=256,
+        **kwargs) -> tf.keras.Model:
+    """Specifies a transformer-based model to be trained in a loop."""
+    return NILMTransformerModel(
+        window_length=window_length,
+        drop_out=drop_out,
+        hidden=d_model,
+        **kwargs)
+
+def transformer_fit(
         window_length=599,
         drop_out=0.1,
         threshold=0.5,
         d_model=256,
         c0=1.0,
         **kwargs) -> tf.keras.Model:
-    """Specifies a transformer-based model."""
-    return NILMTransformerModel(
+    """Specifies a transformer-based model to be trained by .fit()."""
+    return NILMTransformerModelFit(
         window_length=window_length,
         drop_out=drop_out,
         threshold=threshold,
