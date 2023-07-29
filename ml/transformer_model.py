@@ -1,6 +1,21 @@
 """NILM transformer-based model.
 
-Implemented by Keras subclassed layers and model.
+Implements Non-Intrusive Load Monitoring (aka load disaggregation) by a network
+surrounding a BERT-style encoder. Inspired by the following references.
+
+1. "Efficient Localness Transformer for Smart Sensor-Based Energy Disaggregation"
+(https://arxiv.org/abs/2203.16537).
+
+2. "BERT4NILM: A Bidirectional Transformer Model for Non-Intrusive Load Monitoring"
+(http://nilmworkshop.org/2020/proceedings/nilm20-final88.pdf).
+
+3. "Building Transformer Models with Attention".
+(https://machinelearningmastery.com/transformer-models-with-attention/).
+
+4. "Transfer Learning for Non-Intrusive Load Monitoring".
+(https://arxiv.org/abs/1902.08835).
+
+Implemented by Keras subclassed layers and models.
 
 Copyright (c) 2023 Lindo St. Angel
 """
@@ -348,36 +363,8 @@ class TransformerBlock(tf.keras.layers.Layer):
         return self.add_norm2(addnorm_output, feedforward_output)
 
 
-class TwoClassLogisticLoss(tf.keras.losses.Loss):
-  """Two-class classification logistic loss.
-  
-  Creates a criterion that optimizes a two-class classification logistic loss
-  between ground truth tensor y_true (containing 1. or -1.) and target tensor
-  y_pred (a logit, i.e., any real number).
-  """
-
-  def call(self, y_true, y_pred):
-    # Generally the input tensors can be sequences so return result mean.
-    return tf.reduce_mean(tf.math.log(1.0 + tf.math.exp(-y_pred * y_true)), axis=-1)
-
-
-class NILMTransformerModel(tf.keras.Model):
+class NILMTransformerModelFit(tf.keras.Model):
     """NILM model based on a BERT-style transformer-based encoder.
-
-    Implements Non-Intrusive Load Monitoring (aka load disaggregation) by a network
-    surrounding a BERT-style encoder. Inspired by the following references.
-
-    1. "Efficient Localness Transformer for Smart Sensor-Based Energy Disaggregation"
-    (https://arxiv.org/abs/2203.16537).
-
-    2. "BERT4NILM: A Bidirectional Transformer Model for Non-Intrusive Load Monitoring"
-    (http://nilmworkshop.org/2020/proceedings/nilm20-final88.pdf).
-
-    3. "Building Transformer Models with Attention".
-    (https://machinelearningmastery.com/transformer-models-with-attention/).
-
-    4. "Transfer Learning for Non-Intrusive Load Monitoring".
-    (https://arxiv.org/abs/1902.08835).
 
     This is implemented as a Keras subclassed Model and is meant to be trained by fit().
 
@@ -582,6 +569,102 @@ class NILMTransformerModel(tf.keras.Model):
         # List Loss and Metric objects here so that `reset_states()` can be
         # called automatically at the start of each epoch.
         return [self.loss_tracker, self.mae_metric, self.msle_metric]
+
+    def call(self, sequence:tf.Tensor, training:bool=None) -> tf.Tensor:
+        # Expected input sequence shape = (batch_size, original_len)
+
+        # Add sequence length axis.
+        sequence = tf.expand_dims(sequence, axis=-1)
+        # Expected output shape = (batch_size, original_len, 1)
+
+        ### Encoder Layers ###
+
+        features = self.pool(self.conv(sequence))
+        # Expected output shape = (batch_size, latent_len, hidden)
+        positional_embeddings = self.position(features, training=training)
+        # Expected output shape = (batch_size, latent_len, hidden)
+        x = self.add_norm1(features, positional_embeddings)
+        # Expected output shape = (batch_size, latent_len, hidden)
+        x = self.dropout1(x, training=training)
+        # Expected output shape = (batch_size, latent_len, hidden)
+
+        ### Transformer Layers ###
+
+        # Assign importance weights to "x" using back-to-back transformers.
+        for _, transformer_layer in enumerate(self.transformer_layers):
+            x = transformer_layer(x, mask=None, training=training)
+        # Expected output shape = (batch_size, latent_len, hidden)
+
+        ### Decoder Layers ###
+
+        relative_positional_embeddings = self.relative_position(x)
+        # Expected output shape = (batch_size, latent_len, hidden)
+        x = self.add_norm2(x, relative_positional_embeddings)
+        # Expected output shape = (batch_size, latent_len, hidden)
+        x = self.avg_pool(x) #self.max_pool(x)
+        # Expected output shape = (batch_size, hidden)
+        x = self.dense1(x)
+        # Expected output shape = (batch_size, decoder_hidden)
+        x = self.dropout2(x, training=training)
+        # Expected output size = (batch_size, decoder_hidden)
+        # Apply sequence-to-point transformation.
+        x = self.dense2(x)
+        # Expected output_size = (batch_size, 1)
+        return self.output_activation(x)
+    
+
+class NILMTransformerModel(tf.keras.Model):
+    """NILM model based on a BERT-style transformer-based encoder.
+
+    This is implemented as a Keras subclassed Model and is meant to be trained in a
+    custom training loop, other than that it is identical to NILMTransformerModelFit.
+
+    Args:
+        window_length: The length of the input sequence of aggregate power samples.
+        drop_out: Drop out rate used in encoder and transformer drop out layers.
+        sequence: The input sequence (used by the call method).
+        hidden: Dimensionality of transformer output and input representations (aka d_model).
+        training: Flag indicating training or inference (used by the call method).
+    """
+
+    def __init__(self,
+                 window_length:int,
+                 drop_out:float,
+                 hidden:int,
+                 **kwargs) -> None:
+        super().__init__(**kwargs)
+
+        self.original_len = window_length
+        self.latent_len = self.original_len // 2
+        self.dropout_rate = drop_out
+        self.hidden = hidden
+
+        self.decoder_hidden = 1024
+        self.heads = 2
+        self.n_layers = 2
+        self.pool_size = 2
+
+        self.conv = tf.keras.layers.Conv1D(
+           filters=self.hidden, kernel_size=5, padding='same')
+        self.pool = L2NormPooling1D(pool_size=self.pool_size)
+        self.position = PositionEmbedding(max_length=self.original_len)
+        self.add_norm1 = AddNormalization()
+        self.dropout1 = tf.keras.layers.Dropout(rate=self.dropout_rate)
+        self.transformer_layers = [TransformerBlock(
+            self.hidden, self.heads, self.hidden * 4, self.dropout_rate)
+            for _ in range(self.n_layers)]
+        self.relative_position = RelativePositionEmbedding(max_length=self.latent_len)
+        self.avg_pool = tf.keras.layers.GlobalAveragePooling1D()
+        #self.max_pool = tf.keras.layers.GlobalMaxPooling1D()
+        self.dense1 = tf.keras.layers.Dense(units=self.decoder_hidden, activation='tanh')
+        #self.flatten = tf.keras.layers.Flatten()
+        self.dropout2 = tf.keras.layers.Dropout(rate=0.25)
+        self.add_norm2 = AddNormalization()
+        self.dense2 = tf.keras.layers.Dense(units=1)
+        # If training with mixed-precision, ensure model output is float32.
+        # This helps to avoids numerical instability.
+        # See https://www.tensorflow.org/guide/mixed_precision#building_the_model
+        self.output_activation = tf.keras.layers.Activation('linear', dtype=tf.float32)
 
     def call(self, sequence:tf.Tensor, training:bool=None) -> tf.Tensor:
         # Expected input sequence shape = (batch_size, original_len)

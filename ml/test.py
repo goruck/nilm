@@ -38,10 +38,10 @@ def get_arguments():
         type=str,
         default='./models',
         help='this is the directory to the trained models')
-    parser.add_argument('--ckpt_dir',
+    parser.add_argument('--savemodel_dir',
         type=str,
-        default=f'checkpoints_{MODEL_ARCH}',
-        help='directory name of model checkpoint')
+        default=f'savemodel_{MODEL_ARCH}',
+        help='directory name of the saved model to test')
     parser.add_argument('--save_results_dir',
         type=str,
         default='./results',
@@ -139,9 +139,9 @@ if __name__ == '__main__':
         train=False,
         shuffle=False)
 
-    # Load best checkpoint from saved trained model for appliance.
+    # Load best saved trained model for appliance.
     model_file_path = os.path.join(
-        args.trained_model_dir, appliance_name, args.ckpt_dir)
+        args.trained_model_dir, appliance_name, args.savemodel_dir)
     log(f'Loading saved model from {model_file_path}.')
     model = tf.keras.models.load_model(model_file_path, compile=False)
 

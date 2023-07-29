@@ -1,0 +1,564 @@
+"""Train a neural network to perform energy disaggregation.
+
+Given a sequence of electricity mains reading, the algorithm
+separates the mains into appliances.
+
+Uses distributed GPU training. 
+
+Copyright (c) 2022~2023 Lindo St. Angel
+"""
+
+import os
+import argparse
+import socket
+
+import tensorflow as tf
+import matplotlib.pyplot as plt
+
+import define_models
+from logger import log
+import common
+
+# Specify model architecture to use for training.
+MODEL_ARCH = 'transformer'
+model_archs = dir(define_models)
+if MODEL_ARCH not in model_archs:
+    raise ValueError(f'Unknown model architecture: {MODEL_ARCH}!')
+else:
+    log(f'Using model architecture: {MODEL_ARCH}.')
+
+### DO NOT USE MIXED-PRECISION - CURRENTLY GIVES POOR MODEL ACCURACY ###
+# TODO: fix.
+# Run in mixed-precision mode for ~30% speedup vs TensorFloat-32
+# w/GPU compute capability = 8.6.
+USE_MIXED_PRECISION = False
+if USE_MIXED_PRECISION:
+    from keras import mixed_precision
+    mixed_precision.set_global_policy('mixed_float16')
+
+# Set to True run in TF eager mode for debugging.
+# May have to reduce batch size <= 512 to avoid OOM.
+# Turn off distributed training for best results. 
+RUN_EAGERLY = False
+tf.config.run_functions_eagerly(run_eagerly=RUN_EAGERLY)
+
+# BASE_LR is a good learning rate for a batch size of 1024
+# which typically leads to best test accuracy. Other batch
+# sizes and learning rates have not been optimized and should
+# be avoided for now. TODO: optimize LR & batch sizes.
+BASE_LR = 1.0e-4
+LR_BY_BATCH_SIZE = {
+    512: BASE_LR / tf.sqrt(2.0),
+    1024: BASE_LR,
+    2048: BASE_LR * tf.sqrt(2.0),
+    4096: BASE_LR * tf.sqrt(4.0)}
+
+def smooth_curve(points, factor=0.8):
+    """Smooth a series of points given a smoothing factor."""
+    smoothed_points = []
+    for point in points:
+        if smoothed_points:
+            previous = smoothed_points[-1]
+            smoothed_points.append(previous * factor + point * (1 - factor))
+        else:
+            smoothed_points.append(point)
+    return smoothed_points
+
+def plot(history, plot_name, plot_display, appliance_name):
+    """Save and display loss and mae plots."""
+    # Mean square error.
+    loss = history['loss']
+    val_loss = history['val_loss']
+    plot_epochs = range(1,len(loss)+1)
+    plt.plot(
+        plot_epochs, smooth_curve(loss),
+        label='Smoothed Training Loss')
+    plt.plot(
+        plot_epochs, smooth_curve(val_loss),
+        label='Smoothed Validation Loss')
+    plt.title(f'Training history for {appliance_name} ({plot_name})')
+    plt.ylabel('Loss (MSE)')
+    plt.xlabel('Epoch')
+    plt.legend()
+    plot_filepath = os.path.join(
+        args.save_dir, appliance_name, f'{plot_name}_loss')
+    log(f'Plot directory: {plot_filepath}')
+    plt.savefig(fname=plot_filepath)
+    if plot_display:
+        plt.show()
+    plt.close()
+    # Mean Absolute Error.
+    val_mae = history['val_mae']
+    plt.plot(plot_epochs, smooth_curve(val_mae))
+    plt.title(f'Smoothed validation MAE for {appliance_name} ({plot_name})')
+    plt.ylabel('Mean Absolute Error')
+    plt.xlabel('Epoch')
+    plot_filepath = os.path.join(
+        args.save_dir, appliance_name, f'{plot_name}_mae')
+    log(f'Plot directory: {plot_filepath}')
+    plt.savefig(fname=plot_filepath)
+    if plot_display:
+        plt.show()
+    plt.close()
+
+def get_arguments():
+    parser = argparse.ArgumentParser(
+        description='Train a neural network for energy disaggregation - \
+            network input = mains window; network target = the states of \
+            the target appliance.')
+    parser.add_argument(
+        '--appliance_name',
+        type=str,
+        default='kettle',
+        help='the name of target appliance')
+    parser.add_argument(
+        '--datadir',
+        type=str,
+        default='./dataset_management/refit',
+        help='directory of the training samples')
+    parser.add_argument(
+        '--save_dir',
+        type=str,
+        default='/home/lindo/Develop/nilm/ml/models',
+        help='directory to save the trained models and checkpoints')
+    parser.add_argument(
+        '--batchsize',
+        type=int,
+        default=1024,
+        help='mini-batch size')
+    parser.add_argument(
+        '--n_epoch',
+        type=int,
+        default=50,
+        help='number of epochs to train over')
+    parser.add_argument(
+        '--crop_train_dataset',
+        type=int,
+        default=None,
+        help='Number of train samples to use. Default uses entire dataset.')
+    parser.add_argument(
+        '--crop_val_dataset',
+        type=int,
+        default=None,
+        help='Number of val samples to use. Default uses entire dataset.')
+    parser.add_argument(
+        '--do_not_use_distributed_training',
+        action='store_true',
+        help='if True use only GPU 0 for training')
+    parser.set_defaults(do_not_use_distributed_training=False)
+    return parser.parse_args()
+
+class TransformerCustomSchedule(tf.keras.optimizers.schedules.LearningRateSchedule):
+    """Learning rate scheduler per Attention Is All You Need"""
+    def __init__(self, d_model, warmup_steps=4000):
+        super().__init__()
+
+        self.d_model = d_model
+        self.d_model_f = tf.cast(self.d_model, tf.float32)
+
+        self.warmup_steps = warmup_steps
+
+    def __call__(self, step):
+        step = tf.cast(step, dtype=tf.float32)
+        arg1 = tf.math.rsqrt(step)
+        arg2 = step * (self.warmup_steps ** -1.5)
+
+        return tf.math.rsqrt(self.d_model_f) * tf.math.minimum(arg1, arg2)
+    
+    def get_config(self):
+        config = {
+            'd_model': self.d_model,
+            'warmup_steps': self.warmup_steps}
+        return config
+    
+def decay_custom_schedule(
+        batches_per_epoch:int,
+        epochs_per_decay_step:int=5) -> tf.keras.optimizers.schedules:
+    """Decay lr at 1/t every 'epochs_per_decay_step' epochs.
+    
+    Typically set batches_per_epoch = training_provider.__len__()
+    """
+    return tf.keras.optimizers.schedules.InverseTimeDecay(
+        0.001,
+        decay_steps=batches_per_epoch * epochs_per_decay_step,
+        decay_rate=1,
+        staircase=False)
+
+if __name__ == '__main__':
+    log(f'Machine name: {socket.gethostname()}')
+    log(f'tf version: {tf.version.VERSION}')
+    args = get_arguments()
+    log('Arguments: ')
+    log(args)
+
+    # The appliance to train on.
+    appliance_name = args.appliance_name
+    log(f'Appliance name: {appliance_name}')
+
+    window_length = common.params_appliance[appliance_name]['window_length']
+    log(f'Window length: {window_length}')
+
+    # Path for training data.
+    training_path = os.path.join(
+        args.datadir,appliance_name,f'{appliance_name}_training_.csv')
+    log(f'Training dataset: {training_path}')
+
+    # Look for the validation set
+    for filename in os.listdir(os.path.join(args.datadir, appliance_name)):
+        if 'validation' in filename:
+            val_filename = filename
+    # path for validation data
+    validation_path = os.path.join(args.datadir,appliance_name, val_filename)
+    log(f'Validation dataset: {validation_path}')
+
+    model_filepath = os.path.join(args.save_dir, appliance_name)
+    checkpoint_filepath = os.path.join(model_filepath, f'checkpoints_{MODEL_ARCH}')
+    log(f'Checkpoint file path: {checkpoint_filepath}')
+    savemodel_filepath = os.path.join(model_filepath, f'savemodel_{MODEL_ARCH}')
+    log(f'Savemodel file path: {savemodel_filepath}')
+
+    # Load datasets.
+    train_dataset = common.load_dataset(training_path, args.crop_train_dataset)
+    val_dataset = common.load_dataset(validation_path, args.crop_val_dataset)
+    num_train_samples = train_dataset[0].size
+    log(f'There are {num_train_samples/10**6:.3f}M training samples.')
+    num_val_samples = val_dataset[0].size
+    log(f'There are {num_val_samples/10**6:.3f}M validation samples.')
+
+    batch_size = args.batchsize
+    log(f'Batch size: {batch_size}')
+
+    # Just use gpu 0, mainly for debugging.
+    if args.do_not_use_distributed_training:
+        strategy = tf.distribute.OneDeviceStrategy(device='/gpu:0')
+    else: # Use all visible GPUs for training.
+        strategy = tf.distribute.MirroredStrategy()
+    num_replicas = strategy.num_replicas_in_sync
+    log(f'Number of replicas: {num_replicas}.')
+    global_batch_size = batch_size * num_replicas
+    log(f'Global batch size: {global_batch_size}.')
+
+    # Init window generator to provide samples and targets.
+    WindowGenerator = common.get_window_generator()
+    training_provider = WindowGenerator(
+        dataset=train_dataset,
+        batch_size=global_batch_size,
+        window_length=window_length,
+        p=None)# if MODEL_ARCH!='transformer' else 0.2)
+    validation_provider = WindowGenerator(
+        dataset=val_dataset,
+        batch_size=global_batch_size,
+        window_length=window_length,
+        shuffle=False)
+    
+    # Convert Keras Sequence datasets into tf.data.Datasets.
+    train_data_iter = lambda: (s for s in training_provider)
+    train_tf_dataset = tf.data.Dataset.from_generator(
+        train_data_iter,
+        output_signature=(
+            tf.TensorSpec(shape=(None, window_length), dtype=tf.float32),
+            tf.TensorSpec(shape=(None,), dtype=tf.float32),
+            tf.TensorSpec(shape=(None,), dtype=tf.float32)))
+    train_tf_dataset.prefetch(tf.data.AUTOTUNE)
+    val_data_iter = lambda: (s for s in validation_provider)
+    val_tf_dataset = tf.data.Dataset.from_generator(
+        val_data_iter,
+        output_signature=(
+            tf.TensorSpec(shape=(None, window_length), dtype=tf.float32),
+            tf.TensorSpec(shape=(None,), dtype=tf.float32),
+            tf.TensorSpec(shape=(None,), dtype=tf.float32)))
+    val_tf_dataset.prefetch(tf.data.AUTOTUNE)
+    
+    # Distribute datasets to replicas.
+    train_dist_dataset = strategy.experimental_distribute_dataset(train_tf_dataset)
+    test_dist_dataset = strategy.experimental_distribute_dataset(val_tf_dataset)
+
+    log('Training model from scratch.')
+
+    try:
+        lr = LR_BY_BATCH_SIZE[global_batch_size]
+        log(f'Learning rate: {lr}')
+    except KeyError:
+        log('Learning rate cannot be determined due to invalid batch size.')
+        exit(1)
+
+    with strategy.scope():
+        if MODEL_ARCH == 'transformer_fit':
+            raise ValueError('Must use model "transformer" for distributed training.')
+        elif MODEL_ARCH == 'transformer':
+            # Calculate normalized threshold for appliance status determination.
+            threshold = common.params_appliance[appliance_name]['on_power_threshold']
+            max_on_power = common.params_appliance[appliance_name]['max_on_power']
+            threshold /= max_on_power
+            log(f'Normalized on power threshold: {threshold}')
+
+            # Get L1 loss multiplier.
+            c0 = common.params_appliance[appliance_name]['c0']
+            log(f'L1 loss multiplier: {c0}')
+
+            model_depth = 256
+            model = define_models.transformer(window_length=window_length,
+                                              d_model=model_depth)
+            #lr_schedule = TransformerCustomSchedule(d_model=model_depth)
+            lr_schedule = lr
+        elif MODEL_ARCH == 'cnn':
+            model = define_models.cnn(window_length=window_length)
+            lr_schedule = lr
+        elif MODEL_ARCH == 'fcn':
+            model = define_models.fcn(window_length=window_length)
+            lr_schedule = lr
+        elif MODEL_ARCH == 'resnet':
+            model = define_models.resnet(window_length=window_length)
+            lr_schedule = lr
+        else:
+            log('Model architecture not found.')
+            exit(1)
+
+        # Define loss objects.
+        mse_loss_obj = tf.keras.losses.MeanSquaredError(
+            reduction=tf.keras.losses.Reduction.NONE)
+        mae_loss_obj = tf.keras.losses.MeanAbsoluteError(
+            reduction=tf.keras.losses.Reduction.NONE)
+        bce_loss_obj = tf.keras.losses.BinaryCrossentropy(
+            reduction=tf.keras.losses.Reduction.NONE)
+
+        def compute_train_loss(y, y_status, y_pred, y_pred_status, model_losses):
+            """Calculate per-sample test loss on a single replica for a batch.
+            
+            Returns a scalar loss value scaled by the global batch size. 
+            """
+
+            # Losses on each replica are calculated per batch so a reduce sum is
+            # used here which is then scaled by the global batch size.
+            mse_loss = tf.reduce_sum(
+                mse_loss_obj(y, y_pred)) * (1. / global_batch_size)
+            bce_loss = tf.reduce_sum(
+                bce_loss_obj(y_status, y_pred_status)) * (1. / global_batch_size)
+
+            # Add mae loss if appliance is on or status is incorrect.
+            mask = (y_status > 0) | (y_status != y_pred_status)
+            if tf.reduce_any(mask):
+                # Apply mask which will flatten tensor. Because of that add
+                # a dummy axis so that mae loss is calculated for each batch.
+                y = tf.reshape(y[mask], shape=[-1, 1])
+                y_pred = tf.reshape(y_pred[mask], shape=[-1, 1])
+                # Expected shape = (mask_size, 1)
+                mask_size = tf.math.count_nonzero(mask, dtype=tf.float32)
+                scale_factor = 1. / (mask_size * (1. * num_replicas))
+                mae_loss = c0 * tf.reduce_sum(mae_loss_obj(y, y_pred)) * scale_factor
+                loss = mse_loss + bce_loss + mae_loss
+            else:
+                loss = mse_loss + bce_loss
+
+            # Add model regularization losses. 
+            if model_losses:
+                loss += tf.nn.scale_regularization_loss(tf.add_n(model_losses))
+
+            return loss
+        
+        def compute_test_loss(y, y_status, y_pred, y_pred_status):
+            """Calculate per-sample test loss on a single replica for a batch.
+            
+            Returns a scalar loss value scaled by the global batch size. This is
+            identical to compute_test_loss except model losses are ignored.
+
+            TODO: combine into one loss function with compute_test_loss.
+            """
+
+            # Losses on each replica are calculated per batch so a reduce sum is
+            # used here which is then scaled by the global batch size.
+            mse_loss = tf.reduce_sum(
+                mse_loss_obj(y, y_pred)) * (1. / global_batch_size)
+            bce_loss = tf.reduce_sum(
+                bce_loss_obj(y_status, y_pred_status)) * (1. / global_batch_size)
+
+            # Add mae loss if appliance is on or status is incorrect.
+            mask = (y_status > 0) | (y_status != y_pred_status)
+            if tf.reduce_any(mask):
+                # Apply mask which will flatten tensor. Because of that add
+                # a dummy axis so that mae loss is calculated for each batch.
+                y = tf.reshape(y[mask], shape=[-1, 1])
+                y_pred = tf.reshape(y_pred[mask], shape=[-1, 1])
+                # Expected shape = (mask_size, 1)
+                mask_size = tf.math.count_nonzero(mask, dtype=tf.float32)
+                scale_factor = 1. / (mask_size * (1. * num_replicas))
+                mae_loss = c0 * tf.reduce_sum(mae_loss_obj(y, y_pred)) * scale_factor
+                loss = mse_loss + bce_loss + mae_loss
+            else:
+                loss = mse_loss + bce_loss
+
+            return loss
+    
+        # Define metrics.
+        test_loss = tf.keras.metrics.Mean(name='test_loss')
+        test_mae = tf.keras.metrics.MeanAbsoluteError(name='test_mae')
+        test_mse = tf.keras.metrics.MeanSquaredError(name='test_mse')
+        mae = tf.keras.metrics.MeanAbsoluteError(name='train_mae')
+        mse = tf.keras.metrics.MeanSquaredError(name='train_mse')
+
+        optimizer = tf.keras.optimizers.Adam(learning_rate=lr_schedule,
+                                             beta_1=0.9,
+                                             beta_2=0.999,
+                                             epsilon=1e-08)
+        
+        checkpoint = tf.train.Checkpoint(optimizer=optimizer, model=model)
+
+        def train_step(data):
+            """Runs forward and backward passes on a batch."""
+            x, y, y_status = data
+            # x expected input shape = (batch_size, original_length)
+            # y expected input shape = (batch_size,)
+            # status expected input shape = (batch_size,)
+
+            # Include a dummy axis so that reductions are done correctly.
+            y = tf.reshape(y, shape=[-1, 1])
+            y_status = tf.reshape(y_status, shape=[-1, 1])
+            # Expected output shape = (batch_size, 1)
+
+            with tf.GradientTape() as tape:
+                y_pred = model(x, training=True)
+                y_pred_status = tf.where(y_pred >= threshold, 1.0, 0.0)
+                loss = compute_train_loss(y, y_status, y_pred, y_pred_status, model.losses)
+
+            gradients = tape.gradient(loss, model.trainable_variables)
+            optimizer.apply_gradients(zip(gradients, model.trainable_variables))
+
+            mse.update_state(y, y_pred)
+            mae.update_state(y, y_pred)
+
+            return loss
+        
+        def test_step(data):
+            """Runs forward pass on a batch."""
+            x, y, y_status = data
+            # x expected input shape = (batch_size, original_length)
+            # y expected input shape = (batch_size,)
+            # status expected input shape = (batch_size,)
+
+            # Include a dummy axis so that reductions are done correctly.
+            y = tf.reshape(y, shape=[-1, 1])
+            y_status = tf.reshape(y_status, shape=[-1, 1])
+            # Expected output shape = (batch_size, 1)
+
+            y_pred = model(x, training=False)
+            y_pred_status = tf.where(y_pred >= threshold, 1.0, 0.0)
+            loss = compute_test_loss(y, y_status, y_pred, y_pred_status)
+
+            #test_loss.update_state(loss) # auto-scaled by number of replicas
+            test_mse.update_state(y, y_pred)
+            test_mae.update_state(y, y_pred)
+
+            return loss
+
+        @tf.function
+        def distributed_train_step(dataset_inputs):
+            """Replicate the train step and run it with distributed input.
+            
+            Returns the sum of losses from replicas which is further summed
+            over batches and averaged over an epoch in downstream processing.
+            """
+            per_replica_losses = strategy.run(
+                train_step,
+                args=(dataset_inputs,))
+            return strategy.reduce(
+                tf.distribute.ReduceOp.SUM,
+                per_replica_losses,
+                axis=None)
+
+        @tf.function
+        def distributed_test_step(dataset_inputs):
+            """Replicate the test step and run it with distributed input.
+            
+            Returns the sum of losses from replicas which is further summed
+            over batches and averaged over an epoch in downstream processing.
+            """
+            per_replica_losses =  strategy.run(
+                test_step,
+                args=(dataset_inputs,))
+            return strategy.reduce(
+                tf.distribute.ReduceOp.SUM,
+                per_replica_losses,
+                axis=None)
+        
+        best_test_loss = float('inf')
+        wait_for_better_loss = 0
+        PATIENCE = 6
+        history = {'loss': [],
+                   'mse': [],
+                   'mae': [],
+                   'val_loss': [],
+                   'val_mse': [],
+                   'val_mae': []}
+
+        for epoch in range(args.n_epoch):
+            # Train loop.
+            total_loss = 0.0
+            steps = 0
+            pbar = tf.keras.utils.Progbar(
+                target=training_provider.__len__(), # number of batches
+                stateful_metrics=['mse', 'mae'])
+            for x in train_dist_dataset: # iterate over batches
+                total_loss += distributed_train_step(x)
+                steps += 1 # each step is a batch
+                metrics = {
+                    'loss': total_loss / steps,
+                    'mse': mse.result(),
+                    'mae': mae.result()}
+                pbar.update(steps,
+                            values=metrics.items(),
+                            finalize=False)
+            train_loss = total_loss / steps
+            pbar.update(steps, values=metrics.items(), finalize=True)
+
+            # Test loop.
+            total_loss = 0.0
+            steps = 0
+            for x in test_dist_dataset:
+                total_loss += distributed_test_step(x)
+                steps += 1
+            test_loss = total_loss / steps
+
+            print(
+                f'epoch: {epoch + 1} loss: {train_loss:2.4f} '
+                f'mse: {mse.result():2.4f} mae: {mae.result():2.4f} '
+                f'val loss: {test_loss:2.4f} '
+                f'val mse: {test_mse.result():2.4f} val mae: {test_mae.result():2.4f}'
+            )
+
+            if test_loss < best_test_loss:
+                print(
+                    f'Current val loss of {test_loss:2.4f} < '
+                    f'than val loss of {best_test_loss:2.4f}, '
+                    f'saving model to {savemodel_filepath}.'
+                )
+                model.save(savemodel_filepath)
+                best_test_loss = test_loss
+                wait_for_better_loss = 0
+            else:
+                wait_for_better_loss += 1
+
+            if epoch % 2 == 0:
+                checkpoint.save(checkpoint_filepath)
+
+            history['loss'].append(train_loss.numpy())
+            history['mse'].append(mse.result().numpy())
+            history['mae'].append(mae.result().numpy())
+            history['val_loss'].append(test_loss.numpy())
+            history['val_mse'].append(test_mse.result().numpy())
+            history['val_mae'].append(test_mae.result().numpy())
+
+            test_mse.reset_states()
+            test_mae.reset_states()
+            mse.reset_states()
+            mae.reset_states()
+
+            if wait_for_better_loss > PATIENCE:
+                log('Early termination of training.')
+                break
+    
+    model.summary()
+
+    plot(history,
+         plot_name=f'train_{MODEL_ARCH}',
+         plot_display=True,
+         appliance_name=appliance_name)

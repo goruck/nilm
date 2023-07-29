@@ -20,7 +20,7 @@ from logger import log
 import common
 
 # Specify model architecture to use for training.
-MODEL_ARCH = 'transformer'
+MODEL_ARCH = 'transformer_fit'
 model_archs = dir(define_models)
 if MODEL_ARCH not in model_archs:
     raise ValueError(f'Unknown model architecture: {MODEL_ARCH}!')
@@ -222,8 +222,8 @@ if __name__ == '__main__':
     model_filepath = os.path.join(args.save_dir, appliance_name)
     log(f'Model file path: {model_filepath}')
 
-    checkpoint_filepath = os.path.join(model_filepath, f'checkpoints_{MODEL_ARCH}')
-    log(f'Checkpoint file path: {checkpoint_filepath}')
+    savemodel_filepath = os.path.join(model_filepath, f'savemodel_{MODEL_ARCH}')
+    log(f'Savemodel file path: {savemodel_filepath}')
 
     # Load datasets.
     train_dataset = common.load_dataset(training_path, args.crop_train_dataset)
@@ -255,6 +255,8 @@ if __name__ == '__main__':
         log('Training model from scratch.')
 
         if MODEL_ARCH == 'transformer':
+            raise ValueError('Must use model "transformer_fit" for training with .fit().')
+        elif MODEL_ARCH == 'transformer_fit':
             # Calculate normalized threshold for appliance status determination.
             threshold = common.params_appliance[appliance_name]['on_power_threshold']
             max_on_power = common.params_appliance[appliance_name]['max_on_power']
@@ -266,10 +268,10 @@ if __name__ == '__main__':
             log(f'L1 loss multiplier: {c0}')
 
             model_depth = 256
-            model = define_models.transformer(window_length=window_length, 
-                                              threshold=threshold,
-                                              d_model=model_depth,
-                                              c0=c0)
+            model = define_models.transformer_fit(window_length=window_length, 
+                                                  threshold=threshold,
+                                                  d_model=model_depth,
+                                                  c0=c0)
             #lr_schedule = TransformerCustomSchedule(d_model=model_depth)
             lr_schedule = 1e-4
         elif MODEL_ARCH == 'cnn':
@@ -293,7 +295,7 @@ if __name__ == '__main__':
             run_eagerly=RUN_EAGERLY)
 
         checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
-            filepath = checkpoint_filepath,
+            filepath = savemodel_filepath,
             monitor='val_loss',
             verbose=1,
             save_best_only=True,
@@ -324,7 +326,7 @@ if __name__ == '__main__':
 
         quantize_model = tfmot.quantization.keras.quantize_model
 
-        model = tf.keras.models.load_model(checkpoint_filepath)
+        model = tf.keras.models.load_model(savemodel_filepath)
 
         q_aware_model = quantize_model(model)
 
@@ -370,7 +372,7 @@ if __name__ == '__main__':
     elif args.prune:
         log('Prune pre-trained model for on-device inference.')
 
-        model = tf.keras.models.load_model(checkpoint_filepath)
+        model = tf.keras.models.load_model(savemodel_filepath)
 
         # Compute end step to finish pruning after 15 epochs.
         end_step = (num_train_samples // args.batchsize) * args.prune_end_epoch
