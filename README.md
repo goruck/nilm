@@ -27,13 +27,17 @@ The following first two diagrams illustrate the NILM concept and process steps a
 
 ### Algorithm Selection
 
-Energy disaggregation is a highly underdetermined and a single-channel Blind Source Separation (BSS) problem² which makes it difficult to obtain accurate predictions. You need to extract more than one source from a single observation. Past approaches have included factorial hidden Markov models (FHMM)¹ and various event-based methods with some success⁶.
+Energy disaggregation is a highly underdetermined and a single-channel Blind Source Separation (BSS) problem² which makes it difficult to obtain accurate predictions. Let $M$ be the number of household applainces and $i$ be the index referring to the $i$-th applaince. The aggregate power consumption $x$ at a given time $i$ is the sum of the power consumption of all appliances $M$, denoted by $y_i\forall{i=1,...,M}$ Therefore the total power consumption $x$ at a given time $t$ can expressed in the equation below. 
 
-You can also solve the single-channel BSS problem can by using sequence-to-sequence (seq2seq) learning with neural networks, and it can applied to the NILM problem using both convolutional and recurrent neural networks³. Seq2seq learning involves training a deep network to map between an input time series, such as the aggregate power readings the case of NILM, and a output sequence, such as the estimated energy consumption of a single appliance. A sliding input window is typically used to training the network which generates a corresponding window of the output. This method produces multiple predictions for each appliance in the output so an average of the predictions is used for the final result. Some of the predictions will be more accurate than others, especially those near the midpoint of the input sliding window. The averaging will tend to lower the overall accuracy of the predictions.
+$$x(t)=\sum_{i=1}^My_i(t)+\epsilon_{noise}(t) \tag{1}$$
+
+Where $\epsilon_{noise}$ is a noise term. The goal of this project is to solve the inverse problem and estiate the appliance power consumption $y_i$, given the aggregate power signal $x$.
+
+Past approaches have included factorial hidden Markov models (FHMM)¹ and various event-based methods with some success⁶. You can also solve the single-channel BSS problem can by using sequence-to-sequence (seq2seq) learning with neural networks, and it can applied to the NILM problem using transformers, convolutional and recurrent neural networks³. Seq2seq learning involves training a deep network to map between an input time series, such as the aggregate power readings the case of NILM, and a output sequence, such as the estimated energy consumption of a single appliance. A sliding input window is typically used to training the network which generates a corresponding window of the output. This method produces multiple predictions for each appliance in the output so an average of the predictions is used for the final result. Some of the predictions will be more accurate than others, especially those near the midpoint of the input sliding window. The averaging will tend to lower the overall accuracy of the predictions.
 
 Some of the disadvantages of of seq2seq leaning can mitigated by sequence-to-point learning (seq2point) for single-channel BSS⁴. You also use a sliding input signal window in this approach, however the network is trained to predict the output signal only at the midpoint of the window which makes the prediction problem easier on the network, leading to more accurate results.
 
-I selected the seq2point learning approach for my prototype system and my implementation was inspired and guided by work described by Michele D'Incecco, Stefano Squartini and Mingjun Zhong⁵.
+I selected the seq2point learning approach for my prototype system and my implementation was inspired and guided by work described by Michele D'Incecco, Stefano Squartini and Mingjun Zhong⁵. I developed a variety of seq2point learning models using Tensorflow as shown in the Python module [define_models.py](./ml/define_models.py) but focussed my work on the models `transformer` and `cnn`.
 
 ### Datasets
 
@@ -45,31 +49,53 @@ The datasets generally include many 10’s of millions of active power, reactive
 
 ### Model Training
 
-I used TensorFlow 2 and the Keras APIs to train and test the model. All code associated with this section can be found on the Machine Learning section of the project’s GitHub, NILM⁹.
+I used TensorFlow to train and test the model. All code associated with this section can be found on the Machine Learning section of the project’s GitHub, NILM⁹. The seq2point learning models for the appliances were trained individually on z-score standardized or normalized to [0, appliance maximum on power] REFIT data.
 
-The seq2point learning models for the appliances were trained individually on z normalized REFIT data. I used the following four metrics to evaluate the model’s performance. You can view the code that calculates these metrics [here](./ml/nilm_metric.py).
+I used the following metrics to evaluate the model’s performance. You can view the code that calculates these metrics [here](./ml/nilm_metric.py).
 
-* Mean absolute error (MAE), which evaluates the absolute difference between the prediction and the and the ground truth at every time point and calculates the mean value.
-* Normalized signal aggregate error (SAE), which indicates the relative error of the total energy.
-* Energy per day (EpD) which measures the absolute error of the predicted energy used in a day, useful when the household users are interested in the total energy consumed in a period.
-* Normalized disaggregation error (NDE) which measures the normalized error of the squared difference between the prediction and the ground truth of the appliances.
+* Mean absolute error (MAE), which evaluates the absolute difference between the prediction and the and the ground truth at every time point and calculates the mean value, as defined by the equation below.
 
-I created the seq2point learning model `create_model` using the Keras Functional API as shown in the Python module [define_models.py](./ml/define_models.py). You can find alternative model architectures there as well but this one currently gives the best results.
+$$MAE = \frac{1}{N}\sum_{i=1}^{N}|\hat{x_i}-x_i|\tag{2}$$
+
+* Normalized signal aggregate error (SAE), which indicates the relative error of the total energy. Denote $r$ as the total energy consumption of the appliance and $\hat{r}$ as the predicted total energy, then SAE is defined per the equation below.
+
+$$SAE = \frac{|\hat{r} - r|}{r}\tag{3}$$
+
+* Energy per day (EpD) which measures the predicted energy used in a day, useful when the household users are interested in the total energy consumed in a period. Denote $D$ as the total number of days and $e=\sum_{t}x_t$ as the appliance energy consumed in a day, then EpD is defined per the equation below.
+
+$$EpD = \frac{1}{D}\sum_{n=1}^{D}e\tag{4}$$
+
+* Normalized disaggregation error (NDE) which measures the normalized error of the squared difference between the prediction and the ground truth of the appliances, as defined by the equation below.
+
+$$NDE = \frac{\sum_{i,t}(x_{i,t}-\hat{x_{i,t}})^2}{\sum_{i,t}x_{i,t}^2}\tag{5}$$
+
+I also used accuracy, F1-score (F1) and Matthew’s correlation coefficient (MCC) to assess if the model can perform well with the severely imbalanced datasets used to train and test the model. These metrics depend on the on-off status of the device and are computed using the parameters in the [common.py](./ml/common.py) module. Accuracy is equal to the number of correctly predicted time points over the test dataset. F1 and MCC are computed according to the equations below where $TP$ stands for true positives, $TN$ stands for true negatives, $FP$ stands for false positives and $FN$ stands for false negatives.
+
+$$F1=\frac{TP}{TP+\frac{1}{2}(FP+FN)}\tag{6}$$
+
+$$MCC=\frac{TN \times TP+FN \times FP }{\sqrt{(TP+FP)(TP+FN)(TN+FP)(TN+FN)}}\tag{7}$$
+
+$MAE$, $SAE$, $NDE$ and $EpD$ reflect the model's ability to correctly predict the appliance energy consumption levels. $F1$ and $MCC$ indicates the model's ability to correctly predict appliance activations using imbalanced classes. Accuracy is less useful in this application because most of the time the model will correctly predict the appliance is off which dominates the dataset.
 
 A sliding window of 599 samples of the aggregate real power consumption signal is used as inputs to seq2point model and the midpoints of the corresponding windows of the appliances are used as targets. You can see how the samples and targets are generated in the `get_window_generator` function in the [common.py](./ml/common.py) module.
 
-You can see the code I used to train the model in [train.py](./ml/train.py). I used the Keras Adam optimizer and to reduce over-fitting I used EarlyStopping and InverseTimeDecay. The training code can be configured to train the seq2point model from scratch, or given a fitted model, prune it or fine tune it with quantization aware training (QAT), both of which can improve inference performance especially on edge hardware.
+You can see the code I used to train the model in [train_distributed.py](./ml/train_distributed.py) which uses the `tf.distribute.MirroredStrategy()` distributed training strategy. I used the Keras Adam optimizer and to reduce over-fitting, early stopping is used. The training code can be configured to train the seq2point model from scratch, or given a fitted model, prune it or fine tune it with quantization aware training (QAT), both of which can improve inference performance especially on edge hardware.
 
-The hyper-parameters for training and the optimizer are summarized below.
-
+The key hyper-parameters for training and the optimizer are summarized below.
 * Input Window Size: 599 samples
-* Batch size: 1000 samples.
-* From scratch Learning Rate: 0.001 with inverse time decay.
-* QAT and Prune Learning Rate: 0.0001.
-* Optimizer: beta_1=0.9, beta_2=0.999, epsilon=1e-08.
-* From scratch Early Stopping Criteria: 6 epochs.
+* Batch size: 1024 samples.
+* From scratch Learning Rate: 1e-04
+* QAT and Prune Learning Rate: 1e-05
+* Adam Optimizer: beta_1=0.9, beta_2=0.999, epsilon=1e-08.
+* Early Stopping Criteria: 6 epochs.
 
-The training program monitors the Mean Squared Error (MSE) losses for both training and validation data and Mean Absolute Error (MAE) for the validation data with early stopping to reduce over-fitting. The datasets contain a large number of samples (many 10’s of millions) with repeating patterns; it was not uncommon that over-fitting occurred after only a single epoch for some appliances. To mitigate against this, I used a subset of the training data, typically between 5 and 10 million samples.
+The loss function<sup>11</sup> shown in the equation below is used to compute training gradients and to evaluate validation loss on a per-batch basis. It consists of a combination of Mean Squared Error, Binary Cross-Entropy and Mean Absolute Error losses, averaged over distributed model replica batches.
+
+$$L(x, s) = (\hat{x} - x)^2 -(\hat{s}\log{s}+(1-\hat{s})\log{(1-s)}) + (\lambda|\hat{x}-x|, \hat{x}\in\set{O})\tag{8}$$
+
+Where $x, \hat{x}\in[0, 1]$ are the ground truth and predicted power usage single point values divided by the maximum power limit per appliance and $s, \hat{s}\in\set{0, 1}$ are the appliance state label and prediction, and $O$ is the set of predictions when either the status label is on or the prediction is incorrect. The hyperparameter $\lambda$ tunes the absolute loss term on an a per-appliance basis. 
+
+~~The training program monitors losses for both training and validation data with early stopping to reduce over-fitting. The datasets contain a large number of samples (many 10’s of millions) with repeating patterns; it was not uncommon that over-fitting occurred after only a single epoch for some appliances. To mitigate against this, I used a subset of the training data, typically between 5 and 10 million samples.~~
 
 You can find the training results for each appliance in the [models](./ml/models/) folder and typical performance metrics in the Appendix.
 
@@ -138,6 +164,7 @@ By using large publicly available datasets to train seq2point learning models it
 8. Proceedings of the 8th International Conference on Energy Efficiency in Domestic Appliances and Lighting | A data management platform for personalised real-time energy feedback by David Murray and Jing Liao and Lina Stankovic and Vladimir Stankovic and Richard Hauxwell-Baldwin and Charlie Wilson and Michael Coleman and Tom Kane and Steven Firth. The REFIT dataset used in this project is is licensed under the Creative Commons Attribution 4.0 International Public License.
 9. GitHub | NILM by Lindo St. Angel
 10. GitHub | EmonLibCM by Trystan Lea, Glyn Hudson, Brian Orpin and Ivan Kravets.
+11. BERT4NILM: A Bidirectional Transformer Model for Non-Intrusive Load Monitoring by Zhenrui Yue, et. al.
 
 Please also see this project's companion Medium article [Energy Management Using Real-Time Non-Intrusive Load Monitoring](https://towardsdatascience.com/energy-management-using-real-time-non-intrusive-load-monitoring-3c9b0b4c8291).
 
