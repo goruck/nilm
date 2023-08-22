@@ -77,7 +77,7 @@ $$F1=\frac{TP}{TP+\frac{1}{2}(FP+FN)}\tag{6}$$
 
 $$MCC=\frac{TN \times TP+FN \times FP }{\sqrt{(TP+FP)(TP+FN)(TN+FP)(TN+FN)}}\tag{7}$$
 
-$MAE$, $SAE$, $NDE$ and $EpD$ reflect the model's ability to correctly predict the appliance energy consumption levels. $F1$ and $MCC$ indicates the model's ability to correctly predict appliance activations using imbalanced classes. Accuracy is less useful in this application because most of the time the model will correctly predict the appliance is off which dominates the dataset.
+$MAE$, $SAE$, $NDE$ and $EpD$ (relative to a baseline) reflect the model's ability to correctly predict the appliance energy consumption levels. $F1$ and $MCC$ indicates the model's ability to correctly predict appliance activations using imbalanced classes. Accuracy is less useful in this application because most of the time the model will correctly predict the appliance is off which dominates the dataset.
 
 A sliding window of 599 samples of the aggregate real power consumption signal is used as inputs to seq2point model and the midpoints of the corresponding windows of the appliances are used as targets. You can see how the samples and targets are generated in the `get_window_generator` function in the [common.py](./ml/common.py) module.
 
