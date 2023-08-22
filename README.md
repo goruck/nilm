@@ -27,11 +27,11 @@ The following first two diagrams illustrate the NILM concept and process steps a
 
 ### Algorithm Selection
 
-Energy disaggregation is a highly underdetermined and a single-channel Blind Source Separation (BSS) problem² which makes it difficult to obtain accurate predictions. Let $M$ be the number of household applainces and $i$ be the index referring to the $i$-th applaince. The aggregate power consumption $x$ at a given time $i$ is the sum of the power consumption of all appliances $M$, denoted by $y_i\forall{i=1,...,M}$ Therefore the total power consumption $x$ at a given time $t$ can expressed in the equation below. 
+Energy disaggregation is a highly underdetermined and a single-channel Blind Source Separation (BSS) problem² which makes it difficult to obtain accurate predictions. Let $M$ be the number of household appliances and $i$ be the index referring to the $i$-th appliance. The aggregate power consumption $x$ at a given time $i$ is the sum of the power consumption of all appliances $M$, denoted by $y_i\forall{i=1,...,M}$. Therefore, the total power consumption $x$ at a given time $t$ can expressed by the equation below. 
 
 $$x(t)=\sum_{i=1}^My_i(t)+\epsilon_{noise}(t) \tag{1}$$
 
-Where $\epsilon_{noise}$ is a noise term. The goal of this project is to solve the inverse problem and estiate the appliance power consumption $y_i$, given the aggregate power signal $x$.
+Where $\epsilon_{noise}$ is a noise term. The goal of this project is to solve the inverse problem and estimate the appliance power consumption $y_i$, given the aggregate power signal $x$, and to do so in a manner suitable for deployment at the edge. 
 
 Past approaches have included factorial hidden Markov models (FHMM)¹ and various event-based methods with some success⁶. You can also solve the single-channel BSS problem can by using sequence-to-sequence (seq2seq) learning with neural networks, and it can applied to the NILM problem using transformers, convolutional and recurrent neural networks³. Seq2seq learning involves training a deep network to map between an input time series, such as the aggregate power readings the case of NILM, and a output sequence, such as the estimated energy consumption of a single appliance. A sliding input window is typically used to training the network which generates a corresponding window of the output. This method produces multiple predictions for each appliance in the output so an average of the predictions is used for the final result. Some of the predictions will be more accurate than others, especially those near the midpoint of the input sliding window. The averaging will tend to lower the overall accuracy of the predictions.
 
@@ -46,6 +46,8 @@ There are a number of large-scale publicly available datasets specifically desig
 ![Alt text](./img/nilm-datasets.png?raw=true "NILM Datasets (Oliver Parson, et al.⁷)")
 
 The datasets generally include many 10’s of millions of active power, reactive power, current, and voltage samples but with different sampling frequencies which requires you to pre-process the data before use. Most NILM algorithms utilize only real (aka active or true) power data. Five appliances are usually considered for energy disaggregation research which are kettle, microwave, fridge, dish washer and washing machine. These are the appliances I considered for my prototype and following the work of Michele DIncecco, et al.⁵, I mainly focused on the REFIT⁸ data et but will eventually include UK-DALE and REDD.
+
+These datasets are typically very imbalanced because the majority of the time an appliance is in the off state. 
 
 ### Model Training
 
