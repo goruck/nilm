@@ -45,9 +45,9 @@ There are a number of large-scale publicly available datasets specifically desig
 
 ![Alt text](./img/nilm-datasets.png?raw=true "NILM Datasets (Oliver Parson, et al.⁷)")
 
-The datasets generally include many 10’s of millions of active power, reactive power, current, and voltage samples but with different sampling frequencies which requires you to pre-process the data before use. Most NILM algorithms utilize only real (aka active or true) power data. Five appliances are usually considered for energy disaggregation research which are kettle, microwave, fridge, dish washer and washing machine. These are the appliances I considered for my prototype and following the work of Michele DIncecco, et al.⁵, I mainly focused on the REFIT⁸ data et but will eventually include UK-DALE and REDD.
+The datasets generally include many 10’s of millions of active power, reactive power, current, and voltage samples but with different sampling frequencies which requires you to pre-process the data before use. Most NILM algorithms utilize only real (aka active or true) power data. Five appliances are usually considered for energy disaggregation research which are kettle, microwave, fridge, dish washer and washing machine. These are the appliances I considered for my prototype and following the work of Michele DIncecco, et al.⁵, I mainly focused on the REFIT⁸ dataset but will eventually include UK-DALE and REDD.
 
-These datasets are typically very imbalanced because the majority of the time an appliance is in the off state. 
+Note that these datasets are typically very imbalanced because the majority of the time an appliance is in the off state. 
 
 ### Model Training
 
