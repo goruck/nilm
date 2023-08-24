@@ -19,34 +19,66 @@ ALT_AGGREGATE_STD = 814.0   # in Watts
 USE_ALT_STANDARDIZATION = True
 
 # If True the appliance dataset will be normalized to [0, max_on_power]
-# else the appliance dataset will be standardized.
+# else the appliance dataset will be z-score standardized.
 USE_APPLIANCE_NORMALIZATION = True
 
 # Power consumption sample update period in seconds.
 SAMPLE_PERIOD = 8
 
 # Various parameters used for training, validation and testing.
+# Except where noted, values are calculated from statistical analysis
+# of the respective dataset.
 params_appliance = {
     'kettle': {
-        'window_length': 599,                   # in number of samples
-        'on_power_threshold': 2000.0,           # in Watts
-        'max_on_power': 3998.0,                 # in Watts
-        'min_on_duration': 12.0,                # in seconds
-        'min_off_duration': 0.0,                # in seconds
-        'train_agg_mean': 501.32453633286167,   # training aggregate mean (W)
-        'train_agg_std': 783.0367822932175,     # training aggregate standard deviation (W)
-        'train_app_mean': 16.137261776311778,   # training appliance mean (W)
-        'train_app_std': 196.89790951996966,    # training appliance standard deviation (W)
-        'test_app_mean': 23.155018918550294,    # test appliance mean (W)
-        'test_agg_mean': 465.10226795866976,    # test aggregate mean (W)
-        'alt_app_mean': 700.0,                  # alternative standardization (W)
-        'alt_app_std': 1000.0,                  # alternative standardization (W)
-        'c0': 1.0                               # L1 loss multiplier
+        # Input sample window length (samples).
+        'window_length': 599,
+        # Appliance considered inactive below this power draw (W).
+        # From Zhenrui Yue, et. al., "BERT4NILM: A Bidirectional Transformer Model
+        # for Non-Intrusive Load Monitoring".
+        'on_power_threshold': 2000.0,
+        # Appliance max power draw (W).
+        # From Zhenrui Yue, et. al., "BERT4NILM: A Bidirectional Transformer Model
+        # for Non-Intrusive Load Monitoring".
+        'max_on_power': 3100,#3998.0,
+        # Appliance power draw considered invalid longer than this value (s).
+        # From Zhenrui Yue, et. al., "BERT4NILM: A Bidirectional Transformer Model
+        # for Non-Intrusive Load Monitoring".
+        'min_on_duration': 12.0,
+        # Appliance power draw considered invalid if shorter than this value (s).
+        # From Zhenrui Yue, et. al., "BERT4NILM: A Bidirectional Transformer Model
+        # for Non-Intrusive Load Monitoring".
+        'min_off_duration': 0.0,
+        # Training aggregate dataset mean (W).
+        'train_agg_mean': 501.32453633286167,
+        # Training aggregate dataset standard deviation (W).
+        'train_agg_std': 783.0367822932175,
+        # Training appliance dataset mean (W).
+        'train_app_mean': 16.137261776311778,
+        # Training appliance dataset standard deviation (W).
+        'train_app_std': 196.89790951996966,
+        # Test appliance dataset mean (W).
+        'test_app_mean': 23.155018918550294,
+        # Test aggregate dataset mean (W)
+        'test_agg_mean': 465.10226795866976,
+        # Appliance dataset alternative standardization mean (W).
+        # From Michele D’Incecco, et. al., "Transfer Learning for
+        # Non-Intrusive Load Monitoring"
+        'alt_app_mean': 700.0,
+        # Appliance dataset alternative standardization std (W).
+        # From Michele D’Incecco, et. al., "Transfer Learning for
+        # Non-Intrusive Load Monitoring"
+        'alt_app_std': 1000.0,
+        # Coefficient 0 (L1 loss multiplier).
+        # From Zhenrui Yue, et. al., "BERT4NILM: A Bidirectional Transformer Model
+        # for Non-Intrusive Load Monitoring".
+        'c0': 1.0
     },
     'microwave': {
         'window_length': 599,
         'on_power_threshold': 200.0,
-        'max_on_power': 3969.0,
+        'max_on_power': 3000.0,
+        'min_on_duration': 12.0,
+        'min_off_duration': 30.0,
         'train_agg_mean': 495.0447502551665,
         'train_agg_std': 704.1066664964247,
         'train_app_mean': 3.4617193220425304,
@@ -60,7 +92,9 @@ params_appliance = {
     'fridge': {
         'window_length': 599,
         'on_power_threshold': 50.0,
-        'max_on_power': 3323.0,
+        'max_on_power': 400.0,
+        'min_on_duration': 60.0,
+        'min_off_duration': 12.0,
         'train_agg_mean': 605.4483277115743,
         'train_agg_std': 952.1533235759814,
         'train_app_mean': 48.55206460642049,
@@ -74,7 +108,9 @@ params_appliance = {
     'dishwasher': {
         'window_length': 599,
         'on_power_threshold': 10.0,
-        'max_on_power': 3964.0,
+        'max_on_power': 2500.0,
+        'min_on_duration': 1800.0,
+        'min_off_duration': 1800.0,
         'train_agg_mean': 606.3228537145152,
         'train_agg_std': 833.611776395652,
         'train_app_mean': 46.040618889481905,
@@ -88,7 +124,9 @@ params_appliance = {
     'washingmachine': {
         'window_length': 599,
         'on_power_threshold': 20.0,
-        'max_on_power': 3999.0,
+        'max_on_power': 2500.0,
+        'min_on_duration': 1800.0,
+        'min_off_duration': 160.0,
         'train_agg_mean': 517.5859340919116,
         'train_agg_std': 827.1565574135092,
         'train_app_mean': 22.22078550102201,
@@ -133,7 +171,7 @@ def load_dataset(file_name, crop=None):
     return mains_power, appliance_power, activations
 
 def get_window_generator(keras_sequence=True):
-    """Wrapper to conditionally sublass WindowGenerator as Keras sequence.
+    """Wrapper to conditionally subclass WindowGenerator as Keras sequence.
 
     The WindowGenerator is used in keras and non-keras applications and
     so to make it useable across both it can be a subclass of a keras

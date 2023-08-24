@@ -64,12 +64,12 @@ def cnn(window_length=599, conv_l2=0, dense_l2=0, batch_norm=False) -> tf.keras.
         TF-Keras model.
     """
     input_layer = tf.keras.layers.Input(shape=(window_length,))
-    input_layer = tf.keras.layers.Reshape(
+    input_layer_reshape = tf.keras.layers.Reshape(
         target_shape=(1, window_length, 1))(input_layer)
 
     conv_1 = tf.keras.layers.Convolution2D(
         filters=16, kernel_size=(1, 5), padding='same',
-        kernel_regularizer=tf.keras.regularizers.L2(conv_l2))(input_layer)
+        kernel_regularizer=tf.keras.regularizers.L2(conv_l2))(input_layer_reshape)
     if batch_norm:
         conv_1 = tf.keras.layers.BatchNormalization()(conv_1)
     conv_1 = tf.keras.layers.Activation('relu')(conv_1)
@@ -146,12 +146,12 @@ def fcn(window_length=599, conv_l2=0, batch_norm=False) -> tf.keras.Model:
         TF-Keras model.
     """
     input_layer = tf.keras.layers.Input(shape=(window_length,))
-    input_layer = tf.keras.layers.Reshape(
+    input_layer_reshape = tf.keras.layers.Reshape(
         target_shape=(1, window_length, 1))(input_layer)
 
     conv_1 = tf.keras.layers.Convolution2D(
         filters=16, kernel_size=(1, 5), padding='same',
-        kernel_regularizer=tf.keras.regularizers.L2(conv_l2))(input_layer)
+        kernel_regularizer=tf.keras.regularizers.L2(conv_l2))(input_layer_reshape)
     if batch_norm:
         conv_1 = tf.keras.layers.BatchNormalization()(conv_1)
     conv_1 = tf.keras.layers.Activation('relu')(conv_1)
@@ -205,13 +205,13 @@ def resnet(window_length, n_feature_maps=16, batch_norm=False) -> tf.keras.Model
         TF-Keras model.
     """
     input_layer = tf.keras.layers.Input(shape=(window_length,))
-    input_layer = tf.keras.layers.Reshape(
+    input_layer_reshape = tf.keras.layers.Reshape(
         target_shape=(1, window_length, 1))(input_layer)
 
     # Block 1.
 
     conv_x = tf.keras.layers.Conv2D(
-        filters=n_feature_maps, kernel_size=(1, 5), padding='same')(input_layer)
+        filters=n_feature_maps, kernel_size=(1, 5), padding='same')(input_layer_reshape)
     if batch_norm:
         conv_x = tf.keras.layers.BatchNormalization()(conv_x)
     conv_x = tf.keras.layers.Activation('relu')(conv_x)

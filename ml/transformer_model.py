@@ -656,9 +656,9 @@ class NILMTransformerModel(tf.keras.Model):
         self.relative_position = RelativePositionEmbedding(max_length=self.latent_len)
         self.avg_pool = tf.keras.layers.GlobalAveragePooling1D()
         #self.max_pool = tf.keras.layers.GlobalMaxPooling1D()
-        self.dense1 = tf.keras.layers.Dense(units=self.decoder_hidden, activation='tanh')
+        self.dense1 = tf.keras.layers.Dense(units=self.decoder_hidden, activation='relu')
         #self.flatten = tf.keras.layers.Flatten()
-        self.dropout2 = tf.keras.layers.Dropout(rate=0.25)
+        self.dropout2 = tf.keras.layers.Dropout(rate=self.dropout_rate)
         self.add_norm2 = AddNormalization()
         self.dense2 = tf.keras.layers.Dense(units=1)
         # If training with mixed-precision, ensure model output is float32.

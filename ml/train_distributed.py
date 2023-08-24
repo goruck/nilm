@@ -19,14 +19,6 @@ import define_models
 from logger import log
 import common
 
-# Specify model architecture to use for training.
-MODEL_ARCH = 'transformer'
-model_archs = dir(define_models)
-if MODEL_ARCH not in model_archs:
-    raise ValueError(f'Unknown model architecture: {MODEL_ARCH}!')
-else:
-    log(f'Using model architecture: {MODEL_ARCH}.')
-
 ### DO NOT USE MIXED-PRECISION - CURRENTLY GIVES POOR MODEL ACCURACY ###
 # TODO: fix.
 # Run in mixed-precision mode for ~30% speedup vs TensorFloat-32
@@ -66,7 +58,6 @@ def smooth_curve(points, factor=0.8):
 
 def plot(history, plot_name, plot_display, appliance_name):
     """Save and display loss and mae plots."""
-    # Mean square error.
     loss = history['loss']
     val_loss = history['val_loss']
     plot_epochs = range(1,len(loss)+1)
@@ -77,7 +68,7 @@ def plot(history, plot_name, plot_display, appliance_name):
         plot_epochs, smooth_curve(val_loss),
         label='Smoothed Validation Loss')
     plt.title(f'Training history for {appliance_name} ({plot_name})')
-    plt.ylabel('Loss (MSE)')
+    plt.ylabel('Loss')
     plt.xlabel('Epoch')
     plt.legend()
     plot_filepath = os.path.join(
@@ -106,6 +97,11 @@ def get_arguments():
         description='Train a neural network for energy disaggregation - \
             network input = mains window; network target = the states of \
             the target appliance.')
+    parser.add_argument(
+        '--model_arch',
+        type=str,
+        default='cnn',
+        help='network architecture to use')
     parser.add_argument(
         '--appliance_name',
         type=str,
@@ -170,19 +166,6 @@ class TransformerCustomSchedule(tf.keras.optimizers.schedules.LearningRateSchedu
             'd_model': self.d_model,
             'warmup_steps': self.warmup_steps}
         return config
-    
-def decay_custom_schedule(
-        batches_per_epoch:int,
-        epochs_per_decay_step:int=5) -> tf.keras.optimizers.schedules:
-    """Decay lr at 1/t every 'epochs_per_decay_step' epochs.
-    
-    Typically set batches_per_epoch = training_provider.__len__()
-    """
-    return tf.keras.optimizers.schedules.InverseTimeDecay(
-        0.001,
-        decay_steps=batches_per_epoch * epochs_per_decay_step,
-        decay_rate=1,
-        staircase=False)
 
 if __name__ == '__main__':
     log(f'Machine name: {socket.gethostname()}')
@@ -190,6 +173,12 @@ if __name__ == '__main__':
     args = get_arguments()
     log('Arguments: ')
     log(args)
+
+    model_arch = args.model_arch
+    if model_arch not in dir(define_models):
+        raise ValueError(f'Unknown model architecture: {model_arch}!')
+    else:
+        log(f'Using model architecture: {model_arch}.')
 
     # The appliance to train on.
     appliance_name = args.appliance_name
@@ -212,9 +201,9 @@ if __name__ == '__main__':
     log(f'Validation dataset: {validation_path}')
 
     model_filepath = os.path.join(args.save_dir, appliance_name)
-    checkpoint_filepath = os.path.join(model_filepath, f'checkpoints_{MODEL_ARCH}')
+    checkpoint_filepath = os.path.join(model_filepath, f'checkpoints_{model_arch}')
     log(f'Checkpoint file path: {checkpoint_filepath}')
-    savemodel_filepath = os.path.join(model_filepath, f'savemodel_{MODEL_ARCH}')
+    savemodel_filepath = os.path.join(model_filepath, f'savemodel_{model_arch}')
     log(f'Savemodel file path: {savemodel_filepath}')
 
     # Load datasets.
@@ -280,39 +269,42 @@ if __name__ == '__main__':
         log(f'Learning rate: {lr}')
     except KeyError:
         log('Learning rate cannot be determined due to invalid batch size.')
-        exit(1)
+        raise SystemExit(1)
+    
+    # Calculate normalized threshold for appliance status determination.
+    threshold = common.params_appliance[appliance_name]['on_power_threshold']
+    max_on_power = common.params_appliance[appliance_name]['max_on_power']
+    threshold /= max_on_power
+    log(f'Normalized on power threshold: {threshold}')
+
+    # Get L1 loss multiplier.
+    c0 = common.params_appliance[appliance_name]['c0']
+    log(f'L1 loss multiplier: {c0}')
 
     with strategy.scope():
-        if MODEL_ARCH == 'transformer_fit':
+        if model_arch == 'transformer_fit':
             raise ValueError('Must use model "transformer" for distributed training.')
-        elif MODEL_ARCH == 'transformer':
-            # Calculate normalized threshold for appliance status determination.
-            threshold = common.params_appliance[appliance_name]['on_power_threshold']
-            max_on_power = common.params_appliance[appliance_name]['max_on_power']
-            threshold /= max_on_power
-            log(f'Normalized on power threshold: {threshold}')
-
-            # Get L1 loss multiplier.
-            c0 = common.params_appliance[appliance_name]['c0']
-            log(f'L1 loss multiplier: {c0}')
-
+        elif model_arch == 'transformer':
             model_depth = 256
             model = define_models.transformer(window_length=window_length,
                                               d_model=model_depth)
             #lr_schedule = TransformerCustomSchedule(d_model=model_depth)
+            #lr_schedule = tf.keras.optimizers.schedules.PiecewiseConstantDecay(
+                #boundaries=[100000, 200000],
+                #values=[5e-04, 1e-04, .5e-04])
             lr_schedule = lr
-        elif MODEL_ARCH == 'cnn':
+        elif model_arch == 'cnn':
             model = define_models.cnn(window_length=window_length)
             lr_schedule = lr
-        elif MODEL_ARCH == 'fcn':
+        elif model_arch == 'fcn':
             model = define_models.fcn(window_length=window_length)
             lr_schedule = lr
-        elif MODEL_ARCH == 'resnet':
+        elif model_arch == 'resnet':
             model = define_models.resnet(window_length=window_length)
             lr_schedule = lr
         else:
             log('Model architecture not found.')
-            exit(1)
+            raise SystemExit(1)
 
         # Define loss objects.
         mse_loss_obj = tf.keras.losses.MeanSquaredError(
@@ -418,7 +410,8 @@ if __name__ == '__main__':
             with tf.GradientTape() as tape:
                 y_pred = model(x, training=True)
                 y_pred_status = tf.where(y_pred >= threshold, 1.0, 0.0)
-                loss = compute_train_loss(y, y_status, y_pred, y_pred_status, model.losses)
+                loss = compute_train_loss(
+                    y, y_status, y_pred, y_pred_status, model.losses)
 
             gradients = tape.gradient(loss, model.trainable_variables)
             optimizer.apply_gradients(zip(gradients, model.trainable_variables))
@@ -444,7 +437,6 @@ if __name__ == '__main__':
             y_pred_status = tf.where(y_pred >= threshold, 1.0, 0.0)
             loss = compute_test_loss(y, y_status, y_pred, y_pred_status)
 
-            #test_loss.update_state(loss) # auto-scaled by number of replicas
             test_mse.update_state(y, y_pred)
             test_mae.update_state(y, y_pred)
 
@@ -555,10 +547,10 @@ if __name__ == '__main__':
             if wait_for_better_loss > PATIENCE:
                 log('Early termination of training.')
                 break
-    
-    model.summary()
 
+    model.summary()
+    
     plot(history,
-         plot_name=f'train_{MODEL_ARCH}',
+         plot_name=f'train_{model_arch}',
          plot_display=True,
          appliance_name=appliance_name)

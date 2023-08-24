@@ -15,12 +15,6 @@ from logger import log
 import nilm_metric
 import common
 
-# Mains sample period in seconds.
-SAMPLE_PERIOD = 8
-
-# Model architecture to test.
-MODEL_ARCH = 'transformer'
-
 def get_arguments():
     parser = argparse.ArgumentParser(description='Predict appliance\
         given a trained neural network for energy disaggregation -\
@@ -38,37 +32,24 @@ def get_arguments():
         type=str,
         default='./models',
         help='this is the directory to the trained models')
-    parser.add_argument('--savemodel_dir',
+    parser.add_argument('--model_arch',
         type=str,
-        default=f'savemodel_{MODEL_ARCH}',
-        help='directory name of the saved model to test')
+        default='cnn',
+        help='model architecture to test')
     parser.add_argument('--save_results_dir',
         type=str,
         default='./results',
         help='this is the directory to save the predictions')
-    parser.add_argument('--test_type',
-        type=str,
-        default='test',
-        help='Type of the test set to load: \
-            test -- test on the proper test set;\
-            train -- test on a already prepared slice of the train set;\
-            val -- test on the validation set;\
-            uk -- test on UK-DALE;\
-            redd -- test on REDD.')
     parser.add_argument('--plot', action='store_true',
         help='If set, plot the predicted appliance against ground truth.')
-    parser.add_argument('--cnn',
-        type=str,
-        default='kettle',
-        help='The trained CNN for the appliance to load.')
     parser.add_argument('--crop',
         type=int,
         default=None,
-        help='To use part of the dataset for testing.')
+        help='use part of the dataset for testing')
     parser.add_argument('--batch_size',
         type=int,
-        default=1000,
-        help='Sets mini-batch size.')
+        default=1024,
+        help='sets test batch size')
     parser.set_defaults(plot=False)
     return parser.parse_args()
 
@@ -82,7 +63,7 @@ if __name__ == '__main__':
     log('Appliance target is: ' + appliance_name)
 
     test_filename = common.find_test_filename(
-        args.datadir, appliance_name, args.test_type)
+        args.datadir, appliance_name, 'test')
     log('File for test: ' + test_filename)
     test_file_path = os.path.join(args.datadir, appliance_name, test_filename)
     log('Loading from: ' + test_file_path)
@@ -141,7 +122,7 @@ if __name__ == '__main__':
 
     # Load best saved trained model for appliance.
     model_file_path = os.path.join(
-        args.trained_model_dir, appliance_name, args.savemodel_dir)
+        args.trained_model_dir, appliance_name, f'savemodel_{args.model_arch}')
     log(f'Loading saved model from {model_file_path}.')
     model = tf.keras.models.load_model(model_file_path, compile=False)
 
@@ -172,8 +153,8 @@ if __name__ == '__main__':
         alt_app_std = common.params_appliance[appliance_name]['alt_app_std']
         app_mean = alt_app_mean if common.USE_ALT_STANDARDIZATION else train_app_mean
         app_std = alt_app_std if common.USE_ALT_STANDARDIZATION else train_app_std
-        print('Using alt standardization.' if common.USE_ALT_STANDARDIZATION 
-                else 'Using default standardization.')
+        print('Using alt standardization.' if common.USE_ALT_STANDARDIZATION
+              else 'Using default standardization.')
     print(f'De-normalizing predictions with mean = {app_mean} and std = {app_std}.')
     prediction = test_prediction.flatten() * app_std + app_mean
     # Remove negative energy predictions
@@ -215,7 +196,7 @@ if __name__ == '__main__':
     save_path = os.path.join(
         args.save_results_dir, appliance_name)
     log(f'Saving mains, ground truth and predictions to {save_path}.')
-    np.save(f'{save_path}/{test_filename}_pred_{MODEL_ARCH}.npy', prediction)
+    np.save(f'{save_path}/{test_filename}_pred_{args.model_arch}.npy', prediction)
     np.save(f'{save_path}/{test_filename}_gt.npy', ground_truth)
     np.save(f'{save_path}/{test_filename}_mains.npy', aggregate)
 
