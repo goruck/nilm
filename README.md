@@ -37,7 +37,110 @@ Past approaches have included factorial hidden Markov models (FHMM)¹ and variou
 
 Some of the disadvantages of of seq2seq leaning can mitigated by sequence-to-point learning (seq2point) for single-channel BSS⁴. You also use a sliding input signal window in this approach, however the network is trained to predict the output signal only at the midpoint of the window which makes the prediction problem easier on the network, leading to more accurate results.
 
-I selected the seq2point learning approach for my prototype system and my implementation was inspired and guided by work described by Michele D'Incecco, Stefano Squartini and Mingjun Zhong⁵. I developed a variety of seq2point learning models using Tensorflow as shown in the Python module [define_models.py](./ml/define_models.py) but focussed my work on the models `transformer` and `cnn`.
+I selected the seq2point learning approach for my prototype system and my implementation was inspired and guided by work described by Michele D'Incecco, Stefano Squartini and Mingjun Zhong⁵. I developed a variety of seq2point learning models using Tensorflow as shown in the Python module [define_models.py](./ml/define_models.py) but focussed my work on the models `transformer` and `cnn` which are summarized below for an input sequence length of 599 samples.
+
+```text
+Model: "cnn"
+_________________________________________________________________
+ Layer (type)                Output Shape              Param #   
+=================================================================
+ input_1 (InputLayer)        [(None, 599)]             0         
+                                                                 
+ reshape (Reshape)           (None, 1, 599, 1)         0         
+                                                                 
+ conv2d (Conv2D)             (None, 1, 599, 16)        96        
+                                                                 
+ activation (Activation)     (None, 1, 599, 16)        0         
+                                                                 
+ max_pooling2d (MaxPooling2D  (None, 1, 300, 16)       0         
+ )                                                               
+                                                                 
+ conv2d_1 (Conv2D)           (None, 1, 300, 32)        1568      
+                                                                 
+ activation_1 (Activation)   (None, 1, 300, 32)        0         
+                                                                 
+ max_pooling2d_1 (MaxPooling  (None, 1, 150, 32)       0         
+ 2D)                                                             
+                                                                 
+ conv2d_2 (Conv2D)           (None, 1, 150, 64)        6208      
+                                                                 
+ activation_2 (Activation)   (None, 1, 150, 64)        0         
+                                                                 
+ max_pooling2d_2 (MaxPooling  (None, 1, 75, 64)        0         
+ 2D)                                                             
+                                                                 
+ conv2d_3 (Conv2D)           (None, 1, 75, 128)        24704     
+                                                                 
+ activation_3 (Activation)   (None, 1, 75, 128)        0         
+                                                                 
+ max_pooling2d_3 (MaxPooling  (None, 1, 38, 128)       0         
+ 2D)                                                             
+                                                                 
+ conv2d_4 (Conv2D)           (None, 1, 38, 256)        98560     
+                                                                 
+ activation_4 (Activation)   (None, 1, 38, 256)        0         
+                                                                 
+ flatten (Flatten)           (None, 9728)              0         
+                                                                 
+ dense (Dense)               (None, 1024)              9962496   
+                                                                 
+ activation_5 (Activation)   (None, 1024)              0         
+                                                                 
+ dense_1 (Dense)             (None, 1)                 1025      
+                                                                 
+=================================================================
+Total params: 10,094,657
+Trainable params: 10,094,657
+Non-trainable params: 0
+```
+
+```text
+Model: "nilm_transformer_model"
+_________________________________________________________________
+ Layer (type)                Output Shape              Param #   
+=================================================================
+ conv1d (Conv1D)             multiple                  1536      
+                                                                 
+ l2_norm_pooling1d (L2NormPo  multiple                 0         
+ oling1D)                                                        
+                                                                 
+ position_embedding (Positio  multiple                 153344    
+ nEmbedding)                                                     
+                                                                 
+ add_normalization (AddNorma  multiple                 512       
+ lization)                                                       
+                                                                 
+ dropout (Dropout)           multiple                  0         
+                                                                 
+ transformer_block (Transfor  multiple                 658304    
+ merBlock)                                                       
+                                                                 
+ transformer_block_1 (Transf  multiple                 658304    
+ ormerBlock)                                                     
+                                                                 
+ relative_position_embedding  multiple                 38144     
+  (RelativePositionEmbedding                                     
+ )                                                               
+                                                                 
+ global_average_pooling1d (G  multiple                 0         
+ lobalAveragePooling1D)                                          
+                                                                 
+ dense_12 (Dense)            multiple                  263168    
+                                                                 
+ dropout_5 (Dropout)         multiple                  0         
+                                                                 
+ add_normalization_5 (AddNor  multiple                 512       
+ malization)                                                     
+                                                                 
+ dense_13 (Dense)            multiple                  1025      
+                                                                 
+ activation (Activation)     multiple                  0         
+                                                                 
+=================================================================
+Total params: 1,774,849
+Trainable params: 1,774,849
+Non-trainable params: 0
+```
 
 ### Datasets
 
@@ -55,29 +158,29 @@ I used TensorFlow to train and test the model. All code associated with this sec
 
 I used the following metrics to evaluate the model’s performance. You can view the code that calculates these metrics [here](./ml/nilm_metric.py).
 
-* Mean absolute error (MAE), which evaluates the absolute difference between the prediction and the and the ground truth at every time point and calculates the mean value, as defined by the equation below.
+* Mean absolute error ($MAE$), which evaluates the absolute difference between the prediction and the and the ground truth at every time point and calculates the mean value, as defined by the equation below.
 
 $$MAE = \frac{1}{N}\sum_{i=1}^{N}|\hat{x_i}-x_i|\tag{2}$$
 
-* Normalized signal aggregate error (SAE), which indicates the relative error of the total energy. Denote $r$ as the total energy consumption of the appliance and $\hat{r}$ as the predicted total energy, then SAE is defined per the equation below.
+* Normalized signal aggregate error ($SAE$), which indicates the relative error of the total energy. Denote $r$ as the total energy consumption of the appliance and $\hat{r}$ as the predicted total energy, then SAE is defined per the equation below.
 
 $$SAE = \frac{|\hat{r} - r|}{r}\tag{3}$$
 
-* Energy per day (EpD) which measures the predicted energy used in a day, useful when the household users are interested in the total energy consumed in a period. Denote $D$ as the total number of days and $e=\sum_{t}x_t$ as the appliance energy consumed in a day, then EpD is defined per the equation below.
+* Energy per Day ($EpD$) which measures the predicted energy used in a day, useful when the household users are interested in the total energy consumed in a period. Denote $D$ as the total number of days and $e=\sum_{t}x_t$ as the appliance energy consumed in a day, then EpD is defined per the equation below.
 
 $$EpD = \frac{1}{D}\sum_{n=1}^{D}e\tag{4}$$
 
-* Normalized disaggregation error (NDE) which measures the normalized error of the squared difference between the prediction and the ground truth of the appliances, as defined by the equation below.
+* Normalized disaggregation error ($NDE$) which measures the normalized error of the squared difference between the prediction and the ground truth of the appliances, as defined by the equation below.
 
 $$NDE = \frac{\sum_{i,t}(x_{i,t}-\hat{x_{i,t}})^2}{\sum_{i,t}x_{i,t}^2}\tag{5}$$
 
-I also used accuracy, F1-score (F1) and Matthew’s correlation coefficient (MCC) to assess if the model can perform well with the severely imbalanced datasets used to train and test the model. These metrics depend on the on-off status of the device and are computed using the parameters in the [common.py](./ml/common.py) module. Accuracy is equal to the number of correctly predicted time points over the test dataset. F1 and MCC are computed according to the equations below where $TP$ stands for true positives, $TN$ stands for true negatives, $FP$ stands for false positives and $FN$ stands for false negatives.
+I also used accuracy ($ACC$), F1-score ($F1$) and Matthew’s correlation coefficient ($MCC$) to assess if the model can perform well with the severely imbalanced datasets used to train and test the model. These metrics depend on the on-off status of the device and are computed using the parameters in the [common.py](./ml/common.py) module. $ACC$ is equal to the number of correctly predicted time points over the test dataset. F1 and MCC are computed according to the equations below where $TP$ stands for true positives, $TN$ stands for true negatives, $FP$ stands for false positives and $FN$ stands for false negatives.
 
 $$F1=\frac{TP}{TP+\frac{1}{2}(FP+FN)}\tag{6}$$
 
 $$MCC=\frac{TN \times TP+FN \times FP }{\sqrt{(TP+FP)(TP+FN)(TN+FP)(TN+FN)}}\tag{7}$$
 
-$MAE$, $SAE$, $NDE$ and $EpD$ (relative to a baseline) reflect the model's ability to correctly predict the appliance energy consumption levels. $F1$ and $MCC$ indicates the model's ability to correctly predict appliance activations using imbalanced classes. Accuracy is less useful in this application because most of the time the model will correctly predict the appliance is off which dominates the dataset.
+$MAE$, $SAE$, $NDE$ and $EpD_e$ (defined as the difference between the ground truth $EpD$ and the predicted $EpD$) reflect the model's ability to correctly predict the appliance energy consumption levels. $F1$ and $MCC$ indicates the model's ability to correctly predict appliance activations using imbalanced classes. $ACC$ is less useful in this application because most of the time the model will correctly predict the appliance is off which dominates the dataset.
 
 A sliding window of 599 samples of the aggregate real power consumption signal is used as inputs to seq2point model and the midpoints of the corresponding windows of the appliances are used as targets. You can see how the samples and targets are generated in the `get_window_generator` function in the [common.py](./ml/common.py) module.
 
@@ -99,7 +202,29 @@ Where $x, \hat{x}\in[0, 1]$ are the ground truth and predicted power usage singl
 
 ~~The training program monitors losses for both training and validation data with early stopping to reduce over-fitting. The datasets contain a large number of samples (many 10’s of millions) with repeating patterns; it was not uncommon that over-fitting occurred after only a single epoch for some appliances. To mitigate against this, I used a subset of the training data, typically between 5 and 10 million samples.~~
 
-You can find the training results for each appliance in the [models](./ml/models/) folder and typical performance metrics in the Appendix.
+You can find the training results for each appliance in the [models](./ml/models/) folder.
+
+Typical performance metrics for the `cnn` model are shown in the table below.
+
+|Appliance|$F1\uparrow$|$MCC\uparrow$|$ACC\uparrow$|$MAE\downarrow$ ($W$)|$SAE\downarrow$|$NDE\downarrow$|$EpD_e\downarrow$ ($W$)|
+| --- | --- | --- | --- | --- | --- | --- | --- |
+|Kettle|x| x | x | x | x |
+|Microwave| x | x | x | x |
+|fridge|
+|dishwasher|
+|washingmachine|0.8063|0.8086|0.9850|15.56|0.2629|0.2754|181.2|
+
+Typical performance metrics for the `transformer` model are shown in the table below.
+
+|Appliance|$F1\uparrow$|$MCC\uparrow$|$ACC\uparrow$|$MAE\downarrow$ ($W$)|$SAE\downarrow$|$NDE\downarrow$|$EpD_e\downarrow$ ($W$)|
+| --- | --- | --- | --- | --- | --- | --- | --- |
+|Kettle|x| x | x | x | x |
+|Microwave| x | x | x | x |
+|fridge|
+|dishwasher|
+|washingmachine|
+
+Note that even though the `transformer` model has about six times fewer parameters than the `cnn` model, each training step takes about seven times longer due to the `transformer` model's use of self-attention which has $O(n^2)$ complexity as compared to the `cnn` model's $O(n)$, $n$ being the input sequence length.
 
 ### Model Quantization
 
