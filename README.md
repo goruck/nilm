@@ -224,7 +224,7 @@ Typical performance metrics for the `transformer` model are shown in the table b
 
 Average metrics across all appliances for both model architectures are compared in the table below.
 
-|Architecture|$\overline{F1}\uparrow$|$\overline{MCC}\uparrow$|$\overline{ACC}\uparrow$|$\overline{MAE}$ ($W$)$\downarrow$|$\overline{SAE}\downarrow$|$\overline{NDE}\downarrow$|$\overline{\|EpD_e\|}$ $(Wh)$ $\downarrow$|
+|Architecture|$\overline{F1}\uparrow$|$\overline{MCC}\uparrow$|$\overline{ACC}\uparrow$|$\overline{MAE}$ $(W)$ $\downarrow$|$\overline{SAE}\downarrow$|$\overline{NDE}\downarrow$|$\overline{\|EpD_e\|}$ $(Wh)$ $\downarrow$|
 | --- | --- | --- | --- | --- | --- | --- | --- |
 |```cnn```|0.7000|0.6964|0.9648|9.586|0.1993|0.3993|84.07|
 |```transformer```|0.7528|0.7358|0.9599|10.32|0.2484|0.4174|84.29|
