@@ -158,7 +158,7 @@ I used TensorFlow to train and test the model. All code associated with this sec
 
 I used the following metrics to evaluate the model’s performance. You can view the code that calculates these metrics [here](./ml/nilm_metric.py).
 
-* Mean absolute error ($MAE$), which evaluates the absolute difference between the prediction and the and the ground truth at every time point and calculates the mean value, as defined by the equation below.
+* Mean absolute error ($MAE$), which evaluates the absolute difference between the prediction and the ground truth power at every time point and calculates the mean value, as defined by the equation below.
 
 $$MAE = \frac{1}{N}\sum_{i=1}^{N}|\hat{x_i}-x_i|\tag{2}$$
 
@@ -166,11 +166,11 @@ $$MAE = \frac{1}{N}\sum_{i=1}^{N}|\hat{x_i}-x_i|\tag{2}$$
 
 $$SAE = \frac{|\hat{r} - r|}{r}\tag{3}$$
 
-* Energy per Day ($EpD$) which measures the predicted energy used in a day, useful when the household users are interested in the total energy consumed in a period. Denote $D$ as the total number of days and $e=\sum_{t}x_t$ as the appliance energy consumed in a day, then EpD is defined per the equation below.
+* Energy per Day ($EpD$) which measures the predicted energy used in a day, useful when the household users are interested in the total energy consumed in a period. Denote $D$ as the total number of days and $e=\sum_{t}e_t$ as the appliance energy consumed in a day, then EpD is defined per the equation below.
 
 $$EpD = \frac{1}{D}\sum_{n=1}^{D}e\tag{4}$$
 
-* Normalized disaggregation error ($NDE$) which measures the normalized error of the squared difference between the prediction and the ground truth of the appliances, as defined by the equation below.
+* Normalized disaggregation error ($NDE$) which measures the normalized error of the squared difference between the prediction and the ground truth power of the appliances, as defined by the equation below.
 
 $$NDE = \frac{\sum_{i,t}(x_{i,t}-\hat{x_{i,t}})^2}{\sum_{i,t}x_{i,t}^2}\tag{5}$$
 
@@ -180,7 +180,7 @@ $$F1=\frac{TP}{TP+\frac{1}{2}(FP+FN)}\tag{6}$$
 
 $$MCC=\frac{TN \times TP+FN \times FP }{\sqrt{(TP+FP)(TP+FN)(TN+FP)(TN+FN)}}\tag{7}$$
 
-$MAE$, $SAE$, $NDE$ and $EpD_e$ (defined as the difference between the ground truth $EpD$ and the predicted $EpD$) reflect the model's ability to correctly predict the appliance energy consumption levels. $F1$ and $MCC$ indicates the model's ability to correctly predict appliance activations using imbalanced classes. $ACC$ is less useful in this application because most of the time the model will correctly predict the appliance is off which dominates the dataset.
+$MAE$, $SAE$, $NDE$ and $EpD_e$ (defined as the difference between the predicted and ground truth $EpD$) reflect the model's ability to correctly predict the appliance energy consumption levels. $F1$ and $MCC$ indicates the model's ability to correctly predict appliance activations using imbalanced classes. $ACC$ is less useful in this application because most of the time the model will correctly predict the appliance is off which dominates the dataset.
 
 A sliding window of 599 samples of the aggregate real power consumption signal is used as inputs to seq2point model and the midpoints of the corresponding windows of the appliances are used as targets. You can see how the samples and targets are generated in the `get_window_generator` function in the [common.py](./ml/common.py) module.
 
@@ -202,29 +202,42 @@ Where $x, \hat{x}\in[0, 1]$ are the ground truth and predicted power usage singl
 
 ~~The training program monitors losses for both training and validation data with early stopping to reduce over-fitting. The datasets contain a large number of samples (many 10’s of millions) with repeating patterns; it was not uncommon that over-fitting occurred after only a single epoch for some appliances. To mitigate against this, I used a subset of the training data, typically between 5 and 10 million samples.~~
 
-You can find the training results for each appliance in the [models](./ml/models/) folder.
+You can find the training results for each appliance in the [models](./ml/models/) folder. Typical performance metrics for the `cnn` model are shown in the table below.
 
-Typical performance metrics for the `cnn` model are shown in the table below.
-
-|Appliance|$F1\uparrow$|$MCC\uparrow$|$ACC\uparrow$|$MAE\downarrow$ ($W$)|$SAE\downarrow$|$NDE\downarrow$|$EpD_e\downarrow$ ($W$)|
+|Appliance|$F1\uparrow$|$MCC\uparrow$|$ACC\uparrow$|$MAE$ ($W$)$\downarrow$|$SAE\downarrow$|$NDE\downarrow$|$EpD_e$ ($Wh$)|
 | --- | --- | --- | --- | --- | --- | --- | --- |
-|Kettle|x| x | x | x | x |
-|Microwave| x | x | x | x |
-|fridge|
-|dishwasher|
+|kettle|0.7217|0.7320|0.9960|8.635|0.3173|0.4652|-135.4|
+|microwave|0.6462|0.6461|0.9946|6.268|0.3094|0.6135|-57.14|
+|fridge|0.8039|0.7124|0.8747|12.03|0.0583|0.3733|-33.92|
+|dishwasher|0.5203|0.5827|0.9723|5.436|0.0485|0.2693|13.09|
 |washingmachine|0.8063|0.8086|0.9850|15.56|0.2629|0.2754|181.2|
 
 Typical performance metrics for the `transformer` model are shown in the table below.
 
-|Appliance|$F1\uparrow$|$MCC\uparrow$|$ACC\uparrow$|$MAE\downarrow$ ($W$)|$SAE\downarrow$|$NDE\downarrow$|$EpD_e\downarrow$ ($W$)|
+|Appliance|$F1\uparrow$|$MCC\uparrow$|$ACC\uparrow$|$MAE$ ($W$)$\downarrow$|$SAE\downarrow$|$NDE\downarrow$|$EpD_e$ ($Wh$)|
 | --- | --- | --- | --- | --- | --- | --- | --- |
-|Kettle|x| x | x | x | x |
-|Microwave| x | x | x | x |
-|fridge|
-|dishwasher|
-|washingmachine|
+|kettle|0.8708|0.8698|0.9979|6.716|0.0050|0.2353|-2.694|
+|microwave|0.6752|0.6754|0.9946|7.385|0.2924|0.6513|-70.94|
+|fridge|0.7536|0.6354|0.8345|16.85|0.3336|0.6344|185.8|
+|dishwasher|0.6467|0.6846|0.9866|4.966|0.2870|0.4383|63.46|
+|washingmachine|0.8179|0.8139|0.9861|15.67|0.3239|0.1278|-98.58|
 
-Note that even though the `transformer` model has about six times fewer parameters than the `cnn` model, each training step takes about seven times longer due to the `transformer` model's use of self-attention which has $O(n^2)$ complexity as compared to the `cnn` model's $O(n)$, $n$ being the input sequence length.
+Average metrics across all appliances for both model architectures are compared in the table below.
+
+|Architecture|$\overline{F1}\uparrow$|$\overline{MCC}\uparrow$|$\overline{ACC}\uparrow$|$\overline{MAE}$ ($W$)$\downarrow$|$\overline{SAE}\downarrow$|$\overline{NDE}\downarrow$|$\overline{\|EpD_e\|}$ ($Wh$)$\downarrow$|
+| --- | --- | --- | --- | --- | --- | --- | --- |
+|```cnn```|0.7000|0.6964|0.9648|9.586|0.1993|0.3993|84.07|
+|```transformer```|0.7528|0.7358|0.9599|10.32|0.2484|0.4174|84.29|
+
+You can see that the ```cnn``` and ```transformer``` models have similar performance even though the latter has about six times fewer parameters than the former. However, each ```transformer``` training step takes about seven times longer than ```cnn``` due to the `transformer` model's use of self-attention which has $O(n^4)$ complexity as compared to the `cnn` model's $O(n)$, where $n$ is the input sequence length. On the basis on training (and inference) efficiency, you can see that ```cnn``` is preferable with little loss in model performance.
+
+You can find a variety of performance metrics in the literature to compare these results against, here are two examples. The middle column in the table<sup>5</sup> below shows another cnn-based model's performance. You can see the results of this project compare very favorably. 
+
+![Alt text](./img/cnn_results_baseline.png?raw=true "Transfer Learning for Non-Intrusive Load Monitoring by Michele D'Incecco, Stefano Squartini and Mingjun Zhong[5]")
+
+The table<sup>12</sup> below shows the results from two transformer-based models (BERT4NILM and ELECTRIcity) and three other architectures. Although the data is incomplete, again this project's transformer-based model results compare favorably. 
+
+![Alt text](img/transformer_results_baseline.png?raw=true "ELECTRIcity: An Efficient Transformer for Non-Intrusive Load Monitoring by Stavros Sykiotis, Maria Kaselimi ,Anastasios Doulamis and Nikolaos Doulamis[12].")
 
 ### Model Quantization
 
@@ -292,6 +305,7 @@ By using large publicly available datasets to train seq2point learning models it
 9. GitHub | NILM by Lindo St. Angel
 10. GitHub | EmonLibCM by Trystan Lea, Glyn Hudson, Brian Orpin and Ivan Kravets.
 11. BERT4NILM: A Bidirectional Transformer Model for Non-Intrusive Load Monitoring by Zhenrui Yue, et. al.
+12. ELECTRIcity: An Efficient Transformer for Non-Intrusive Load Monitoring by Stavros Sykiotis, Maria Kaselimi ,Anastasios Doulamis and Nikolaos Doulamis.
 
 Please also see this project's companion Medium article [Energy Management Using Real-Time Non-Intrusive Load Monitoring](https://towardsdatascience.com/energy-management-using-real-time-non-intrusive-load-monitoring-3c9b0b4c8291).
 
