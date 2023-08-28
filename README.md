@@ -204,7 +204,7 @@ Where $x, \hat{x}\in[0, 1]$ are the ground truth and predicted power usage singl
 
 You can find the training results for each appliance in the [models](./ml/models/) folder. Typical performance metrics for the `cnn` model are shown in the table below.
 
-|Appliance|$F1\uparrow$|$MCC\uparrow$|$ACC\uparrow$|$MAE$ ($W$)$\downarrow$|$SAE\downarrow$|$NDE\downarrow$|$EpD_e$ ($Wh$)|
+|Appliance|$F1\uparrow$|$MCC\uparrow$|$ACC\uparrow$|$MAE$ $(W)$ $\downarrow$|$SAE\downarrow$|$NDE\downarrow$|$EpD_e$ ($Wh$)|
 | --- | --- | --- | --- | --- | --- | --- | --- |
 |kettle|0.7217|0.7320|0.9960|8.635|0.3173|0.4652|-135.4|
 |microwave|0.6462|0.6461|0.9946|6.268|0.3094|0.6135|-57.14|
@@ -214,7 +214,7 @@ You can find the training results for each appliance in the [models](./ml/models
 
 Typical performance metrics for the `transformer` model are shown in the table below.
 
-|Appliance|$F1\uparrow$|$MCC\uparrow$|$ACC\uparrow$|$MAE$ ($W$)$\downarrow$|$SAE\downarrow$|$NDE\downarrow$|$EpD_e$ ($Wh$)|
+|Appliance|$F1\uparrow$|$MCC\uparrow$|$ACC\uparrow$|$MAE$ $(W)$ $\downarrow$|$SAE\downarrow$|$NDE\downarrow$|$EpD_e$ ($Wh$)|
 | --- | --- | --- | --- | --- | --- | --- | --- |
 |kettle|0.8708|0.8698|0.9979|6.716|0.0050|0.2353|-2.694|
 |microwave|0.6752|0.6754|0.9946|7.385|0.2924|0.6513|-70.94|
@@ -224,7 +224,7 @@ Typical performance metrics for the `transformer` model are shown in the table b
 
 Average metrics across all appliances for both model architectures are compared in the table below.
 
-|Architecture|$\overline{F1}\uparrow$|$\overline{MCC}\uparrow$|$\overline{ACC}\uparrow$|$\overline{MAE}$ ($W$)$\downarrow$|$\overline{SAE}\downarrow$|$\overline{NDE}\downarrow$|$\overline{\|EpD_e\|}$ ($Wh$)$\downarrow$|
+|Architecture|$\overline{F1}\uparrow$|$\overline{MCC}\uparrow$|$\overline{ACC}\uparrow$|$\overline{MAE}$ ($W$)$\downarrow$|$\overline{SAE}\downarrow$|$\overline{NDE}\downarrow$|$\overline{\|EpD_e\|}$ $(Wh)$ $\downarrow$|
 | --- | --- | --- | --- | --- | --- | --- | --- |
 |```cnn```|0.7000|0.6964|0.9648|9.586|0.1993|0.3993|84.07|
 |```transformer```|0.7528|0.7358|0.9599|10.32|0.2484|0.4174|84.29|
