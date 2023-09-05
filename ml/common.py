@@ -8,6 +8,7 @@ import pandas as pd
 import time
 
 import numpy as np
+from tqdm import tqdm
 
 # Alternative aggregate standardization parameters used for all appliances.
 # From Michele D’Incecco, et. al., "Transfer Learning for Non-Intrusive Load Monitoring"
@@ -304,10 +305,8 @@ def get_window_generator(keras_sequence=True):
 
     return WindowGenerator
 
-def tflite_infer(interpreter, provider, num_eval, log=print) -> list:
+def tflite_infer(interpreter, provider, num_eval, eval_offset=0, log=print) -> list:
     """Perform inference using a tflite model"""
-    rng = np.random.default_rng()
-
     interpreter.allocate_tensors()
 
     input_details = interpreter.get_input_details()
@@ -322,24 +321,31 @@ def tflite_infer(interpreter, provider, num_eval, log=print) -> list:
     # Get I/O indices.
     input_index = input_details[0]['index']
     output_index = output_details[0]['index']
-    # If model has int I/O get quantization information.
+    # If model has int8 I/O get quantization information.
     if not floating_input:
-        input_scale, input_zero_point = input_details[0]['quantization']
+        input_quant_params = input_details[0]['quantization_parameters']
+        input_scale = input_quant_params['scales'][0]
+        input_zero_point = input_quant_params['zero_points'][0]
     if not floating_output:
-        output_scale, output_zero_point = output_details[0]['quantization']
+        output_quant_params = output_details[0]['quantization_parameters']
+        output_scale = output_quant_params['scales'][0]
+        output_zero_point = output_quant_params['zero_points'][0]
 
-    # Calculate num_eval sized indices of random locations in provider.
-    eval_indices = rng.integers(low=0, high=provider.__len__(), size=num_eval)
+    # Calculate num_eval sized indices of contiguous locations in provider.
+    # Get number of samples per batch in provider. Since batch should always be
+    # set to 1 for inference, this will simply return the total number of samples. 
+    samples_per_batch = provider.__len__()
+    if num_eval - eval_offset > samples_per_batch:
+        raise ValueError('Not enough test samples to run evaluation.')
+    eval_indices = list(range(samples_per_batch))[eval_offset:num_eval+eval_offset]
 
     log(f'Running inference on {num_eval} samples...')
     start = time.time()
     def infer(i):
-        sample, target = provider.__getitem__(i)
-        # Add axis to match model InputLayer shape.
-        sample = sample[:, :, :, np.newaxis]
-        if not sample.any(): return # ignore missing data
+        sample, target, _= provider.__getitem__(i)
+        if not sample.any(): return 0.0, 0.0 # ignore missing data
         ground_truth = np.squeeze(target)
-        if not floating_input: # convert to float to int8
+        if not floating_input: # convert float to int8
             sample = sample / input_scale + input_zero_point
             sample = sample.astype(np.int8)
         interpreter.set_tensor(input_index, sample)
@@ -350,7 +356,7 @@ def tflite_infer(interpreter, provider, num_eval, log=print) -> list:
             prediction = (prediction - output_zero_point) * output_scale
         #print(f'sample index: {i} ground_truth: {ground_truth:.3f} prediction: {prediction:.3f}')
         return ground_truth, prediction
-    results = [infer(i) for i in eval_indices]
+    results = [infer(i) for i in tqdm(eval_indices)]
     end = time.time()
     log('Inference run complete.')
     log(f'Inference rate: {num_eval / (end - start):.3f} Hz')
