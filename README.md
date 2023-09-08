@@ -241,7 +241,18 @@ The table<sup>12</sup> below shows the results from two transformer-based models
 
 ### Model Quantization
 
-I quantized the model’s weights and activation functions from Float32 to INT8 using TensorFlow Lite to improve inference performance on edge hardware, including the Raspberry Pi and the Google Edge TPU. See [convert_keras_to_tflite.py](./ml/convert_keras_to_tflite.py) for the code that does this quantization. You may observed a slight degradation in performance after quantization but this is acceptable for most use cases. A typical result is shown below, note that the floating point model was not fine-tuned using QAT nor pruned before INT8 conversion.
+I quantized the model’s weights and activation functions from Float32 to INT8 using TensorFlow Lite to improve inference performance on edge hardware, including the Raspberry Pi and the Google Edge TPU. See [convert_keras_to_tflite.py](./ml/convert_keras_to_tflite.py) for the code that does this quantization. You may observed a slight degradation in performance after quantization but this is acceptable for most use cases. The quantized results are shown in the tables below, where $R_{x86}$ is the inference rate on a 3.8 GHz x86 machine using eight tflite interpreter threads XNNPACK and $R_{\pi}$ is the inference rate on a Raspberry Pi 4. 
+
+|Appliance|$F1\uparrow$|$MCC\uparrow$|$ACC\uparrow$|$MAE$ $(W)$ $\downarrow$|$SAE\downarrow$|$NDE\downarrow$|$EpD_e$ ($Wh$)|$R_{x86}$ ($Hz$)|$R_{\pi}$ ($Hz$)|
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+|kettle|0.6910|0.7109|0.9963|7.826|0.4021|0.4854|-147.9|2731|x|
+|microwave|0.6826|0.6798|0.9943|7.660|0.4209|0.6187|-99.66|2775|x|
+|fridge|0.6390|0.4941|0.7909|17.61|0.1596|0.6746|-86.06|2730|x|
+|dishwasher|0.4688|0.5429|0.9662|11.49|0.9661|0.9848|-266.2|2714|x|
+|washingmachine|0.7752|0.7785|0.9814|20.70|0.3610|0.4323|-262.4|2742|x|
+
+
+~~A typical result is shown below, note that the floating point model was not fine-tuned using QAT nor pruned before INT8 conversion.~~
 
 ```text
 ### Fridge Float32 vs INT8 Model Performance ###
