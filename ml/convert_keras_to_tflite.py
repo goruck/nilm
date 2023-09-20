@@ -14,23 +14,37 @@ import socket
 
 import tensorflow as tf
 import numpy as np
+import matplotlib.pyplot as plt
+import pandas as pd
 
 import nilm_metric
 import common
-from logger import log
+from logger import Logger
 
 # Number of samples for post-training quantization calibration.
-NUM_CAL = 10800 # 24 hours @ 8 sec per sample
-# Number of samples from the start of cal dataset to start calibration.
-CAL_OFFSET = 2 * 10800
+NUM_CAL = 4 * 10800 # 96 hours @ 8 sec per sample
 # Number of threads used by the interpreter and available to CPU kernels.
 NUM_INTERPRETER_THREADS = 8
 # Name of best pruned checkpoint directory during training.
 PRUNED_CHECKPOINT_DIR = 'pruned_model_for_export'
+# Check how well model was quantized.
+DEBUG = True
+# Improve model accuracy at expense of performance (DEBUG must be True).
+FIX_MODEL = False
+# RMSE / scale quantization metric threshold.
+HIGH_QUANT_ERROR = 0.7
 
 rng = np.random.default_rng()
 
-def convert(model, provider, num_cal, cal_offset, io_float):
+def convert(
+        model,
+        provider,
+        num_cal,
+        io_float,
+        use_tpu,
+        debug,
+        debug_results_file,
+        fix_model):
     """ Convert Keras model to tflite.
     
     Optimize for latency and size, quantize weights and activations
@@ -42,8 +56,10 @@ def convert(model, provider, num_cal, cal_offset, io_float):
         model: Keras input model.
         provider: Object that provides samples for calibration.
         num_cal: Number of calibration passes.
-        cal_offset: Sample number of data set to start calibration.
         io_float: Boolean indicating float input and outputs.
+        use_tpu: Make conversion compatible with edge tpu.
+        debug: Debug model, comparing float with quantized.
+        fix_mode: Attempt to improve model accuracy at expense of latency.
 
     Returns:
         Quantized tflite model.
@@ -58,21 +74,75 @@ def convert(model, provider, num_cal, cal_offset, io_float):
     # the sparse model weights trained with pruning if available.
     converter.optimizations = [
         tf.lite.Optimize.DEFAULT,
-        tf.lite.Optimize.EXPERIMENTAL_SPARSITY
+        #tf.lite.Optimize.EXPERIMENTAL_SPARSITY # will not work with debugger
     ]
-    # ref_gen must be a callable so use partial to set parameters. 
-    ref_gen = partial(
+    # rep_gen must be a callable so use partial to set parameters. 
+    rep_gen = partial(
         representative_dataset_gen,
         provider=provider,
-        num_cal=num_cal,
-        cal_offset=cal_offset)
-    converter.representative_dataset = tf.lite.RepresentativeDataset(ref_gen)
-    converter.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS_INT8]
+        num_cal=num_cal)
+    converter.representative_dataset = tf.lite.RepresentativeDataset(rep_gen)
+    if use_tpu:
+        converter.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS_INT8]
     if not io_float:
         converter.inference_input_type = tf.int8
         converter.inference_output_type = tf.int8
 
-    return converter.convert()
+    quantized_model = converter.convert()
+
+    if debug:
+        logger.log('Debugging model..')
+        debugger = tf.lite.experimental.QuantizationDebugger(
+            converter=converter,
+            debug_dataset=rep_gen)
+        
+        debugger.run()
+
+        with open(debug_results_file, 'w') as f:
+            debugger.layer_statistics_dump(f)
+
+        layer_stats = pd.read_csv(debug_results_file)
+        logger.log(layer_stats)
+
+        layer_stats['range'] = 255.0 * layer_stats['scale']
+        layer_stats['rmse/scale'] = layer_stats.apply(
+            lambda row: np.sqrt(row['mean_squared_error']) / row['scale'], axis=1)
+        logger.log(layer_stats[['op_name', 'range', 'rmse/scale']])
+
+        plt.figure(figsize=(15, 5))
+        ax1 = plt.subplot(121)
+        ax1.bar(np.arange(len(layer_stats)), layer_stats['range'])
+        ax1.set_ylabel('range')
+        ax2 = plt.subplot(122)
+        ax2.bar(np.arange(len(layer_stats)), layer_stats['rmse/scale'])
+        ax2.set_ylabel('rmse/scale')
+        plt.show()
+
+        # The RMSE / scale is close to 1 / sqrt(12) (~ 0.289) when quantized
+        # distribution is similar to the original float distribution, indicating
+        # a well quantized model. The larger the value is, it's more likely for
+        # the layer not being quantized well. These layers can remain in float to
+        # generate a selectively quantized model that increases accuracy at the 
+        # expense of inference performance. See:
+        #  https://www.tensorflow.org/lite/performance/quantization_debugger
+        suspected_layers = list(
+            layer_stats[layer_stats['rmse/scale'] > HIGH_QUANT_ERROR]['tensor_name'])
+        logger.log(f'Suspected layers: {suspected_layers}')
+
+        if fix_model:
+            logger.log('Restoring suspected quantized layers to float.')
+            debug_options = tf.lite.experimental.QuantizationDebugOptions(
+                denylisted_nodes=suspected_layers)
+            debugger = tf.lite.experimental.QuantizationDebugger(
+                converter=converter,
+                debug_dataset=rep_gen,
+                debug_options=debug_options)
+            
+            selective_quantized_model = debugger.get_nondebug_quantized_model()
+
+            return selective_quantized_model
+    
+    return quantized_model
 
 def change_model_batch_size(model, batch_size=1):
     """Change a model's batch size."""
@@ -96,19 +166,19 @@ def change_model_batch_size(model, batch_size=1):
 
     return new_model
 
-def representative_dataset_gen(provider, num_cal=10800, cal_offset=0) -> np.float32:
+def representative_dataset_gen(provider, num_cal=43200) -> np.float32:
     """Yields samples from representative dataset.
 
     This is a generator function that provides a small dataset to calibrate or
     estimate the range, i.e, (min, max) of all floating-point arrays in the model.
     
-    Since dataset is very imbalanced must ensure enough samples are used to get
-    generate a representative set. 24 hours of samples is a good starting point.
+    Since dataset is very imbalanced must ensure enough samples are used to generate a
+    representative set. 96 hours (4 days) of samples is a good starting point as that
+    period should be long enough to capture infrequently used appliances.
 
     Args:
         provider: Object that provides samples for calibration.
-        num_cal: Number of calibration passes.
-        cal_offset: Sample number of data set to start calibration.
+        num_cal: Number of calibration samples.
 
     Yields:
         A representative model input sample.
@@ -117,19 +187,44 @@ def representative_dataset_gen(provider, num_cal=10800, cal_offset=0) -> np.floa
     # set to 1 for inference, this will simply return the total number of samples.
     samples_per_batch = provider.__len__()
 
-    # Calculate num_eval sized indices of contiguous locations in provider,
-    # starting from cal_offset.
-    if num_cal - cal_offset > samples_per_batch:
+    if num_cal > samples_per_batch:
         raise ValueError('Not enough representative samples.')
-    indices = list(range(samples_per_batch))[cal_offset:num_cal+cal_offset]
 
-    # Calculate num_cal sized indices of random locations in dataset.
-    #indices = rng.choice(samples_per_batch, size=num_cal)
-
-    # Generate samples from provider.
+    """
+    # Generate 'num_cal' samples at random locations in dataset. 
+    indices = rng.choice(samples_per_batch, size=num_cal)
     for i in indices:
         sample, _, _ = provider.__getitem__(i)
-        yield [sample]
+        yield [sample,]
+    """
+    
+    # Generate 'num_cal' samples from provider.
+    # Given the dataset is unbalanced, this logic ensures that sufficient
+    # representative samples from active appliances periods are yielded.
+    active_frac = 0.5 # fraction of cal samples during appliance active times
+    num_cal_active = int(active_frac * num_cal)
+    i = 0
+    active = 0
+    inactive = 0
+    while True:
+        if i > samples_per_batch: # out of samples
+            break
+        sample, _, status = provider.__getitem__(i)
+        if sample.size == 0 or status.size == 0:
+            raise RuntimeError(f'Missing representative data at i={i}.',)
+        i+=1
+        status = bool(status.item())
+        if active < num_cal_active:
+            if status:
+                active+=1
+                yield [sample,] # generate samples from active times...
+            continue
+        elif active + inactive < num_cal:
+            if not status:
+                inactive+=1
+                yield [sample,] # ... then generate samples from inactive times
+        else:
+            break
 
 def evaluate_tflite(args, appliance_name, tflite_model, provider):
     """Evaluate a converted tflite model"""
@@ -137,10 +232,10 @@ def evaluate_tflite(args, appliance_name, tflite_model, provider):
     test_file_name = common.find_test_filename(
         args.datadir, appliance_name, args.test_type)
     dataset_path = os.path.join(args.datadir, appliance_name, test_file_name)
-    log(f'dataset: {dataset_path}')
+    logger.log(f'dataset: {dataset_path}')
     dataset = common.load_dataset(dataset_path, args.crop)
     num_samples = dataset[0].size
-    log(f'Loaded {num_samples/10**6:.3f}M samples from dataset.')
+    logger.log(f'Loaded {num_samples/10**6:.3f}M samples from dataset.')
 
     # Start the tflite interpreter.
     interpreter = tf.lite.Interpreter(
@@ -152,7 +247,7 @@ def evaluate_tflite(args, appliance_name, tflite_model, provider):
         interpreter=interpreter,
         provider=provider,
         num_eval=args.num_eval,
-        log=log)
+        log=logger.log)
 
     ground_truth = np.array([g for g, _ in results])
     prediction = np.array([p for _, p in results])
@@ -168,17 +263,17 @@ def evaluate_tflite(args, appliance_name, tflite_model, provider):
         alt_app_std = common.params_appliance[appliance_name]['alt_app_std']
         app_mean = alt_app_mean if common.USE_ALT_STANDARDIZATION else train_app_mean
         app_std = alt_app_std if common.USE_ALT_STANDARDIZATION else train_app_std
-        print('Using alt standardization.' if common.USE_ALT_STANDARDIZATION
-              else 'Using default standardization.')
+        logger.log('Using alt standardization.' if common.USE_ALT_STANDARDIZATION 
+                   else 'Using default standardization.')
         
-    log(f'De-normalizing predictions with mean = {app_mean} and std = {app_std}.')
+    logger.log(f'De-normalizing predictions with mean = {app_mean} and std = {app_std}.')
 
     prediction = prediction * app_std + app_mean
     ground_truth = ground_truth * app_std + app_mean
 
     # Apply on-power threshold.
     appliance_threshold = common.params_appliance[appliance_name]['on_power_threshold']
-    log(f'appliance threshold: {appliance_threshold}')
+    logger.log(f'appliance threshold: {appliance_threshold}')
     prediction[prediction < appliance_threshold] = 0.0
 
     sample_period = common.SAMPLE_PERIOD
@@ -194,18 +289,21 @@ def evaluate_tflite(args, appliance_name, tflite_model, provider):
                                           prediction=prediction,
                                           prediction_status=prediction_status,
                                           sample_period=sample_period)
-    log(f'True positives: {metrics.get_tp()}')
-    log(f'True negatives: {metrics.get_tn()}')
-    log(f'False positives: {metrics.get_fp()}')
-    log(f'False negatives: {metrics.get_fn()}')
-    log(f'Accuracy: {metrics.get_accuracy()}')
-    log(f'MCC: {metrics.get_mcc()}')
-    log(f'F1: {metrics.get_f1()}')
-    log(f'MAE: {metrics.get_abs_error()["mean"]} (W)')
-    log(f'NDE: {metrics.get_nde()}')
-    log(f'SAE: {metrics.get_sae()}')
-    log(f'Ground truth EPD: {nilm_metric.get_epd(ground_truth * ground_truth_status, sample_period)} (Wh)')
-    log(f'Predicted EPD: {nilm_metric.get_epd(prediction * prediction_status, sample_period)} (Wh)')
+    logger.log(f'True positives: {metrics.get_tp()}')
+    logger.log(f'True negatives: {metrics.get_tn()}')
+    logger.log(f'False positives: {metrics.get_fp()}')
+    logger.log(f'False negatives: {metrics.get_fn()}')
+    logger.log(f'Accuracy: {metrics.get_accuracy()}')
+    logger.log(f'MCC: {metrics.get_mcc()}')
+    logger.log(f'F1: {metrics.get_f1()}')
+    logger.log(f'MAE: {metrics.get_abs_error()["mean"]} (W)')
+    logger.log(f'NDE: {metrics.get_nde()}')
+    logger.log(f'SAE: {metrics.get_sae()}')
+    epd_gt = nilm_metric.get_epd(ground_truth * ground_truth_status, sample_period)
+    logger.log(f'Ground truth EPD: {epd_gt} (Wh)')
+    epd_pred = nilm_metric.get_epd(prediction * prediction_status, sample_period)
+    logger.log(f'Predicted EPD: {epd_pred} (Wh)')
+    logger.log(f'EPD Relative Error: {100.0 * (epd_pred - epd_gt) / epd_gt} (%)')
 
     del dataset
 
@@ -271,13 +369,14 @@ def get_arguments():
     return parser.parse_args()
 
 if __name__ == '__main__':
-    log(f'Machine name: {socket.gethostname()}')
     args = get_arguments()
-    log('Arguments: ')
-    log(args)
-
-    # The appliance to train on.
     appliance_name = args.appliance_name
+    logger = Logger(os.path.join(args.save_dir,
+                                 appliance_name,
+                                 f'{appliance_name}_quant_{args.model_arch}.log'))
+    logger.log(f'Machine name: {socket.gethostname()}')
+    logger.log('Arguments: ')
+    logger.log(args)
 
     model_filepath = os.path.join(args.save_dir, appliance_name)
     if args.prune:
@@ -287,7 +386,7 @@ if __name__ == '__main__':
     else:
         # Load Keras model from best SaveModel during training.
         savemodel_filepath = os.path.join(model_filepath, f'savemodel_{args.model_arch}')
-        log(f'Savemodel file path: {savemodel_filepath}')
+        logger.log(f'Savemodel file path: {savemodel_filepath}')
         model = tf.keras.models.load_model(savemodel_filepath)
 
     # Prepare model for edge TPU compilation. Since the edge TPU complier
@@ -306,10 +405,10 @@ if __name__ == '__main__':
         args.datadir, appliance_name, args.test_type)
     dataset_path = os.path.join(
         args.datadir, appliance_name, test_file_name)
-    log(f'dataset: {dataset_path}')
+    logger.log(f'dataset: {dataset_path}')
     dataset = common.load_dataset(dataset_path, args.crop)
     num_samples = dataset[0].size
-    log(f'Loaded {num_samples/10**6:.3f}M samples from dataset.')
+    logger.log(f'Loaded {num_samples/10**6:.3f}M samples from dataset.')
 
     # Provider of windowed dataset samples and single point targets.
     WindowGenerator = common.get_window_generator()
@@ -319,13 +418,17 @@ if __name__ == '__main__':
         shuffle=False)
 
     # Convert model to tflite and quantize.
-    log('Converting model to tflite format and quantizing.')
+    logger.log('Converting model to tflite format and quantizing.')
     tflite_model_quant = convert(
         model=model,
         provider=provider,
         num_cal=NUM_CAL,
-        cal_offset=CAL_OFFSET,
-        io_float=args.io_float)
+        io_float=args.io_float,
+        use_tpu=args.use_tpu,
+        debug=DEBUG,
+        debug_results_file=os.path.join(
+            args.save_dir, appliance_name, 'debug_results.csv'),
+        fix_model=FIX_MODEL)
 
     # Save converted model.
     base_name = f'{appliance_name}_{args.model_arch}_quant'
@@ -335,7 +438,7 @@ if __name__ == '__main__':
                             else f'{base_name}.tflite')
     with open(filepath, 'wb') as file:
         file.write(tflite_model_quant)
-    log(f'Quantized tflite model saved to {filepath}.')
+    logger.log(f'Quantized tflite model saved to {filepath}.')
 
     if args.evaluate:
         evaluate_tflite(args, appliance_name, tflite_model_quant, provider)

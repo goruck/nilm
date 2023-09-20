@@ -205,6 +205,7 @@ def get_window_generator(keras_sequence=True):
             window_length: number of samples in a window of time series data.
             train: if True returns samples and targets else just samples.
             shuffle: if True shuffles dataset initially and every epoch.
+            model_arch: sets shape of windowed time samples per model architecture.
             p: proportion of input samples masked with a special token.
         """
 
@@ -290,6 +291,9 @@ def get_window_generator(keras_sequence=True):
             # Create a batch of windowed samples.
             wsam = np.array(
                 [self.samples[row:row + self.window_length] for row in rows])
+            
+            # Add 'channel' axis for model input convnet.
+            wsam = wsam.reshape(-1, self.window_length, 1)
 
             if self.train:
                 # Create batch of window-centered, single point targets and status.
@@ -314,14 +318,16 @@ def tflite_infer(interpreter, provider, num_eval, eval_offset=0, log=print) -> l
     output_details = interpreter.get_output_details()
     log(f'interpreter output details: {output_details}')
     # Check I/O tensor type.
-    floating_input = input_details[0]['dtype'] == np.float32
+    input_dtype = input_details[0]['dtype']
+    floating_input = input_dtype == np.float32
     log(f'tflite model floating input: {floating_input}')
-    floating_output = output_details[0]['dtype'] == np.float32
+    output_dtype = output_details[0]['dtype']
+    floating_output = output_dtype == np.float32
     log(f'tflite model floating output: {floating_output}')
     # Get I/O indices.
     input_index = input_details[0]['index']
     output_index = output_details[0]['index']
-    # If model has int8 I/O get quantization information.
+    # If model has int I/O get quantization information.
     if not floating_input:
         input_quant_params = input_details[0]['quantization_parameters']
         input_scale = input_quant_params['scales'][0]
@@ -345,14 +351,14 @@ def tflite_infer(interpreter, provider, num_eval, eval_offset=0, log=print) -> l
         sample, target, _= provider.__getitem__(i)
         if not sample.any(): return 0.0, 0.0 # ignore missing data
         ground_truth = np.squeeze(target)
-        if not floating_input: # convert float to int8
+        if not floating_input: # convert float to int
             sample = sample / input_scale + input_zero_point
-            sample = sample.astype(np.int8)
+            sample = sample.astype(input_dtype)
         interpreter.set_tensor(input_index, sample)
         interpreter.invoke() # run inference
         result = interpreter.get_tensor(output_index)
         prediction = np.squeeze(result)
-        if not floating_output: # convert int8 to float
+        if not floating_output: # convert int to float
             prediction = (prediction - output_zero_point) * output_scale
         #print(f'sample index: {i} ground_truth: {ground_truth:.3f} prediction: {prediction:.3f}')
         return ground_truth, prediction

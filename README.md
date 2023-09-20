@@ -180,7 +180,7 @@ $$F1=\frac{TP}{TP+\frac{1}{2}(FP+FN)}\tag{6}$$
 
 $$MCC=\frac{TN \times TP+FN \times FP }{\sqrt{(TP+FP)(TP+FN)(TN+FP)(TN+FN)}}\tag{7}$$
 
-$MAE$, $SAE$, $NDE$ and $EpD_e$ (defined as the difference between the predicted and ground truth $EpD$) reflect the model's ability to correctly predict the appliance energy consumption levels. $F1$ and $MCC$ indicates the model's ability to correctly predict appliance activations using imbalanced classes. $ACC$ is less useful in this application because most of the time the model will correctly predict the appliance is off which dominates the dataset.
+$MAE$, $SAE$, $NDE$ and $EpD_e$ (defined as $ 100\% \times (EpD_{predicted} - EpD_{ground\_truth}) / EpD_{ground\_truth}$) reflect the model's ability to correctly predict the appliance energy consumption levels. $F1$ and $MCC$ indicates the model's ability to correctly predict appliance activations using imbalanced classes. $ACC$ is less useful in this application because most of the time the model will correctly predict the appliance is off which dominates the dataset.
 
 A sliding window of 599 samples of the aggregate real power consumption signal is used as inputs to seq2point model and the midpoints of the corresponding windows of the appliances are used as targets. You can see how the samples and targets are generated in the `get_window_generator` function in the [common.py](./ml/common.py) module.
 
@@ -204,13 +204,13 @@ Where $x, \hat{x}\in[0, 1]$ are the ground truth and predicted power usage singl
 
 You can find the training results for each appliance in the [models](./ml/models/) folder. Typical performance metrics for the `cnn` model are shown in the table below.
 
-|Appliance|$F1\uparrow$|$MCC\uparrow$|$ACC\uparrow$|$MAE$ $(W)$ $\downarrow$|$SAE\downarrow$|$NDE\downarrow$|$EpD_e$ ($Wh$)|
+|Appliance|$F1\uparrow$|$MCC\uparrow$|$ACC\uparrow$|$MAE$ $(W)$ $\downarrow$|$SAE\downarrow$|$NDE\downarrow$|$EpD_e$ ($\%$)|
 | --- | --- | --- | --- | --- | --- | --- | --- |
-|kettle|0.7217|0.7320|0.9960|8.635|0.3173|0.4652|-135.4|
-|microwave|0.6462|0.6461|0.9946|6.268|0.3094|0.6135|-57.14|
-|fridge|0.8039|0.7124|0.8747|12.03|0.0583|0.3733|-33.92|
-|dishwasher|0.5203|0.5827|0.9723|5.436|0.0485|0.2693|13.09|
-|washingmachine|0.8063|0.8086|0.9850|15.56|0.2629|0.2754|181.2|
+|kettle|0.7199|0.7298|0.9960|8.723|0.3091|0.4705|-30.91|
+|microwave|0.6328|0.6303|0.9950|6.070|0.2102|0.6876|-21.02|
+|fridge|0.7978|0.7002|0.8620|14.71|0.1471|0.4137|14.71|
+|dishwasher|0.5825|0.6281|0.9790|5.007|0.0193|0.3450|1.926|
+|washingmachine|0.8478|0.8441|0.9893|14.75|0.2929|0.3470|-29.29|
 
 Typical performance metrics for the `transformer` model are shown in the table below.
 
@@ -243,13 +243,13 @@ The table<sup>12</sup> below shows the results from two transformer-based models
 
 I quantized the model’s weights and activation functions from Float32 to INT8 using TensorFlow Lite to improve inference performance on edge hardware, including the Raspberry Pi and the Google Edge TPU. See [convert_keras_to_tflite.py](./ml/convert_keras_to_tflite.py) for the code that does this quantization. You may observed a slight degradation in performance after quantization but this is acceptable for most use cases. The quantized results are shown in the tables below, where $R_{x86}$ is the inference rate on a 3.8 GHz x86 machine using eight tflite interpreter threads XNNPACK and $R_{\pi}$ is the inference rate on a Raspberry Pi 4. 
 
-|Appliance|$F1\uparrow$|$MCC\uparrow$|$ACC\uparrow$|$MAE$ $(W)$ $\downarrow$|$SAE\downarrow$|$NDE\downarrow$|$EpD_e$ ($Wh$)|$R_{x86}$ ($Hz$)|$R_{\pi}$ ($Hz$)|
+|Appliance|$F1\uparrow$|$MCC\uparrow$|$ACC\uparrow$|$MAE$ $(W)$ $\downarrow$|$SAE\downarrow$|$NDE\downarrow$|$EpD_e$ ($\%$)|$R_{x86}$ ($Hz$)|$R_{\pi}$ ($Hz$)|
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-|kettle|0.6910|0.7109|0.9963|7.826|0.4021|0.4854|-147.9|2731|x|
-|microwave|0.6826|0.6798|0.9943|7.660|0.4209|0.6187|-99.66|2775|x|
-|fridge|0.6390|0.4941|0.7909|17.61|0.1596|0.6746|-86.06|2730|x|
-|dishwasher|0.4688|0.5429|0.9662|11.49|0.9661|0.9848|-266.2|2714|x|
-|washingmachine|0.7752|0.7785|0.9814|20.70|0.3610|0.4323|-262.4|2742|x|
+|kettle|0.6313|0.6510|0.9957|9.220|0.4034|0.5768|-40.34|5081|x|
+|microwave|0.6221|0.6283|0.9943|7.652|0.4811|0.6841|-48.11|5128|x|
+|fridge|0.5980|0.4354|0.7665|19.17|0.1101|0.7746|-10.88|5108|x|
+|dishwasher|0.6645|0.6775|0.9842|5.874|0.0167|0.3895|-1.668|5050|x|
+|washingmachine|0.8910|0.8872|0.9926|15.08|0.3796|0.3442|-37.96|5094|x|
 
 
 ~~A typical result is shown below, note that the floating point model was not fine-tuned using QAT nor pruned before INT8 conversion.~~

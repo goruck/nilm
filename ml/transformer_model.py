@@ -667,10 +667,10 @@ class NILMTransformerModel(tf.keras.Model):
         self.output_activation = tf.keras.layers.Activation('linear', dtype=tf.float32)
 
     def call(self, sequence:tf.Tensor, training:bool=None) -> tf.Tensor:
-        # Expected input sequence shape = (batch_size, original_len)
+        # Expected input sequence shape = (batch_size, original_len, 1)
 
         # Add sequence length axis.
-        sequence = tf.expand_dims(sequence, axis=-1)
+        #sequence = tf.expand_dims(sequence, axis=-1)
         # Expected output shape = (batch_size, original_len, 1)
 
         ### Encoder Layers ###

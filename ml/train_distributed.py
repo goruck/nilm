@@ -16,7 +16,7 @@ import tensorflow as tf
 import matplotlib.pyplot as plt
 
 import define_models
-from logger import log
+from logger import Logger
 import common
 
 ### DO NOT USE MIXED-PRECISION - CURRENTLY GIVES POOR MODEL ACCURACY ###
@@ -73,7 +73,7 @@ def plot(history, plot_name, plot_display, appliance_name):
     plt.legend()
     plot_filepath = os.path.join(
         args.save_dir, appliance_name, f'{plot_name}_loss')
-    log(f'Plot directory: {plot_filepath}')
+    logger.log(f'Plot directory: {plot_filepath}')
     plt.savefig(fname=plot_filepath)
     if plot_display:
         plt.show()
@@ -86,7 +86,7 @@ def plot(history, plot_name, plot_display, appliance_name):
     plt.xlabel('Epoch')
     plot_filepath = os.path.join(
         args.save_dir, appliance_name, f'{plot_name}_mae')
-    log(f'Plot directory: {plot_filepath}')
+    logger.log(f'Plot directory: {plot_filepath}')
     plt.savefig(fname=plot_filepath)
     if plot_display:
         plt.show()
@@ -168,29 +168,32 @@ class TransformerCustomSchedule(tf.keras.optimizers.schedules.LearningRateSchedu
         return config
 
 if __name__ == '__main__':
-    log(f'Machine name: {socket.gethostname()}')
-    log(f'tf version: {tf.version.VERSION}')
     args = get_arguments()
-    log('Arguments: ')
-    log(args)
+    appliance_name = args.appliance_name
+    logger = Logger(os.path.join(args.save_dir,
+                                 appliance_name,
+                                 f'{appliance_name}_train_{args.model_arch}.log'))
+    logger.log(f'Machine name: {socket.gethostname()}')
+    logger.log('Arguments: ')
+    logger.log(args)
 
     model_arch = args.model_arch
     if model_arch not in dir(define_models):
         raise ValueError(f'Unknown model architecture: {model_arch}!')
     else:
-        log(f'Using model architecture: {model_arch}.')
+        logger.log(f'Using model architecture: {model_arch}.')
 
     # The appliance to train on.
     appliance_name = args.appliance_name
-    log(f'Appliance name: {appliance_name}')
+    logger.log(f'Appliance name: {appliance_name}')
 
     window_length = common.params_appliance[appliance_name]['window_length']
-    log(f'Window length: {window_length}')
+    logger.log(f'Window length: {window_length}')
 
     # Path for training data.
     training_path = os.path.join(
         args.datadir,appliance_name,f'{appliance_name}_training_.csv')
-    log(f'Training dataset: {training_path}')
+    logger.log(f'Training dataset: {training_path}')
 
     # Look for the validation set
     for filename in os.listdir(os.path.join(args.datadir, appliance_name)):
@@ -198,24 +201,24 @@ if __name__ == '__main__':
             val_filename = filename
     # path for validation data
     validation_path = os.path.join(args.datadir,appliance_name, val_filename)
-    log(f'Validation dataset: {validation_path}')
+    logger.log(f'Validation dataset: {validation_path}')
 
     model_filepath = os.path.join(args.save_dir, appliance_name)
     checkpoint_filepath = os.path.join(model_filepath, f'checkpoints_{model_arch}')
-    log(f'Checkpoint file path: {checkpoint_filepath}')
+    logger.log(f'Checkpoint file path: {checkpoint_filepath}')
     savemodel_filepath = os.path.join(model_filepath, f'savemodel_{model_arch}')
-    log(f'Savemodel file path: {savemodel_filepath}')
+    logger.log(f'Savemodel file path: {savemodel_filepath}')
 
     # Load datasets.
     train_dataset = common.load_dataset(training_path, args.crop_train_dataset)
     val_dataset = common.load_dataset(validation_path, args.crop_val_dataset)
     num_train_samples = train_dataset[0].size
-    log(f'There are {num_train_samples/10**6:.3f}M training samples.')
+    logger.log(f'There are {num_train_samples/10**6:.3f}M training samples.')
     num_val_samples = val_dataset[0].size
-    log(f'There are {num_val_samples/10**6:.3f}M validation samples.')
+    logger.log(f'There are {num_val_samples/10**6:.3f}M validation samples.')
 
     batch_size = args.batchsize
-    log(f'Batch size: {batch_size}')
+    logger.log(f'Batch size: {batch_size}')
 
     # Just use gpu 0, mainly for debugging.
     if args.do_not_use_distributed_training:
@@ -223,9 +226,9 @@ if __name__ == '__main__':
     else: # Use all visible GPUs for training.
         strategy = tf.distribute.MirroredStrategy()
     num_replicas = strategy.num_replicas_in_sync
-    log(f'Number of replicas: {num_replicas}.')
+    logger.log(f'Number of replicas: {num_replicas}.')
     global_batch_size = batch_size * num_replicas
-    log(f'Global batch size: {global_batch_size}.')
+    logger.log(f'Global batch size: {global_batch_size}.')
 
     # Init window generator to provide samples and targets.
     WindowGenerator = common.get_window_generator()
@@ -245,7 +248,7 @@ if __name__ == '__main__':
     train_tf_dataset = tf.data.Dataset.from_generator(
         train_data_iter,
         output_signature=(
-            tf.TensorSpec(shape=(None, window_length), dtype=tf.float32),
+            tf.TensorSpec(shape=(None, window_length, 1), dtype=tf.float32),
             tf.TensorSpec(shape=(None,), dtype=tf.float32),
             tf.TensorSpec(shape=(None,), dtype=tf.float32)))
     train_tf_dataset.prefetch(tf.data.AUTOTUNE)
@@ -253,7 +256,7 @@ if __name__ == '__main__':
     val_tf_dataset = tf.data.Dataset.from_generator(
         val_data_iter,
         output_signature=(
-            tf.TensorSpec(shape=(None, window_length), dtype=tf.float32),
+            tf.TensorSpec(shape=(None, window_length, 1), dtype=tf.float32),
             tf.TensorSpec(shape=(None,), dtype=tf.float32),
             tf.TensorSpec(shape=(None,), dtype=tf.float32)))
     val_tf_dataset.prefetch(tf.data.AUTOTUNE)
@@ -262,24 +265,24 @@ if __name__ == '__main__':
     train_dist_dataset = strategy.experimental_distribute_dataset(train_tf_dataset)
     test_dist_dataset = strategy.experimental_distribute_dataset(val_tf_dataset)
 
-    log('Training model from scratch.')
+    logger.log('Training model from scratch.')
 
     try:
         lr = LR_BY_BATCH_SIZE[global_batch_size]
-        log(f'Learning rate: {lr}')
+        logger.log(f'Learning rate: {lr}')
     except KeyError:
-        log('Learning rate cannot be determined due to invalid batch size.')
+        logger.log('Learning rate cannot be determined due to invalid batch size.')
         raise SystemExit(1)
     
     # Calculate normalized threshold for appliance status determination.
     threshold = common.params_appliance[appliance_name]['on_power_threshold']
     max_on_power = common.params_appliance[appliance_name]['max_on_power']
     threshold /= max_on_power
-    log(f'Normalized on power threshold: {threshold}')
+    logger.log(f'Normalized on power threshold: {threshold}')
 
     # Get L1 loss multiplier.
     c0 = common.params_appliance[appliance_name]['c0']
-    log(f'L1 loss multiplier: {c0}')
+    logger.log(f'L1 loss multiplier: {c0}')
 
     with strategy.scope():
         if model_arch == 'transformer_fit':
@@ -294,7 +297,7 @@ if __name__ == '__main__':
                 #values=[5e-04, 1e-04, .5e-04])
             lr_schedule = lr
         elif model_arch == 'cnn':
-            model = define_models.cnn(window_length=window_length)
+            model = define_models.cnn()
             lr_schedule = lr
         elif model_arch == 'fcn':
             model = define_models.fcn(window_length=window_length)
@@ -303,7 +306,7 @@ if __name__ == '__main__':
             model = define_models.resnet(window_length=window_length)
             lr_schedule = lr
         else:
-            log('Model architecture not found.')
+            logger.log('Model architecture not found.')
             raise SystemExit(1)
 
         # Define loss objects.
@@ -398,7 +401,7 @@ if __name__ == '__main__':
         def train_step(data):
             """Runs forward and backward passes on a batch."""
             x, y, y_status = data
-            # x expected input shape = (batch_size, original_length)
+            # x expected input shape = (batch_size, window_length)
             # y expected input shape = (batch_size,)
             # status expected input shape = (batch_size,)
 
@@ -424,7 +427,7 @@ if __name__ == '__main__':
         def test_step(data):
             """Runs forward pass on a batch."""
             x, y, y_status = data
-            # x expected input shape = (batch_size, original_length)
+            # x expected input shape = (batch_size, window_length)
             # y expected input shape = (batch_size,)
             # status expected input shape = (batch_size,)
 
@@ -510,7 +513,7 @@ if __name__ == '__main__':
                 steps += 1
             test_loss = total_loss / steps
 
-            print(
+            logger.log(
                 f'epoch: {epoch + 1} loss: {train_loss:2.4f} '
                 f'mse: {mse.result():2.4f} mae: {mae.result():2.4f} '
                 f'val loss: {test_loss:2.4f} '
@@ -518,7 +521,7 @@ if __name__ == '__main__':
             )
 
             if test_loss < best_test_loss:
-                print(
+                logger.log(
                     f'Current val loss of {test_loss:2.4f} < '
                     f'than val loss of {best_test_loss:2.4f}, '
                     f'saving model to {savemodel_filepath}.'
@@ -545,7 +548,7 @@ if __name__ == '__main__':
             mae.reset_states()
 
             if wait_for_better_loss > PATIENCE:
-                log('Early termination of training.')
+                logger.log('Early termination of training.')
                 break
 
     model.summary()
