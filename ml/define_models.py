@@ -47,6 +47,9 @@ def cnn() -> tf.keras.Sequential:
     The model expects inputs with shape = (batch_size, sequence_length, 1)
     and its output has shape = (batch_size, 1).
 
+    This code results in a model that has about 2x the inference rate than
+    the 2D version below ('cnn_fun'). TODO - figure out why.
+
     Args:
         None.
 
