@@ -208,6 +208,8 @@ def representative_dataset_gen(provider, num_cal=43200) -> np.float32:
     inactive = 0
     while True:
         if i > samples_per_batch: # out of samples
+            logger.log(f'Out of cal samples, act={active}, inact={inactive}.',
+                       level='warning')
             break
         sample, _, status = provider.__getitem__(i)
         if sample.size == 0 or status.size == 0:
