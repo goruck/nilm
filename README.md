@@ -44,54 +44,40 @@ Model: "cnn"
 _________________________________________________________________
  Layer (type)                Output Shape              Param #   
 =================================================================
- input_1 (InputLayer)        [(None, 599)]             0         
+ conv1d (Conv1D)             (None, 599, 16)           96        
                                                                  
- reshape (Reshape)           (None, 1, 599, 1)         0         
+ max_pooling1d (MaxPooling1  (None, 300, 16)           0         
+ D)                                                              
                                                                  
- conv2d (Conv2D)             (None, 1, 599, 16)        96        
+ conv1d_1 (Conv1D)           (None, 300, 32)           1568      
                                                                  
- activation (Activation)     (None, 1, 599, 16)        0         
+ max_pooling1d_1 (MaxPoolin  (None, 150, 32)           0         
+ g1D)                                                            
                                                                  
- max_pooling2d (MaxPooling2D  (None, 1, 300, 16)       0         
- )                                                               
+ conv1d_2 (Conv1D)           (None, 150, 64)           6208      
                                                                  
- conv2d_1 (Conv2D)           (None, 1, 300, 32)        1568      
+ max_pooling1d_2 (MaxPoolin  (None, 75, 64)            0         
+ g1D)                                                            
                                                                  
- activation_1 (Activation)   (None, 1, 300, 32)        0         
+ conv1d_3 (Conv1D)           (None, 75, 128)           24704     
                                                                  
- max_pooling2d_1 (MaxPooling  (None, 1, 150, 32)       0         
- 2D)                                                             
+ max_pooling1d_3 (MaxPoolin  (None, 38, 128)           0         
+ g1D)                                                            
                                                                  
- conv2d_2 (Conv2D)           (None, 1, 150, 64)        6208      
-                                                                 
- activation_2 (Activation)   (None, 1, 150, 64)        0         
-                                                                 
- max_pooling2d_2 (MaxPooling  (None, 1, 75, 64)        0         
- 2D)                                                             
-                                                                 
- conv2d_3 (Conv2D)           (None, 1, 75, 128)        24704     
-                                                                 
- activation_3 (Activation)   (None, 1, 75, 128)        0         
-                                                                 
- max_pooling2d_3 (MaxPooling  (None, 1, 38, 128)       0         
- 2D)                                                             
-                                                                 
- conv2d_4 (Conv2D)           (None, 1, 38, 256)        98560     
-                                                                 
- activation_4 (Activation)   (None, 1, 38, 256)        0         
+ conv1d_4 (Conv1D)           (None, 38, 256)           98560     
                                                                  
  flatten (Flatten)           (None, 9728)              0         
                                                                  
  dense (Dense)               (None, 1024)              9962496   
                                                                  
- activation_5 (Activation)   (None, 1024)              0         
+ dense_1 (Dense)             (None, 512)               524800    
                                                                  
- dense_1 (Dense)             (None, 1)                 1025      
+ dense_2 (Dense)             (None, 1)                 513       
                                                                  
 =================================================================
-Total params: 10,094,657
-Trainable params: 10,094,657
-Non-trainable params: 0
+Total params: 10618945 (40.51 MB)
+Trainable params: 10618945 (40.51 MB)
+Non-trainable params: 0 (0.00 Byte)
 ```
 
 ```text
@@ -226,7 +212,7 @@ Average metrics across all appliances for both model architectures are compared 
 
 |Architecture|$\overline{F1}\uparrow$|$\overline{MCC}\uparrow$|$\overline{ACC}\uparrow$|$\overline{MAE}$ $(W)$ $\downarrow$|$\overline{SAE}\downarrow$|$\overline{NDE}\downarrow$|$\overline{\|EpD_e\|}$ $(Wh)$ $\downarrow$|
 | --- | --- | --- | --- | --- | --- | --- | --- |
-|```cnn```|0.7000|0.6964|0.9648|9.586|0.1993|0.3993|84.07|
+|```cnn```|0.7161|0.7065|0.9643|9.852|0.1957|0.4528|19.57|
 |```transformer```|0.7528|0.7358|0.9599|10.32|0.2484|0.4174|84.29|
 
 You can see that the ```cnn``` and ```transformer``` models have similar performance even though the latter has about six times fewer parameters than the former. However, each ```transformer``` training step takes about seven times longer than ```cnn``` due to the `transformer` model's use of self-attention which has $O(n^4)$ complexity as compared to the `cnn` model's $O(n)$, where $n$ is the input sequence length. On the basis on training (and inference) efficiency, you can see that ```cnn``` is preferable with little loss in model performance.
@@ -241,7 +227,7 @@ The table<sup>12</sup> below shows the results from two transformer-based models
 
 ### Model Quantization
 
-I quantized the model’s weights and activation functions from Float32 to INT8 using TensorFlow Lite to improve inference performance on edge hardware, including the Raspberry Pi and the Google Edge TPU. See [convert_keras_to_tflite.py](./ml/convert_keras_to_tflite.py) for the code that does this quantization. You may observed a slight degradation in performance after quantization but this is acceptable for most use cases. The quantized results are shown in the tables below, where $R_{x86}$ is the inference rate on a 3.8 GHz x86 machine using eight tflite interpreter threads XNNPACK and $R_{\pi}$ is the inference rate on a Raspberry Pi 4. 
+I quantized the model’s weights and activation functions from Float32 to INT8 using TensorFlow Lite to improve inference performance on edge hardware, including the Raspberry Pi and the Google Edge TPU. See [convert_keras_to_tflite.py](./ml/convert_keras_to_tflite.py) for the code that does this quantization which also uses [TFLite's quantization debugger](https://www.tensorflow.org/lite/performance/quantization_debugger) to check how well each layer in the model was quantized. The quantized inference results are shown in the tables below, where $R_{x86}$ is the inference rate on a 3.8 GHz x86 machine using eight tflite interpreter threads with XNNPACK and $R_{\pi}$ is the inference rate on a Raspberry Pi 4. You will observed a slight degradation in performance after quantization but this is acceptable for most use cases.
 
 |Appliance|$F1\uparrow$|$MCC\uparrow$|$ACC\uparrow$|$MAE$ $(W)$ $\downarrow$|$SAE\downarrow$|$NDE\downarrow$|$EpD_e$ ($\%$)|$R_{x86}$ ($Hz$)|$R_{\pi}$ ($Hz$)|
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
