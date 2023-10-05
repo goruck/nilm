@@ -3,7 +3,7 @@
 Given a sequence of electricity mains reading, the algorithm
 separates the mains into appliances.
 
-Uses distributed GPU training. 
+Uses distributed GPU training.
 
 Copyright (c) 2022~2023 Lindo St. Angel
 """
@@ -30,7 +30,7 @@ if USE_MIXED_PRECISION:
 
 # Set to True run in TF eager mode for debugging.
 # May have to reduce batch size <= 512 to avoid OOM.
-# Turn off distributed training for best results. 
+# Turn off distributed training for best results.
 RUN_EAGERLY = False
 tf.config.run_functions_eagerly(run_eagerly=RUN_EAGERLY)
 
@@ -56,10 +56,10 @@ def smooth_curve(points, factor=0.8):
             smoothed_points.append(point)
     return smoothed_points
 
-def plot(history, plot_name, plot_display, appliance_name):
+def plot(data, plot_name, plot_display, appliance):
     """Save and display loss and mae plots."""
-    loss = history['loss']
-    val_loss = history['val_loss']
+    loss = data['loss']
+    val_loss = data['val_loss']
     plot_epochs = range(1,len(loss)+1)
     plt.plot(
         plot_epochs, smooth_curve(loss),
@@ -67,25 +67,25 @@ def plot(history, plot_name, plot_display, appliance_name):
     plt.plot(
         plot_epochs, smooth_curve(val_loss),
         label='Smoothed Validation Loss')
-    plt.title(f'Training history for {appliance_name} ({plot_name})')
+    plt.title(f'Training history for {appliance} ({plot_name})')
     plt.ylabel('Loss')
     plt.xlabel('Epoch')
     plt.legend()
     plot_filepath = os.path.join(
-        args.save_dir, appliance_name, f'{plot_name}_loss')
+        args.save_dir, appliance, f'{plot_name}_loss')
     logger.log(f'Plot directory: {plot_filepath}')
     plt.savefig(fname=plot_filepath)
     if plot_display:
         plt.show()
     plt.close()
     # Mean Absolute Error.
-    val_mae = history['val_mae']
+    val_mae = data['val_mae']
     plt.plot(plot_epochs, smooth_curve(val_mae))
-    plt.title(f'Smoothed validation MAE for {appliance_name} ({plot_name})')
+    plt.title(f'Smoothed validation MAE for {appliance} ({plot_name})')
     plt.ylabel('Mean Absolute Error')
     plt.xlabel('Epoch')
     plot_filepath = os.path.join(
-        args.save_dir, appliance_name, f'{plot_name}_mae')
+        args.save_dir, appliance, f'{plot_name}_mae')
     logger.log(f'Plot directory: {plot_filepath}')
     plt.savefig(fname=plot_filepath)
     if plot_display:
@@ -160,7 +160,7 @@ class TransformerCustomSchedule(tf.keras.optimizers.schedules.LearningRateSchedu
         arg2 = step * (self.warmup_steps ** -1.5)
 
         return tf.math.rsqrt(self.d_model_f) * tf.math.minimum(arg1, arg2)
-    
+
     def get_config(self):
         config = {
             'd_model': self.d_model,
@@ -212,10 +212,10 @@ if __name__ == '__main__':
     # Load datasets.
     train_dataset = common.load_dataset(training_path, args.crop_train_dataset)
     val_dataset = common.load_dataset(validation_path, args.crop_val_dataset)
-    num_train_samples = train_dataset[0].size
-    logger.log(f'There are {num_train_samples/10**6:.3f}M training samples.')
-    num_val_samples = val_dataset[0].size
-    logger.log(f'There are {num_val_samples/10**6:.3f}M validation samples.')
+    NUM_TRAIN_SAMPLES = train_dataset[0].size
+    logger.log(f'There are {NUM_TRAIN_SAMPLES/10**6:.3f}M training samples.')
+    NUM_VAL_SAMPLES = val_dataset[0].size
+    logger.log(f'There are {NUM_VAL_SAMPLES/10**6:.3f}M validation samples.')
 
     batch_size = args.batchsize
     logger.log(f'Batch size: {batch_size}')
@@ -242,7 +242,7 @@ if __name__ == '__main__':
         batch_size=global_batch_size,
         window_length=window_length,
         shuffle=False)
-    
+
     # Convert Keras Sequence datasets into tf.data.Datasets.
     train_data_iter = lambda: (s for s in training_provider)
     train_tf_dataset = tf.data.Dataset.from_generator(
@@ -260,7 +260,7 @@ if __name__ == '__main__':
             tf.TensorSpec(shape=(None,), dtype=tf.float32),
             tf.TensorSpec(shape=(None,), dtype=tf.float32)))
     val_tf_dataset.prefetch(tf.data.AUTOTUNE)
-    
+
     # Distribute datasets to replicas.
     train_dist_dataset = strategy.experimental_distribute_dataset(train_tf_dataset)
     test_dist_dataset = strategy.experimental_distribute_dataset(val_tf_dataset)
@@ -270,10 +270,10 @@ if __name__ == '__main__':
     try:
         lr = LR_BY_BATCH_SIZE[global_batch_size]
         logger.log(f'Learning rate: {lr}')
-    except KeyError:
+    except KeyError as e:
         logger.log('Learning rate cannot be determined due to invalid batch size.')
-        raise SystemExit(1)
-    
+        raise SystemExit(1) from e
+
     # Calculate normalized threshold for appliance status determination.
     threshold = common.params_appliance[appliance_name]['on_power_threshold']
     max_on_power = common.params_appliance[appliance_name]['max_on_power']
@@ -288,9 +288,9 @@ if __name__ == '__main__':
         if model_arch == 'transformer_fit':
             raise ValueError('Must use model "transformer" for distributed training.')
         elif model_arch == 'transformer':
-            model_depth = 256
+            MODEL_DEPTH = 256
             model = define_models.transformer(window_length=window_length,
-                                              d_model=model_depth)
+                                              d_model=MODEL_DEPTH)
             #lr_schedule = TransformerCustomSchedule(d_model=model_depth)
             #lr_schedule = tf.keras.optimizers.schedules.PiecewiseConstantDecay(
                 #boundaries=[100000, 200000],
@@ -319,8 +319,8 @@ if __name__ == '__main__':
 
         def compute_train_loss(y, y_status, y_pred, y_pred_status, model_losses):
             """Calculate per-sample test loss on a single replica for a batch.
-            
-            Returns a scalar loss value scaled by the global batch size. 
+
+            Returns a scalar loss value scaled by the global batch size.
             """
 
             # Losses on each replica are calculated per batch so a reduce sum is
@@ -345,15 +345,15 @@ if __name__ == '__main__':
             else:
                 loss = mse_loss + bce_loss
 
-            # Add model regularization losses. 
+            # Add model regularization losses.
             if model_losses:
                 loss += tf.nn.scale_regularization_loss(tf.add_n(model_losses))
 
             return loss
-        
+
         def compute_test_loss(y, y_status, y_pred, y_pred_status):
             """Calculate per-sample test loss on a single replica for a batch.
-            
+
             Returns a scalar loss value scaled by the global batch size. This is
             identical to compute_test_loss except model losses are ignored.
 
@@ -383,7 +383,7 @@ if __name__ == '__main__':
                 loss = mse_loss + bce_loss
 
             return loss
-    
+
         # Define metrics.
         test_loss = tf.keras.metrics.Mean(name='test_loss')
         test_mae = tf.keras.metrics.MeanAbsoluteError(name='test_mae')
@@ -395,7 +395,7 @@ if __name__ == '__main__':
                                              beta_1=0.9,
                                              beta_2=0.999,
                                              epsilon=1e-08)
-        
+
         checkpoint = tf.train.Checkpoint(optimizer=optimizer, model=model)
 
         def train_step(data):
@@ -423,7 +423,7 @@ if __name__ == '__main__':
             mae.update_state(y, y_pred)
 
             return loss
-        
+
         def test_step(data):
             """Runs forward pass on a batch."""
             x, y, y_status = data
@@ -448,7 +448,7 @@ if __name__ == '__main__':
         @tf.function
         def distributed_train_step(dataset_inputs):
             """Replicate the train step and run it with distributed input.
-            
+
             Returns the sum of losses from replicas which is further summed
             over batches and averaged over an epoch in downstream processing.
             """
@@ -463,7 +463,7 @@ if __name__ == '__main__':
         @tf.function
         def distributed_test_step(dataset_inputs):
             """Replicate the test step and run it with distributed input.
-            
+
             Returns the sum of losses from replicas which is further summed
             over batches and averaged over an epoch in downstream processing.
             """
@@ -474,7 +474,7 @@ if __name__ == '__main__':
                 tf.distribute.ReduceOp.SUM,
                 per_replica_losses,
                 axis=None)
-        
+
         best_test_loss = float('inf')
         wait_for_better_loss = 0
         PATIENCE = 6
@@ -492,8 +492,8 @@ if __name__ == '__main__':
             pbar = tf.keras.utils.Progbar(
                 target=training_provider.__len__(), # number of batches
                 stateful_metrics=['mse', 'mae'])
-            for x in train_dist_dataset: # iterate over batches
-                total_loss += distributed_train_step(x)
+            for d in train_dist_dataset: # iterate over batches
+                total_loss += distributed_train_step(d)
                 steps += 1 # each step is a batch
                 metrics = {
                     'loss': total_loss / steps,
@@ -508,8 +508,8 @@ if __name__ == '__main__':
             # Test loop.
             total_loss = 0.0
             steps = 0
-            for x in test_dist_dataset:
-                total_loss += distributed_test_step(x)
+            for d in test_dist_dataset:
+                total_loss += distributed_test_step(d)
                 steps += 1
             test_loss = total_loss / steps
 
@@ -552,8 +552,8 @@ if __name__ == '__main__':
                 break
 
     model.summary()
-    
+
     plot(history,
          plot_name=f'train_{model_arch}',
          plot_display=True,
-         appliance_name=appliance_name)
+         appliance=appliance_name)

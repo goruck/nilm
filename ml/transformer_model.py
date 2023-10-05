@@ -29,17 +29,17 @@ class GELU(tf.keras.layers.Layer):
     def __init__(self, name='GELU', **kwargs):
         super().__init__(name=name, **kwargs)
 
-    def call(self, x):
-        return 0.5 * x * (1 + tf.tanh(
-           tf.sqrt(2 / math.pi) * (x + 0.044715 * tf.pow(x, 3))))
-    
+    def call(self, inputs, *args, **kwargs):
+        return 0.5 * inputs * (1 + tf.tanh(
+           tf.sqrt(2 / math.pi) * (inputs + 0.044715 * tf.pow(inputs, 3))))
+
 
 class L2NormPooling1D(tf.keras.layers.Layer):
     """Applies L2 norm average pooling over an input signal.
 
     If the L2 norm pooling is zero, the gradient of this function is not defined.
     This implementation adds `epsilon` to that quantity to maintain numerical stability.
-    
+
     Args:
         Same as tf.keras.layers.AveragePooling1D except:
         epsilon: A small number added to the pooled output for numerical stability.
@@ -52,7 +52,7 @@ class L2NormPooling1D(tf.keras.layers.Layer):
                  data_format='channels_last',
                  epsilon=1e-10,
                  **kwargs):
-        
+
         super().__init__(**kwargs)
         self.pool_size = pool_size
         self.strides = strides
@@ -64,153 +64,180 @@ class L2NormPooling1D(tf.keras.layers.Layer):
                                                          padding=self.padding,
                                                          data_format=self.data_format)
 
-    def call(self, x):
-        avg_pooled_squares = self.avg_pool(tf.square(x)) #* tf.cast(self.pool_size, dtype=x.dtype)
+    def call(self, inputs, *args, **kwargs):
+        avg_pooled_squares = self.avg_pool(tf.square(inputs)) #* tf.cast(self.pool_size, dtype=x.dtype)
         return tf.sqrt(avg_pooled_squares + self.epsilon)
-    
+
 
 class PositionEmbedding(tf.keras.layers.Layer):
-  """Creates a positional embedding.
-  Example:
-  ```python
-  position_embedding = PositionEmbedding(max_length=100)
-  inputs = tf.keras.Input((100, 32), dtype=tf.float32)
-  outputs = position_embedding(inputs)
-  ```
-  Args:
-    max_length: The maximum size of the dynamic sequence.
-    initializer: The initializer to use for the embedding weights. Defaults to
-      'glorot_uniform'.
-    seq_axis: The axis of the input tensor where we add the embeddings.
-  Reference: This layer creates a positional embedding as described in
-  [BERT: Pre-training of Deep Bidirectional Transformers for Language
-  Understanding](https://arxiv.org/abs/1810.04805).
-  """
+    """Creates a positional embedding.
+    Example:
+    ```python
+    position_embedding = PositionEmbedding(max_length=100)
+    inputs = tf.keras.Input((100, 32), dtype=tf.float32)
+    outputs = position_embedding(inputs)
+    ```
+    Args:
+        max_length: The maximum size of the dynamic sequence.
+        initializer: The initializer to use for the embedding weights. Defaults to
+        'glorot_uniform'.
+        seq_axis: The axis of the input tensor where we add the embeddings.
+    Reference: This layer creates a positional embedding as described in
+    [BERT: Pre-training of Deep Bidirectional Transformers for Language
+    Understanding](https://arxiv.org/abs/1810.04805).
+    """
 
-  def __init__(self,
-               max_length,
-               initializer='glorot_uniform',
-               seq_axis=1,
-               **kwargs):
+    def __init__(self,
+                max_length,
+                initializer='glorot_uniform',
+                seq_axis=1,
+                **kwargs):
 
-    super().__init__(**kwargs)
-    if max_length is None:
-      raise ValueError(
-          "`max_length` must be an Integer, not `None`."
-      )
-    self._max_length = max_length
-    self._initializer = tf.keras.initializers.get(initializer)
-    self._seq_axis = seq_axis
+        super().__init__(**kwargs)
+        if max_length is None:
+            raise ValueError("`max_length` must be an Integer, not `None`.")
+        self._max_length = max_length
+        self._initializer = tf.keras.initializers.get(initializer)
+        self._seq_axis = seq_axis
+        self._position_embeddings = None
 
-  def get_config(self):
-    config = {
-        'max_length': self._max_length,
-        'initializer': tf.keras.initializers.serialize(self._initializer),
-        'seq_axis': self._seq_axis,
-    }
-    base_config = super(PositionEmbedding, self).get_config()
-    return dict(list(base_config.items()) + list(config.items()))
+    def get_config(self):
+        config = {
+            'max_length': self._max_length,
+            'initializer': tf.keras.initializers.serialize(self._initializer),
+            'seq_axis': self._seq_axis,
+        }
+        base_config = super(PositionEmbedding, self).get_config()
+        return dict(list(base_config.items()) + list(config.items()))
 
-  def build(self, input_shape):
-    dimension_list = input_shape.as_list()
-    width = dimension_list[-1]
-    weight_sequence_length = self._max_length
+    def build(self, input_shape):
+        dimension_list = input_shape.as_list()
+        width = dimension_list[-1]
+        weight_sequence_length = self._max_length
 
-    self._position_embeddings = self.add_weight(
-        'embeddings',
-        shape=[weight_sequence_length, width],
-        initializer=self._initializer,
-        trainable=True)
+        self._position_embeddings = self.add_weight(
+            'embeddings',
+            shape=[weight_sequence_length, width],
+            initializer=self._initializer,
+            trainable=True)
 
-    super().build(input_shape)
+        super().build(input_shape)
 
-  def call(self, inputs):
-    input_shape = tf.shape(inputs)
-    actual_seq_len = input_shape[self._seq_axis]
-    position_embeddings = self._position_embeddings[:actual_seq_len, :]
-    new_shape = [1 for _ in inputs.get_shape().as_list()]
-    new_shape[self._seq_axis] = actual_seq_len
-    new_shape[-1] = position_embeddings.get_shape().as_list()[-1]
-    position_embeddings = tf.reshape(position_embeddings, new_shape)
-    return tf.broadcast_to(position_embeddings, input_shape)
-  
+    def call(self, inputs, *args, **kwargs):
+        input_shape = tf.shape(inputs)
+        actual_seq_len = input_shape[self._seq_axis]
+        position_embeddings = self._position_embeddings[:actual_seq_len, :]
+        new_shape = [1 for _ in inputs.get_shape().as_list()]
+        new_shape[self._seq_axis] = actual_seq_len
+        new_shape[-1] = position_embeddings.get_shape().as_list()[-1]
+        position_embeddings = tf.reshape(position_embeddings, new_shape)
+        return tf.broadcast_to(position_embeddings, input_shape)
+
 
 class RelativePositionEmbedding(tf.keras.layers.Layer):
-  """Creates a relative positional embedding.
-  Example:
-  ```pythontensorflow loss nan square root
-  position_embedding = RelativePositionEmbedding(max_length=100)
-  inputs = tf.keras.Input((100, 32), dtype=tf.float32)
-  outputs = position_embedding(inputs)
-  ```
-  Args:
-    max_length: The maximum size of the dynamic sequence.
-    initializer: The initializer to use for the embedding weights. Defaults to
-      'glorot_uniform.
-    seq_axis: The axis of the input tensor where we add the embeddings.
-  Reference: This layer creates a relative positional embedding as described in
-  [Efficient Localness Transformer for Smart Sensor-Based Energy Disaggregation
-  ](https://arxiv.org/abs/2203.16537).
-  """
+    """Creates a relative positional embedding.
+    Example:
+    ```python
+    position_embedding = RelativePositionEmbedding(max_length=100)
+    inputs = tf.keras.Input((100, 32), dtype=tf.float32)
+    outputs = position_embedding(inputs)
+    ```
+    Args:
+        max_length: The maximum size of the dynamic sequence.
+        initializer: The initializer to use for the embedding weights. Defaults to
+        'glorot_uniform.
+        seq_axis: The axis of the input tensor where we add the embeddings.
+    Reference: This layer creates a relative positional embedding as described in
+    [Efficient Localness Transformer for Smart Sensor-Based Energy Disaggregation
+    ](https://arxiv.org/abs/2203.16537).
+    """
 
-  def __init__(self,
-               max_length,
-               initializer='glorot_uniform',
-               seq_axis=1,
-               **kwargs):
+    def __init__(self,
+                max_length,
+                initializer='glorot_uniform',
+                seq_axis=1,
+                **kwargs):
 
-    super().__init__(**kwargs)
-    if max_length is None:
-      raise ValueError(
-          "`max_length` must be an Integer, not `None`."
-      )
-    self._max_length = max_length
-    self._initializer = tf.keras.initializers.get(initializer)
-    self._seq_axis = seq_axis
+        super().__init__(**kwargs)
+        if max_length is None:
+            raise ValueError("`max_length` must be an Integer, not `None`.")
+        self._max_length = max_length
+        self._initializer = tf.keras.initializers.get(initializer)
+        self._seq_axis = seq_axis
+        self._embeddings = None
 
-  def get_config(self):
-    config = {
-        'max_length': self._max_length,
-        'initializer': tf.keras.initializers.serialize(self._initializer),
-        'seq_axis': self._seq_axis,
-    }
-    base_config = super(RelativePositionEmbedding, self).get_config()
-    return dict(list(base_config.items()) + list(config.items()))
+    def get_config(self):
+        config = {
+            'max_length': self._max_length,
+            'initializer': tf.keras.initializers.serialize(self._initializer),
+            'seq_axis': self._seq_axis,
+        }
+        base_config = super(RelativePositionEmbedding, self).get_config()
+        return dict(list(base_config.items()) + list(config.items()))
 
-  def build(self, input_shape):
-    dimension_list = input_shape.as_list()
-    width = dimension_list[-1]
+    def build(self, input_shape):
+        dimension_list = input_shape.as_list()
+        width = dimension_list[-1]
 
-    # Embeddings need only to be half the max sequence length
-    # because they designed to be symmetric.
-    weight_sequence_length = self._max_length // 2
-    self._embeddings = self.add_weight(
-        'embeddings',
-        shape=[weight_sequence_length, width],
-        initializer=self._initializer,
-        trainable=True)
-    
-    super().build(input_shape)
+        # Embeddings need only to be half the max sequence length
+        # because they designed to be symmetric.
+        #weight_sequence_length = self._max_length // 2
+        weight_sequence_length = tf.cast(
+            tf.math.ceil(self._max_length / 2), dtype=tf.int32)
+        #print(weight_sequence_length)
+        self._embeddings = self.add_weight(
+            'embeddings',
+            shape=[weight_sequence_length, width],
+            initializer=self._initializer,
+            trainable=True)
 
-  def call(self, inputs):
-    input_shape = tf.shape(inputs)
-    actual_seq_len = input_shape[self._seq_axis]
-    embeddings = self._embeddings[:actual_seq_len, :]
+        super().build(input_shape)
 
-    seq_indices = tf.range(actual_seq_len)
+    @tf.function
+    def determine_pe1(self, seq_len, embeddings):
+        """Determines correct length of embedding weights."""
+        if seq_len % tf.constant(2) == tf.constant(0):
+            return embeddings
 
-    # Make embeddings to have the same value when its elements have same
-    # distance to the sequence midpoint.
-    mid = actual_seq_len // 2
-    dist_from_mid = tf.abs(seq_indices - mid)
-    position_embeddings = tf.gather(embeddings, dist_from_mid)
+        return embeddings[1:]
 
-    new_shape = [1 for _ in inputs.get_shape().as_list()]
-    new_shape[self._seq_axis] = actual_seq_len
-    new_shape[-1] = position_embeddings.get_shape().as_list()[-1]
-    position_embeddings = tf.reshape(position_embeddings, new_shape)
-    return tf.broadcast_to(position_embeddings, input_shape)
-  
+    def call(self, inputs, *args, **kwargs):
+        input_shape = tf.shape(inputs)
+        actual_seq_len = input_shape[self._seq_axis]
+        half_act_seq_len = tf.cast(
+            tf.math.ceil(actual_seq_len / 2), dtype=tf.int32)
+        embeddings = self._embeddings[:half_act_seq_len]
+        #print(f'embeddings: {tf.shape(embeddings)}')
+
+        # Form position embeddings from two parts, the embeddings and a mirrored
+        # version of the embeddings. If the sequence is even, the mid point of
+        # position embeddings will be repeated. For example, if actual_seq_len=10
+        # the positional embeddings will be [e4,e3,e2,e1,e0,e0,e1,e2,e3,e4] and if
+        # actual_seq_len=9, they will be [e4,e3,e2,e1,e0,e1,e2,e3,e4], where
+        # e0...en are the indices of the embedding weights.
+        pe1 = self.determine_pe1(actual_seq_len, embeddings)
+        #print(f'e1: {tf.shape(pe1)}')
+        pe2 = embeddings[::-1]
+        #print(f'e2: {tf.shape(pe2)}')
+        position_embeddings = tf.concat(values=[pe2, pe1], axis=0)
+        #print(f'pos emb: {tf.shape(position_embeddings)}')
+
+        # Alternative way of generating the position embeddings is shown below.
+        # This works but tf.gather is not supported by tflite for input
+        # dimensions > 1 so approach was depreciated and kept here for reference.
+        #seq_indices = tf.range(actual_seq_len)
+        # Make embeddings have same value when its elements have same
+        # distance to the sequence midpoint.
+        #mid = actual_seq_len // 2
+        #dist_from_mid = tf.abs(seq_indices - mid)
+        #position_embeddings = tf.gather(embeddings, dist_from_mid) # not supported by tflite
+
+        new_shape = [1 for _ in inputs.get_shape().as_list()]
+        new_shape[self._seq_axis] = actual_seq_len
+        new_shape[-1] = position_embeddings.get_shape().as_list()[-1]
+        position_embeddings = tf.reshape(position_embeddings, new_shape)
+        return tf.broadcast_to(position_embeddings, input_shape)
+
 
 class DotProductAttention(tf.keras.layers.Layer):
     """Dot-product attention layer, a.k.a. Luong-style attention."""
@@ -308,9 +335,9 @@ class PositionwiseFeedForward(tf.keras.layers.Layer):
         self.fully_connected2 = tf.keras.layers.Dense(d_model)  # Second fully connected layer
         self.activation = GELU()
 
-    def call(self, x):
+    def call(self, inputs, *args, **kwargs):
         # The input is passed into the two fully-connected layers, with GELU activation.
-        x_fc1 = self.fully_connected1(x)
+        x_fc1 = self.fully_connected1(inputs)
 
         return self.activation(self.fully_connected2(x_fc1))
 
@@ -322,8 +349,8 @@ class AddNormalization(tf.keras.layers.Layer):
         super(AddNormalization, self).__init__(**kwargs)
         self.layer_norm = tf.keras.layers.LayerNormalization()
 
-    def call(self, x, sublayer_x):
-        return self.layer_norm(x + sublayer_x)
+    def call(self, inputs, sublayer_x, **kwargs):
+        return self.layer_norm(inputs + sublayer_x)
 
 
 class TransformerBlock(tf.keras.layers.Layer):
@@ -442,7 +469,7 @@ class NILMTransformerModelFit(tf.keras.Model):
         # masked_batch_size = tf.math.count_nonzero(mask)
         # Expected output shape = (masked_batch_size,)
         return tf.where(tf.reduce_any(mask), self.l1_on(y, y_pred), 0.0)
-    
+
     def train_step(self, data):
         """Function called by fit() that trains on every batch of data."""
 
@@ -476,12 +503,12 @@ class NILMTransformerModelFit(tf.keras.Model):
 
             # [0, 1] -> [-1, 1]
             #y_status = y_status * 2.0 - 1.0
-            
+
             # Compute prediction status.
             #y_pred_status = tf.where(y_pred >= self.threshold, 1.0, -1.0)
             y_pred_status = tf.where(y_pred >= self.threshold, 1.0, 0.0)
             # Expected output shape = (masked_batch_size,)
-            
+
             # Calculate loss for current batch.
             mse_loss = self.mse(y, y_pred)
             bce_loss = self.bce(y_true=y_status, y_pred=y_pred_status)
@@ -489,20 +516,18 @@ class NILMTransformerModelFit(tf.keras.Model):
             loss = mse_loss + bce_loss + self.l1_loss_c0 * l1_loss
             # Expected output shape = ()
 
-            """
             # Run in Eager mode if debugging.
-            debug_mask = tf.ones(tf.shape(y), dtype=tf.bool)
-            if tf.reduce_any(debug_mask):
-                print(f'\nx:{x[debug_mask]}')
-                print(f'\ny: {y[debug_mask]}')
-                print(f'\ny_pred: {y_pred[debug_mask]}')
-                print(f'\ny_status: {y_status[debug_mask]}')
-                print(f'\ny_pred_status: {y_pred_status[debug_mask]}')
-                print(f'\nmse loss: {mse_loss}')
-                print(f'\nlog loss: {log_loss}')
-                print(f'\nl1 loss: {l1_loss}')
-                print(f'\nloss: {loss}')
-            """
+            #debug_mask = tf.ones(tf.shape(y), dtype=tf.bool)
+            #if tf.reduce_any(debug_mask):
+                #print(f'\nx:{x[debug_mask]}')
+                #print(f'\ny: {y[debug_mask]}')
+                #print(f'\ny_pred: {y_pred[debug_mask]}')
+                #print(f'\ny_status: {y_status[debug_mask]}')
+                #print(f'\ny_pred_status: {y_pred_status[debug_mask]}')
+                #print(f'\nmse loss: {mse_loss}')
+                #print(f'\nlog loss: {log_loss}')
+                #print(f'\nl1 loss: {l1_loss}')
+                #print(f'\nloss: {loss}')
 
         # Compute gradients
         trainable_vars = self.trainable_variables
@@ -519,7 +544,7 @@ class NILMTransformerModelFit(tf.keras.Model):
         # Return a dict mapping loss and metric names to current values
         return {'loss': self.loss_tracker.result(),
                 'mae': self.mae_metric.result(), 'msle': self.msle_metric.result()}
-    
+
     def test_step(self, data):
         """Function called by fit() that evaluates every batch of data."""
 
@@ -542,12 +567,12 @@ class NILMTransformerModelFit(tf.keras.Model):
 
             # [0, 1] -> [-1, 1]
             #y_status = y_status * 2.0 - 1.0
-            
+
             # Compute prediction status.
             #y_pred_status = tf.where(y_pred >= self.threshold, 1.0, -1.0)
             y_pred_status = tf.where(y_pred >= self.threshold, 1.0, 0.0)
             # Expected output shape = (masked_batch_size,)
-            
+
             # Calculate loss for current batch.
             mse_loss = self.mse(y, y_pred)
             bce_loss = self.bce(y_true=y_status, y_pred=y_pred_status)
@@ -611,7 +636,7 @@ class NILMTransformerModelFit(tf.keras.Model):
         x = self.dense2(x)
         # Expected output_size = (batch_size, 1)
         return self.output_activation(x)
-    
+
 
 class NILMTransformerModel(tf.keras.Model):
     """NILM model based on a BERT-style transformer-based encoder.
@@ -654,12 +679,11 @@ class NILMTransformerModel(tf.keras.Model):
             self.hidden, self.heads, self.hidden * 4, self.dropout_rate)
             for _ in range(self.n_layers)]
         self.relative_position = RelativePositionEmbedding(max_length=self.latent_len)
+        self.add_norm2 = AddNormalization()
         self.avg_pool = tf.keras.layers.GlobalAveragePooling1D()
         #self.max_pool = tf.keras.layers.GlobalMaxPooling1D()
         self.dense1 = tf.keras.layers.Dense(units=self.decoder_hidden, activation='relu')
-        #self.flatten = tf.keras.layers.Flatten()
         self.dropout2 = tf.keras.layers.Dropout(rate=self.dropout_rate)
-        self.add_norm2 = AddNormalization()
         self.dense2 = tf.keras.layers.Dense(units=1)
         # If training with mixed-precision, ensure model output is float32.
         # This helps to avoids numerical instability.
@@ -668,10 +692,6 @@ class NILMTransformerModel(tf.keras.Model):
 
     def call(self, sequence:tf.Tensor, training:bool=None) -> tf.Tensor:
         # Expected input sequence shape = (batch_size, original_len, 1)
-
-        # Add sequence length axis.
-        #sequence = tf.expand_dims(sequence, axis=-1)
-        # Expected output shape = (batch_size, original_len, 1)
 
         ### Encoder Layers ###
 

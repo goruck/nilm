@@ -190,7 +190,7 @@ Where $x, \hat{x}\in[0, 1]$ are the ground truth and predicted power usage singl
 
 You can find the training results for each appliance in the [models](./ml/models/) folder. Typical performance metrics for the `cnn` model are shown in the table below.
 
-|Appliance|$F1\uparrow$|$MCC\uparrow$|$ACC\uparrow$|$MAE$ $(W)$ $\downarrow$|$SAE\downarrow$|$NDE\downarrow$|$EpD_e$ ($\%$)|
+|Appliance|$F1\uparrow$|$MCC\uparrow$|$ACC\uparrow$|$MAE$ $(W)$ $\downarrow$|$SAE\downarrow$|$NDE\downarrow$|$EpD_e$ ($\%$)$\downarrow$|
 | --- | --- | --- | --- | --- | --- | --- | --- |
 |kettle|0.7199|0.7298|0.9960|8.723|0.3091|0.4705|-30.91|
 |microwave|0.6328|0.6303|0.9950|6.070|0.2102|0.6876|-21.02|
@@ -200,9 +200,9 @@ You can find the training results for each appliance in the [models](./ml/models
 
 Typical performance metrics for the `transformer` model are shown in the table below.
 
-|Appliance|$F1\uparrow$|$MCC\uparrow$|$ACC\uparrow$|$MAE$ $(W)$ $\downarrow$|$SAE\downarrow$|$NDE\downarrow$|$EpD_e$ ($Wh$)|
+|Appliance|$F1\uparrow$|$MCC\uparrow$|$ACC\uparrow$|$MAE$ $(W)$ $\downarrow$|$SAE\downarrow$|$NDE\downarrow$|$EpD_e$ ($\%$)$\downarrow$|
 | --- | --- | --- | --- | --- | --- | --- | --- |
-|kettle|0.8708|0.8698|0.9979|6.716|0.0050|0.2353|-2.694|
+|kettle|0.8058|0.8044|0.9968|6.996|0.0590|0.3691|-5.864|
 |microwave|0.6752|0.6754|0.9946|7.385|0.2924|0.6513|-70.94|
 |fridge|0.7536|0.6354|0.8345|16.85|0.3336|0.6344|185.8|
 |dishwasher|0.6467|0.6846|0.9866|4.966|0.2870|0.4383|63.46|

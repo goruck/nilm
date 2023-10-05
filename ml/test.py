@@ -197,6 +197,9 @@ if __name__ == '__main__':
     logger.log(f'Predicted EPD: {epd_pred} (Wh)')
     logger.log(f'EPD Relative Error: {100.0 * (epd_pred - epd_gt) / epd_gt} (%)')
 
+    # Remove file extension for saving and plotting results.
+    test_filename = os.path.splitext(test_filename)[0]
+
     # Save raw results.
     save_path = os.path.join(args.save_dir, appliance_name)
     logger.log(f'Saving mains, ground truth and predictions to {save_path}.')
