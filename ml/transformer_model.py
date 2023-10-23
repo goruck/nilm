@@ -29,7 +29,11 @@ class GELU(tf.keras.layers.Layer):
     def __init__(self, name='GELU', **kwargs):
         super().__init__(name=name, **kwargs)
 
-    def call(self, inputs, *args, **kwargs):
+    def get_config(self):
+        config = super().get_config()
+        return config
+
+    def call(self, inputs):
         return 0.5 * inputs * (1 + tf.tanh(
            tf.sqrt(2 / math.pi) * (inputs + 0.044715 * tf.pow(inputs, 3))))
 
@@ -64,7 +68,18 @@ class L2NormPooling1D(tf.keras.layers.Layer):
                                                          padding=self.padding,
                                                          data_format=self.data_format)
 
-    def call(self, inputs, *args, **kwargs):
+    def get_config(self):
+        config = {
+            'pool_size': self.pool_size,
+            'strides': self.strides,
+            'padding': self.padding,
+            'data_format': self.data_format,
+            'epsilon': self.epsilon
+        }
+        base_config = super().get_config()
+        return dict(list(base_config.items()) + list(config.items()))
+
+    def call(self, inputs):
         avg_pooled_squares = self.avg_pool(tf.square(inputs)) #* tf.cast(self.pool_size, dtype=x.dtype)
         return tf.sqrt(avg_pooled_squares + self.epsilon)
 
@@ -107,7 +122,7 @@ class PositionEmbedding(tf.keras.layers.Layer):
             'initializer': tf.keras.initializers.serialize(self._initializer),
             'seq_axis': self._seq_axis,
         }
-        base_config = super(PositionEmbedding, self).get_config()
+        base_config = super().get_config()
         return dict(list(base_config.items()) + list(config.items()))
 
     def build(self, input_shape):
@@ -123,7 +138,7 @@ class PositionEmbedding(tf.keras.layers.Layer):
 
         super().build(input_shape)
 
-    def call(self, inputs, *args, **kwargs):
+    def call(self, inputs):
         input_shape = tf.shape(inputs)
         actual_seq_len = input_shape[self._seq_axis]
         position_embeddings = self._position_embeddings[:actual_seq_len, :]
@@ -172,7 +187,7 @@ class RelativePositionEmbedding(tf.keras.layers.Layer):
             'initializer': tf.keras.initializers.serialize(self._initializer),
             'seq_axis': self._seq_axis,
         }
-        base_config = super(RelativePositionEmbedding, self).get_config()
+        base_config = super().get_config()
         return dict(list(base_config.items()) + list(config.items()))
 
     def build(self, input_shape):
@@ -201,13 +216,13 @@ class RelativePositionEmbedding(tf.keras.layers.Layer):
 
         return embeddings[1:]
 
-    def call(self, inputs, *args, **kwargs):
+    def call(self, inputs):
         input_shape = tf.shape(inputs)
         actual_seq_len = input_shape[self._seq_axis]
         half_act_seq_len = tf.cast(
-            tf.math.ceil(actual_seq_len / 2), dtype=tf.int32)
+            tf.math.ceil(actual_seq_len / 2), dtype=tf.int32
+        )
         embeddings = self._embeddings[:half_act_seq_len]
-        #print(f'embeddings: {tf.shape(embeddings)}')
 
         # Form position embeddings from two parts, the embeddings and a mirrored
         # version of the embeddings. If the sequence is even, the mid point of
@@ -216,11 +231,8 @@ class RelativePositionEmbedding(tf.keras.layers.Layer):
         # actual_seq_len=9, they will be [e4,e3,e2,e1,e0,e1,e2,e3,e4], where
         # e0...en are the indices of the embedding weights.
         pe1 = self.determine_pe1(actual_seq_len, embeddings)
-        #print(f'e1: {tf.shape(pe1)}')
         pe2 = embeddings[::-1]
-        #print(f'e2: {tf.shape(pe2)}')
         position_embeddings = tf.concat(values=[pe2, pe1], axis=0)
-        #print(f'pos emb: {tf.shape(position_embeddings)}')
 
         # Alternative way of generating the position embeddings is shown below.
         # This works but tf.gather is not supported by tflite for input
@@ -244,6 +256,10 @@ class DotProductAttention(tf.keras.layers.Layer):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+
+    def get_config(self):
+        config = super().get_config()
+        return config
 
     def call(self, queries, keys, values, d_k, mask=None):
         # Scoring the queries against the keys after transposing the latter, and scaling
@@ -277,11 +293,22 @@ class MultiHeadedAttention(tf.keras.layers.Layer):
         self.d_model = d_model # Dimensionality of the model
         self.d_k = d_k # Dimensionality of the linearly projected queries and keys
         self.d_v = d_v # Dimensionality of the linearly projected values
+
         self.attention = DotProductAttention()  # Scaled dot product attention
         self.W_q = tf.keras.layers.Dense(self.d_k)  # Learned projection matrix for the queries
         self.W_k = tf.keras.layers.Dense(self.d_k)  # Learned projection matrix for the keys
         self.W_v = tf.keras.layers.Dense(self.d_v)  # Learned projection matrix for the values
         self.W_o = tf.keras.layers.Dense(self.d_model)   # Learned projection matrix for the multi-head output
+
+    def get_config(self):
+        config = {
+            'heads': self.heads,
+            'd_model': self.d_model,
+            'd_k': self.d_k,
+            'd_v': self.d_v
+        }
+        base_config = super().get_config()
+        return dict(list(base_config.items()) + list(config.items()))
 
     def reshape_tensor(self, x, heads, flag):
         if flag:
@@ -331,25 +358,45 @@ class PositionwiseFeedForward(tf.keras.layers.Layer):
 
     def __init__(self, d_model, d_ff, **kwargs):
         super().__init__(**kwargs)
-        self.fully_connected1 = tf.keras.layers.Dense(d_ff)  # First fully connected layer
-        self.fully_connected2 = tf.keras.layers.Dense(d_model)  # Second fully connected layer
-        self.activation = GELU()
+        self.d_model = d_model
+        self.d_ff = d_ff
 
-    def call(self, inputs, *args, **kwargs):
-        # The input is passed into the two fully-connected layers, with GELU activation.
+        self.fully_connected1 = tf.keras.layers.Dense(self.d_ff)
+        self.fully_connected2 = tf.keras.layers.Dense(self.d_model)
+        # Using gelu instead of relu below makes training converge faster
+        # but each training and inference step is about 30% slower. Since
+        # this model is meant to be deployed on the edge, optimizing here
+        # for inference efficiency by using relu. Model accuracy is about
+        # the same using either relu or gelu.
+        self.activation = tf.keras.layers.Activation('relu')
+
+    def get_config(self):
+        config = {
+            'd_model': self.d_model,
+            'd_ff': self.d_ff
+        }
+        base_config = super().get_config()
+        return dict(list(base_config.items()) + list(config.items()))
+
+    def call(self, inputs):
+        # The input is passed into the two fully-connected layers,
+        # with ReLU activation in between.
         x_fc1 = self.fully_connected1(inputs)
-
-        return self.activation(self.fully_connected2(x_fc1))
+        return self.fully_connected2(self.activation((x_fc1)))
 
 
 class AddNormalization(tf.keras.layers.Layer):
     """AddNormaliztion Layer"""
 
     def __init__(self, **kwargs):
-        super(AddNormalization, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.layer_norm = tf.keras.layers.LayerNormalization()
 
-    def call(self, inputs, sublayer_x, **kwargs):
+    def get_config(self):
+        config = super().get_config()
+        return config
+
+    def call(self, inputs, sublayer_x):
         return self.layer_norm(inputs + sublayer_x)
 
 
@@ -358,14 +405,39 @@ class TransformerBlock(tf.keras.layers.Layer):
 
     def __init__(self, hidden, attn_heads, feed_forward_hidden, dropout, **kwargs):
         super().__init__(**kwargs)
+        self.hidden = hidden
+        self.attn_heads = attn_heads
+        self.feed_forward_hidden = feed_forward_hidden
+        self.dropout = dropout
+
         d_k = hidden // 2 # d_k must be an even multiple of hidden
-        d_v = hidden // 2 # d_v must be an even multiple of "hidden
-        self.attention = MultiHeadedAttention(attn_heads, d_k, d_v, hidden, **kwargs)
-        self.dropout1 = tf.keras.layers.Dropout(dropout)
+        d_v = hidden // 2 # d_v must be an even multiple of hidden
+
+        self.attention = MultiHeadedAttention(
+            self.attn_heads,
+            d_k,
+            d_v,
+            self.hidden,
+            **kwargs
+        )
+        self.dropout1 = tf.keras.layers.Dropout(self.dropout)
         self.add_norm1 = AddNormalization()
-        self.feed_forward = PositionwiseFeedForward(hidden, feed_forward_hidden)
-        self.dropout2 = tf.keras.layers.Dropout(dropout)
+        self.feed_forward = PositionwiseFeedForward(
+            self.hidden,
+            self.feed_forward_hidden
+        )
+        self.dropout2 = tf.keras.layers.Dropout(self.dropout)
         self.add_norm2 = AddNormalization()
+
+    def get_config(self):
+        config = {
+            'hidden': self.hidden,
+            'attn_heads': self.attn_heads,
+            'feed_forward_hidden': self.feed_forward_hidden,
+            'dropout': self.dropout
+        }
+        base_config = super().get_config()
+        return dict(list(base_config.items()) + list(config.items()))
 
     def call(self, x, mask, training=None):
         # Multi-head attention layer
@@ -683,8 +755,10 @@ class NILMTransformerModel(tf.keras.Model):
         self.avg_pool = tf.keras.layers.GlobalAveragePooling1D()
         #self.max_pool = tf.keras.layers.GlobalMaxPooling1D()
         self.dense1 = tf.keras.layers.Dense(units=self.decoder_hidden, activation='relu')
-        self.dropout2 = tf.keras.layers.Dropout(rate=self.dropout_rate)
-        self.dense2 = tf.keras.layers.Dense(units=1)
+        self.dropout2 = tf.keras.layers.Dropout(rate=0.3)
+        self.dense2 = tf.keras.layers.Dense(units=self.decoder_hidden/2, activation='relu')
+        self.dropout3 = tf.keras.layers.Dropout(rate=0.3)
+        self.dense3 = tf.keras.layers.Dense(units=1)
         # If training with mixed-precision, ensure model output is float32.
         # This helps to avoids numerical instability.
         # See https://www.tensorflow.org/guide/mixed_precision#building_the_model
@@ -723,7 +797,11 @@ class NILMTransformerModel(tf.keras.Model):
         # Expected output shape = (batch_size, decoder_hidden)
         x = self.dropout2(x, training=training)
         # Expected output size = (batch_size, decoder_hidden)
-        # Apply sequence-to-point transformation.
         x = self.dense2(x)
+        # Expected output shape = (batch_size, decoder_hidden/2)
+        x = self.dropout3(x, training=training)
+        # Expected output size = (batch_size, decoder_hidden/2)
+        # Apply sequence-to-point transformation.
+        x = self.dense3(x)
         # Expected output_size = (batch_size, 1)
         return self.output_activation(x)
