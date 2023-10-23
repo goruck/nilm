@@ -9,6 +9,34 @@ Copyright (c) 2022~2023 Lindo St. Angel
 import tensorflow as tf
 
 from transformer_model import NILMTransformerModel, NILMTransformerModelFit
+from transformer_model import (
+    L2NormPooling1D,
+    PositionEmbedding,
+    AddNormalization,
+    TransformerBlock,
+    RelativePositionEmbedding
+)
+
+def transformer_fun(window_length=599, dropout_rate=0.1, d_model=256) -> tf.keras.Model:
+    """Specifies a transformer-based Keras Functional model."""
+    latent_len = window_length // 2
+
+    inp = tf.keras.Input(batch_shape=(None, window_length, 1))
+    x = tf.keras.layers.Conv1D(filters=d_model, kernel_size=5, padding='same')(inp)
+    x = L2NormPooling1D(pool_size=2)(x)
+    p = PositionEmbedding(max_length=window_length)(x)
+    x = AddNormalization()(x, p)
+    x = tf.keras.layers.Dropout(rate=dropout_rate)(x)
+    x = TransformerBlock(d_model, 2, d_model * 4, dropout_rate)(x, mask=None)
+    x = TransformerBlock(d_model, 2, d_model * 4, dropout_rate)(x, mask=None)
+    r = RelativePositionEmbedding(max_length=latent_len)(x)
+    x = AddNormalization()(x, r)
+    x = tf.keras.layers.GlobalAveragePooling1D()(x)
+    x = tf.keras.layers.Dense(units=1024, activation='relu')(x)
+    x = tf.keras.layers.Dense(units=512, activation='relu')(x)
+    x = tf.keras.layers.Dropout(rate=dropout_rate)(x)
+    out = tf.keras.layers.Dense(units=1, activation='linear')(x)
+    return tf.keras.Model(inp, out)
 
 def transformer(
         window_length=599,
