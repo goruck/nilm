@@ -4,9 +4,9 @@ Copyright (c) 2022, 2023 Lindo St. Angel.
 """
 
 import os
-import pandas as pd
 import time
 
+import pandas as pd
 import numpy as np
 from tqdm import tqdm
 
@@ -242,7 +242,7 @@ def get_window_generator(keras_sequence=True):
             self.indices = np.arange(self.num_samples)
 
             self.rng = np.random.default_rng()
-            
+
             if self.p is not None:
                 # Randomly mask input sequence.
                 self.samples = []
@@ -268,7 +268,7 @@ def get_window_generator(keras_sequence=True):
             else:
                 self.samples, self.targets, self.status = X, y, activations
 
-            # Initial shuffle. 
+            # Initial shuffle.
             if self.shuffle:
                 self.rng.shuffle(self.indices)
 
@@ -284,14 +284,14 @@ def get_window_generator(keras_sequence=True):
 
         def __getitem__(self, index) -> np.ndarray:
             """Returns windowed samples and targets."""
-            # Row indices for current batch. 
+            # Row indices for current batch.
             rows = self.indices[
                 index * self.batch_size:(index + 1) * self.batch_size]
-            
+
             # Create a batch of windowed samples.
             wsam = np.array(
                 [self.samples[row:row + self.window_length] for row in rows])
-            
+
             # Add 'channel' axis for model input convnet.
             wsam = wsam.reshape(-1, self.window_length, 1)
 
@@ -301,7 +301,7 @@ def get_window_generator(keras_sequence=True):
                     [self.targets[row + self.window_center] for row in rows])
                 wsta = np.array(
                     [self.status[row + self.window_center] for row in rows])
-                
+
                 return wsam, wtar, wsta
             else:
                 # Return only samples if in test mode.
@@ -339,7 +339,7 @@ def tflite_infer(interpreter, provider, num_eval, eval_offset=0, log=print) -> l
 
     # Calculate num_eval sized indices of contiguous locations in provider.
     # Get number of samples per batch in provider. Since batch should always be
-    # set to 1 for inference, this will simply return the total number of samples. 
+    # set to 1 for inference, this will simply return the total number of samples.
     samples_per_batch = provider.__len__()
     if num_eval - eval_offset > samples_per_batch:
         raise ValueError('Not enough test samples to run evaluation.')
@@ -371,7 +371,6 @@ def tflite_infer(interpreter, provider, num_eval, eval_offset=0, log=print) -> l
 
 def normalize(dataset):
     """Normalize or standardize a dataset."""
-    import numpy as np
     # Compute aggregate statistics.
     agg_mean = np.mean(dataset[0])
     agg_std = np.std(dataset[0])
@@ -412,10 +411,10 @@ def compute_status(appliance_power:np.ndarray, appliance:str) -> list:
     min_off_duration = ceildiv(params_appliance[appliance]['min_off_duration'],
                                SAMPLE_PERIOD)
 
-    # Apply threshold to appliance powers. 
-    initial_status = (appliance_power.copy() >= threshold)
+    # Apply threshold to appliance powers.
+    initial_status = appliance_power.copy() >= threshold
 
-    # Find transistion indices. 
+    # Find transistion indices.
     status_diff = np.diff(initial_status)
     events_idx = status_diff.nonzero()
     events_idx = np.array(events_idx).squeeze()
@@ -433,7 +432,7 @@ def compute_status(appliance_power:np.ndarray, appliance:str) -> list:
     off_events = events_idx[:, 1].copy()
     assert len(on_events) == len(off_events)
 
-    # Filter out on and off transitions faster than minimum values. 
+    # Filter out on and off transitions faster than minimum values.
     if len(on_events) > 0:
         off_duration = on_events[1:] - off_events[:-1]
         off_duration = np.insert(off_duration, 0, 1000)

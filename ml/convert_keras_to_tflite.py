@@ -7,7 +7,6 @@ or used for on-device inference on a Raspberry Pi or other edge compute.
 Copyright (c) 2022~2023 Lindo St. Angel.
 """
 
-from functools import partial
 import os
 import argparse
 import socket
@@ -23,114 +22,234 @@ from logger import Logger
 
 rng = np.random.default_rng()
 
-def convert(
-        keras_model,
-        sample_provider,
-        quant_mode,
-        debug_results_path,
-        log):
-    """ Convert Keras model to tflite.
+# Check how well model was quantized (only for full INT8 quant).
+DEBUG_MODEL = False
+# Attempt to improve model accuracy at expense of performance.
+FIX_MODEL = False
+# Number of samples for post-training quantization calibration.
+# 43200 (4 * 10800) is 4 * 24 = 96 hours @ 8 sec per sample.
+NUM_CAL = 43200
 
-    Optimize for latency and size, quantize weights and activations
-    and optionally quantize input and output layers.
+class ConvertModel():
+    """Convert a Keras model to tflite and quantize.
 
-    Returns a quantized tflite model.
+    The conversion optimizes for latency and size and various quantization schemes
+    are supported including quantizing weights and activations as well as input and
+    output layers. Public methods are provided for debugging the quantized model and
+    keeping troublesome layers and ops in float to improve accuracy.
 
-    Args:
+    Attributes:
         keras_model: Keras input model.
         sample_provider: Object that provides samples for calibration.
-        quant_mode: Quantization mode.
-        debug_results_path: Save path to debug results.
         log: Logger object.
-
-    Returns:
-        Quantized tflite model.
+        quant_mode: Quantization mode.
+        num_cal: Number of samples for post-training quantization calibration.
+        save_path: Path to save the debugger results.
+        debug_file: Name of raw debugger results file.
+        debug_plot: Name of debugger result plot file.
+        results_path: Path to debugger results (usually same as save_path).
+        deny_ops: List of operators to keep in float.
     """
 
-    # Number of samples for post-training quantization calibration.
-    num_cal = 4 * 10800 # 4 * 24 = 96 hours @ 8 sec per sample
-    # Check how well model was quantized (only for full INT8 quant).
-    debug = False
-    # Improve model accuracy at expense of performance (debug must be True).
-    fix_model = False
+    def __init__(
+            self,
+            keras_model,
+            sample_provider,
+            num_cal,
+            log,
+            quant_mode='w8',
+        ) -> None:
+        """Initializes instance and configures it based on quantization mode.
 
-    if debug and quant_mode in ['w8', 'w8_a16']:
-        raise ValueError('Model debug only works for full INT8 quant.')
+        Args:
+            keras_model: Keras input model.
+            sample_provider: Object that provides samples for calibration.
+            log: Logger object.
+            quant_mode: Quantization mode.
+            num_cal: Number of samples for post-training quantization calibration.
+        
+        Raises:
+            ValueError: Unrecognized quantization mode.
+        """
 
-    if fix_model and not debug:
-        raise ValueError('Can only fix model if debug is set.')
+        self.sample_provider = sample_provider
+        self.num_cal = num_cal
+        self.logger = log
+        self.quant_mode = quant_mode
+        self.converter = tf.lite.TFLiteConverter.from_keras_model(keras_model)
 
-    converter = tf.lite.TFLiteConverter.from_keras_model(keras_model)
-
-    # Converter optimization settings.
-    # The DEFAULT optimization strategy quantizes model weights and
-    # activations and tries to optimize for size and latency, while
-    # minimizing the loss in accuracy.
-    # The EXPERIMENTAL_SPARSITY optimization tries to advantage of
-    # the sparse model weights trained with pruning if available.
-    converter.optimizations = [
-        tf.lite.Optimize.DEFAULT,
-        #tf.lite.Optimize.EXPERIMENTAL_SPARSITY # will not work with debugger
-    ]
-
-    rep_gen = partial(
-        representative_dataset_gen,
-        sample_provider=sample_provider,
-        num_cal=num_cal,
-        log=log
-    )
-
-    if quant_mode == 'w8':
-        # Quantize only weights from floating point to int8.
-        # Inputs and outputs are kept in float.
-        converter.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS]
-    elif quant_mode == 'w8_a8_fallback':
-        # Quantize weights and activations from floating point to int8 with
-        # fallback to float if an operator does not have an int implementation.
-        # Inputs and outputs are kept in float.
-        converter.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS]
-        converter.representative_dataset = tf.lite.RepresentativeDataset(rep_gen)
-    elif quant_mode == 'w8_a8':
-        # Enforce full int8 quantization for all ops including the input and output.
-        converter.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS_INT8]
-        converter.representative_dataset = tf.lite.RepresentativeDataset(rep_gen)
-        converter.inference_input_type = tf.int8
-        converter.inference_output_type = tf.int8
-    elif quant_mode == 'w8_a16':
-        # Quantize activations based on their range to int16, weights
-        # to int8 and bias to int64 with fallback to float for
-        # unsupported operators. Inputs and outputs are kept in float.
-        converter.target_spec.supported_ops = [
-            tf.lite.OpsSet.TFLITE_BUILTINS,
-            tf.lite.OpsSet.EXPERIMENTAL_TFLITE_BUILTINS_ACTIVATIONS_INT16_WEIGHTS_INT8
+        # Converter optimization settings.
+        # The DEFAULT optimization strategy quantizes model weights and
+        # activations and tries to optimize for size and latency, while
+        # minimizing the loss in accuracy.
+        # The EXPERIMENTAL_SPARSITY optimization tries to advantage of
+        # the sparse model weights trained with pruning if available.
+        self.converter.optimizations = [
+            tf.lite.Optimize.DEFAULT,
+            #tf.lite.Optimize.EXPERIMENTAL_SPARSITY #TODO will not work with debugger
         ]
-        converter.representative_dataset = tf.lite.RepresentativeDataset(rep_gen)
-    else:
-        raise ValueError('Unrecognized quantization mode.')
 
-    quantized_model = converter.convert()
+        if self.quant_mode == 'w8':
+            # Quantize only weights from floating point to int8.
+            # Inputs and outputs are kept in float.
+            self.converter.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS]
+        elif self.quant_mode == 'w8_a8_fallback':
+            # Quantize weights and activations from floating point to int8 with
+            # fallback to float if an operator does not have an int implementation.
+            # Inputs and outputs are kept in float.
+            self.converter.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS]
+            self.converter.representative_dataset = tf.lite.RepresentativeDataset(self._rep_gen)
+        elif self.quant_mode == 'w8_a8':
+            # Enforce full int8 quantization for all ops including the input and output.
+            self.converter.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS_INT8]
+            self.converter.representative_dataset = tf.lite.RepresentativeDataset(self._rep_gen)
+            self.converter.inference_input_type = tf.int8
+            self.converter.inference_output_type = tf.int8
+        elif self.quant_mode == 'w8_a16':
+            # Quantize activations based on their range to int16, weights
+            # to int8 and bias to int64 with fallback to float for
+            # unsupported operators. Inputs and outputs are kept in float.
+            self.converter.target_spec.supported_ops = [
+                tf.lite.OpsSet.TFLITE_BUILTINS,
+                tf.lite.OpsSet.EXPERIMENTAL_TFLITE_BUILTINS_ACTIVATIONS_INT16_WEIGHTS_INT8
+            ]
+            self.converter.representative_dataset = tf.lite.RepresentativeDataset(self._rep_gen)
+        else:
+            raise ValueError('Unrecognized quantization mode.')
 
-    if debug:
-        log.log('Debugging model...')
+    def _rep_gen(self) -> np.float32:
+        """Yields samples from representative dataset.
+
+        This is a generator function that provides a small dataset to calibrate or
+        estimate the range, i.e, (min, max) of all floating-point arrays in the model.
+
+        Since dataset is very imbalanced must ensure enough samples are used to generate a
+        representative set. 96 hours (4 days) of samples is a good starting point as that
+        period should be long enough to capture infrequently used appliances.
+
+        Yields:
+            A representative model input sample.
+
+        Raises:
+            ValueError: Not enough representative samples to run calibration.
+            RunTimeError: Bad sample in representative dataset.
+        """
+
+        # Get number of samples per batch in provider. Since batch should always be
+        # set to 1 for inference, this will simply return the total number of samples.
+        samples_per_batch = self.sample_provider.__len__()
+
+        if self.num_cal > samples_per_batch:
+            raise ValueError('Not enough representative samples.')
+
+        # Generate 'num_cal' samples at random locations in dataset.
+        #indices = rng.choice(samples_per_batch, size=num_cal)
+        #for i in indices:
+            #sample, _, _ = sample_provider.__getitem__(i)
+            #yield [sample,]
+
+        # Generate 'num_cal' samples from provider.
+        # Given the dataset is unbalanced, this logic ensures that sufficient
+        # representative samples from active appliances periods are yielded.
+        active_frac = 0.5 # fraction of cal samples during appliance active times
+        num_cal_active = int(active_frac * self.num_cal)
+        i = 0
+        active = 0
+        inactive = 0
+        while True:
+            if i > samples_per_batch: # out of samples
+                self.logger.log(f'Out of cal samples, act={active}, inact={inactive}.',
+                        level='warning')
+                break
+            sample, _, status = self.sample_provider.__getitem__(i)
+            if sample.size == 0 or status.size == 0:
+                raise RuntimeError(f'Missing representative data at i={i}.',)
+            status = bool(status.item())
+            i+=1
+            if active < num_cal_active:
+                if status:
+                    active+=1
+                    yield [sample,] # generate samples from active times...
+                continue
+            if active + inactive < self.num_cal:
+                if not status:
+                    inactive+=1
+                    yield [sample,] # ... then generate samples from inactive times
+            else:
+                break
+
+    def _get_suspected_layers(
+            self, layer_stats:pd.DataFrame, high_quant_error:float=0.7
+        ) -> list:
+        """Generate a list of suspected layers given model debug results."""
+        # The RMSE / scale is close to 1 / sqrt(12) (~ 0.289) when quantized
+        # distribution is similar to the original float distribution, indicating
+        # a well quantized model. The larger the value is, it's more likely for
+        # the layer not being quantized well. These layers can remain in float to
+        # generate a selectively quantized model that increases accuracy at the
+        # expense of inference performance. See:
+        #  https://www.tensorflow.org/lite/performance/quantization_debugger
+        suspected_layers = list(
+            layer_stats[layer_stats['rmse/scale'] > high_quant_error]['tensor_name'])
+        # Keep layers with range greater than 255 (8-bits) in float as well.
+        #suspected_layers.extend(
+            #list(layer_stats[layer_stats['range'] > 255.0]['tensor_name']))
+        # Let the first 5 layers remain in float as well.
+        #suspected_layers.extend(list(layer_stats[:5]['tensor_name']))
+        return suspected_layers
+
+    def convert(self):
+        """Quantize model.
+
+        Returns:
+            Quantized model in tflite format.
+        """
+        return self.converter.convert()
+
+    def debug(
+            self,
+            save_path:str,
+            debug_file:str='debug_results.csv',
+            debug_plot:str='debug_results_plot.png'
+        ):
+        """Quantize model and check how well it was quantized.
+
+        Works only for full INT8 quantization.
+
+        Args:
+            save_path: Path to save the debugger results.
+            debug_file: Name of raw debugger results file.
+            debug_plot: Name of debugger result plot file.
+
+        Returns:
+            Quantized model in tflite format.
+
+        Raises:
+            ValueError: Full INT8 quantization mode not specified.
+        """
+        self.logger.log('Debugging model...')
+
+        if self.quant_mode in ['w8', 'w8_a16']:
+            raise ValueError('Model debug only works for full INT8 quant.')
+
         debugger = tf.lite.experimental.QuantizationDebugger(
-            converter=converter,
-            debug_dataset=rep_gen)
-
+            converter=self.converter,
+            debug_dataset=self._rep_gen
+        )
         debugger.run()
 
-        debug_results_file = os.path.join(debug_results_path, 'debug_results.csv')
-
+        debug_results_file = os.path.join(save_path, debug_file)
         with open(debug_results_file, mode='w', encoding='utf-8') as f:
             debugger.layer_statistics_dump(f)
 
         pd.set_option('display.max_rows', None)
         layer_stats = pd.read_csv(debug_results_file)
-        log.log(layer_stats)
+        self.logger.log(layer_stats)
 
         layer_stats['range'] = 255.0 * layer_stats['scale']
         layer_stats['rmse/scale'] = layer_stats.apply(
             lambda row: np.sqrt(row['mean_squared_error']) / row['scale'], axis=1)
-        log.log(layer_stats[['op_name', 'range', 'rmse/scale']])
+        self.logger.log(layer_stats[['op_name', 'range', 'rmse/scale']])
 
         plt.figure(figsize=(15, 5))
         ax1 = plt.subplot(121)
@@ -139,42 +258,45 @@ def convert(
         ax2 = plt.subplot(122)
         ax2.bar(np.arange(len(layer_stats)), layer_stats['rmse/scale'])
         ax2.set_ylabel('rmse/scale')
-        debug_results_plot = os.path.join(debug_results_path, 'debug_results_plot.png')
-        log.log(f'Saving debug results plot to {debug_results_plot}.')
+        debug_results_plot = os.path.join(save_path, debug_plot)
+        self.logger.log(f'Saving debug results plot to {debug_results_plot}.')
         plt.savefig(fname=debug_results_plot)
 
-        # The RMSE / scale is close to 1 / sqrt(12) (~ 0.289) when quantized
-        # distribution is similar to the original float distribution, indicating
-        # a well quantized model. The larger the value is, it's more likely for
-        # the layer not being quantized well. These layers can remain in float to
-        # generate a selectively quantized model that increases accuracy at the
-        # expense of inference performance. See:
-        #  https://www.tensorflow.org/lite/performance/quantization_debugger
-        high_quant_error = 0.7 # RMSE / scale quantization metric threshold.
-        suspected_layers = list(
-            layer_stats[layer_stats['rmse/scale'] > high_quant_error]['tensor_name'])
-        # Keep layers with range greater than 255 (8-bits) in float as well.
-        #suspected_layers.extend(
-            #list(layer_stats[layer_stats['range'] > 255.0]['tensor_name']))
-        # Let the first 5 layers remain in float as well.
-        #suspected_layers.extend(list(layer_stats[:5]['tensor_name']))
-        log.log(f'Suspected layers: {suspected_layers}')
+        suspected_layers = self._get_suspected_layers(layer_stats)
+        self.logger.log(f'Suspected layers: {suspected_layers}')
 
-        if fix_model:
-            log.log('Restoring suspected quantized layers to float.')
-            debug_options = tf.lite.experimental.QuantizationDebugOptions(
-                denylisted_nodes=suspected_layers)
-                #denylisted_ops=['MUL','MEAN','RSQRT','SUB','ADD'])
-            debugger = tf.lite.experimental.QuantizationDebugger(
-                converter=converter,
-                debug_dataset=rep_gen,
-                debug_options=debug_options)
+        return debugger.get_nondebug_quantized_model()
 
-            selective_quantized_model = debugger.get_nondebug_quantized_model()
+    def fix(
+            self,
+            results_path:str,
+            debug_file:str='debug_results.csv',
+            deny_ops:list=None
+        ):
+        """Quantize model but keep troublesome layers and ops in float.
 
-            return selective_quantized_model
+        Args:
+            results_path: Path to debugger results.
+            debug_file: Name of raw debugger results file.
+            deny_ops: List of operators to keep in float.
 
-    return quantized_model
+        Returns:
+            Quantized model in tflite format.
+        """
+        self.logger.log('Fixing model...')
+        debug_results_file = os.path.join(results_path, debug_file)
+        layer_stats = pd.read_csv(debug_results_file)
+        suspected_layers = self._get_suspected_layers(layer_stats)
+        debug_options = tf.lite.experimental.QuantizationDebugOptions(
+            denylisted_nodes=suspected_layers,
+            denylisted_ops=deny_ops
+        )
+        debugger = tf.lite.experimental.QuantizationDebugger(
+            converter=self.converter,
+            debug_dataset=self._rep_gen,
+            debug_options=debug_options
+        )
+        return debugger.get_nondebug_quantized_model()
 
 def change_model_batch_size(input_model, batch_size=1):
     """Change a model's batch size."""
@@ -198,73 +320,6 @@ def change_model_batch_size(input_model, batch_size=1):
     new_model.set_weights(input_model.get_weights())
 
     return new_model
-
-def representative_dataset_gen(sample_provider, num_cal, log) -> np.float32:
-    """Yields samples from representative dataset.
-
-    This is a generator function that provides a small dataset to calibrate or
-    estimate the range, i.e, (min, max) of all floating-point arrays in the model.
-
-    Since dataset is very imbalanced must ensure enough samples are used to generate a
-    representative set. 96 hours (4 days) of samples is a good starting point as that
-    period should be long enough to capture infrequently used appliances.
-
-    Args:
-        sample_provider: Object that provides samples for calibration.
-        num_cal: Number of calibration samples.
-        log: Logger object.
-
-    Yields:
-        A representative model input sample.
-    """
-
-    # Get number of samples per batch in provider. Since batch should always be
-    # set to 1 for inference, this will simply return the total number of samples.
-    samples_per_batch = sample_provider.__len__()
-
-    if num_cal > samples_per_batch:
-        raise ValueError('Not enough representative samples.')
-
-    # Generate 'num_cal' samples at random locations in dataset.
-    #indices = rng.choice(samples_per_batch, size=num_cal)
-    #for i in indices:
-        #sample, _, _ = sample_provider.__getitem__(i)
-        #yield [sample,]
-
-    # Generate 'num_cal' samples from provider.
-    # Given the dataset is unbalanced, this logic ensures that sufficient
-    # representative samples from active appliances periods are yielded.
-    active_frac = 0.5 # fraction of cal samples during appliance active times
-    num_cal_active = int(active_frac * num_cal)
-    i = 0
-    active = 0
-    inactive = 0
-    while True:
-        if i > samples_per_batch: # out of samples
-            log.log(f'Out of cal samples, act={active}, inact={inactive}.',
-                       level='warning')
-            break
-
-        sample, _, status = sample_provider.__getitem__(i)
-
-        if sample.size == 0 or status.size == 0:
-            raise RuntimeError(f'Missing representative data at i={i}.',)
-
-        status = bool(status.item())
-        i+=1
-
-        if active < num_cal_active:
-            if status:
-                active+=1
-                yield [sample,] # generate samples from active times...
-            continue
-
-        if active + inactive < num_cal:
-            if not status:
-                inactive+=1
-                yield [sample,] # ... then generate samples from inactive times
-        else:
-            break
 
 def evaluate_tflite(num_eval, appliance, tflite_model, sample_provider, log):
     """Evaluate a converted tflite model"""
@@ -479,13 +534,14 @@ if __name__ == '__main__':
 
     # Convert model to tflite and quantize.
     logger.log(f'Converting model to tflite using {args.quant_mode} quantization.')
-    tflite_model_quant = convert(
-        keras_model=model,
-        sample_provider=provider,
-        quant_mode=args.quant_mode,
-        debug_results_path=os.path.join(args.save_dir, appliance_name),
-        log=logger
-    )
+    convert_model = ConvertModel(model, provider, NUM_CAL, logger, args.quant_mode)
+    debug_results_path = os.path.join(args.save_dir, appliance_name)
+    if DEBUG_MODEL:
+        tflite_model_quant = convert_model.debug(debug_results_path)
+    if FIX_MODEL:
+        tflite_model_quant = convert_model.fix(debug_results_path)
+    else:
+        tflite_model_quant = convert_model.convert()
 
     # Save converted model.
     filepath = os.path.join(

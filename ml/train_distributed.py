@@ -43,7 +43,11 @@ LR_BY_BATCH_SIZE = {
     512: BASE_LR / tf.sqrt(2.0),
     1024: BASE_LR,
     2048: BASE_LR * tf.sqrt(2.0),
-    4096: BASE_LR * tf.sqrt(4.0)}
+    4096: BASE_LR * tf.sqrt(4.0)
+}
+
+# Number of epochs to wait for validation loss to improve before stopping training.
+PATIENCE = 6
 
 def smooth_curve(points, factor=0.8):
     """Smooth a series of points given a smoothing factor."""
@@ -189,32 +193,40 @@ class TransformerCustomSchedule(tf.keras.optimizers.schedules.LearningRateSchedu
 
 if __name__ == '__main__':
     args = get_arguments()
+
+    # The appliance to train on.
     appliance_name = args.appliance_name
-    logger = Logger(os.path.join(
-        args.save_dir,
-        appliance_name,
-        f'{appliance_name}_train_{args.model_arch}.log')
+
+    logger = Logger(
+        log_file_name=os.path.join(
+            args.save_dir,
+            appliance_name,
+            f'{appliance_name}_train_{args.model_arch}.log'
+        ),
+        append=args.resume_training # append rest of training to end of existing log
+    )
+
+    logger.log(
+        '*** Resuming training from last checkpoint ***' if args.resume_training
+        else '*** Training model from scratch ***'
     )
     logger.log(f'Machine name: {socket.gethostname()}')
     logger.log('Arguments: ')
     logger.log(args)
+    logger.log(f'Appliance name: {appliance_name}')
 
     model_arch = args.model_arch
     if model_arch not in dir(define_models):
         raise ValueError(f'Unknown model architecture: {model_arch}!')
-    else:
-        logger.log(f'Using model architecture: {model_arch}.')
 
-    # The appliance to train on.
-    appliance_name = args.appliance_name
-    logger.log(f'Appliance name: {appliance_name}')
+    logger.log(f'Using model architecture: {model_arch}.')
 
     window_length = common.params_appliance[appliance_name]['window_length']
     logger.log(f'Window length: {window_length}')
 
     # Path for training data.
     training_path = os.path.join(
-        args.datadir,appliance_name,f'{appliance_name}_training_.csv'
+        args.datadir, appliance_name, f'{appliance_name}_training_.csv'
     )
     logger.log(f'Training dataset: {training_path}')
 
@@ -235,10 +247,8 @@ if __name__ == '__main__':
     # Load datasets.
     train_dataset = common.load_dataset(training_path, args.crop_train_dataset)
     val_dataset = common.load_dataset(validation_path, args.crop_val_dataset)
-    NUM_TRAIN_SAMPLES = train_dataset[0].size
-    logger.log(f'There are {NUM_TRAIN_SAMPLES/10**6:.3f}M training samples.')
-    NUM_VAL_SAMPLES = val_dataset[0].size
-    logger.log(f'There are {NUM_VAL_SAMPLES/10**6:.3f}M validation samples.')
+    logger.log(f'There are {train_dataset[0].size/10**6:.3f}M training samples.')
+    logger.log(f'There are {val_dataset[0].size/10**6:.3f}M validation samples.')
 
     batch_size = args.batchsize
     logger.log(f'Batch size: {batch_size}')
@@ -264,7 +274,8 @@ if __name__ == '__main__':
         dataset=val_dataset,
         batch_size=global_batch_size,
         window_length=window_length,
-        shuffle=False)
+        shuffle=False
+    )
 
     # Convert Keras Sequence datasets into tf.data.Datasets.
     train_data_iter = lambda: (s for s in training_provider)
@@ -306,10 +317,13 @@ if __name__ == '__main__':
     logger.log(f'L1 loss multiplier: {c0}')
 
     with strategy.scope():
+        ############################
+        ### Start strategy scope ###
+        ############################
+
         if model_arch == 'transformer':
-            MODEL_DEPTH = 256
-            model = define_models.transformer(window_length, d_model=MODEL_DEPTH)
-            #lr_schedule = TransformerCustomSchedule(d_model=model_depth)
+            model = define_models.transformer(window_length, d_model=256)
+            #lr_schedule = TransformerCustomSchedule(d_model=256)
             #lr_schedule = tf.keras.optimizers.schedules.PiecewiseConstantDecay(
                 #boundaries=[100000, 200000],
                 #values=[5e-04, 1e-04, .5e-04])
@@ -326,7 +340,7 @@ if __name__ == '__main__':
         else:
             logger.log('Model architecture not found.')
             raise SystemExit(1)
-        
+
         # Define loss objects.
         mse_loss_obj = tf.keras.losses.MeanSquaredError(
             reduction=tf.keras.losses.Reduction.NONE
@@ -338,8 +352,34 @@ if __name__ == '__main__':
             reduction=tf.keras.losses.Reduction.NONE
         )
 
+        # Define metrics.
+        test_loss = tf.keras.metrics.Mean(name='test_loss')
+        test_mae = tf.keras.metrics.MeanAbsoluteError(name='test_mae')
+        test_mse = tf.keras.metrics.MeanSquaredError(name='test_mse')
+        mae = tf.keras.metrics.MeanAbsoluteError(name='train_mae')
+        mse = tf.keras.metrics.MeanSquaredError(name='train_mse')
+
+        optimizer = tf.keras.optimizers.Adam(
+            learning_rate=lr_schedule,
+            beta_1=0.9,
+            beta_2=0.999,
+            epsilon=1e-08
+        )
+
+        checkpoint = tf.train.Checkpoint(
+            optimizer=optimizer,
+            model=model,
+            best_test_loss=tf.Variable(0.0) # MirroredVariable
+        )
+
+        checkpoint_manager = tf.train.CheckpointManager(
+            checkpoint,
+            directory=checkpoint_filepath,
+            max_to_keep=2
+        )
+
         def compute_train_loss(y, y_status, y_pred, y_pred_status, model_losses):
-            """Calculate per-sample test loss on a single replica for a batch.
+            """Calculate per-sample train loss on a single replica for a batch.
 
             Returns a scalar loss value scaled by the global batch size.
             """
@@ -347,7 +387,8 @@ if __name__ == '__main__':
             # Losses on each replica are calculated per batch so a reduce sum is
             # used here which is then scaled by the global batch size.
             mse_loss = tf.reduce_sum(
-                mse_loss_obj(y, y_pred)) * (1. / global_batch_size)
+                mse_loss_obj(y, y_pred)
+            ) * (1. / global_batch_size)
             bce_loss = tf.reduce_sum(
                 bce_loss_obj(y_status, y_pred_status)
             ) * (1. / global_batch_size)
@@ -376,16 +417,14 @@ if __name__ == '__main__':
         def compute_test_loss(y, y_status, y_pred, y_pred_status):
             """Calculate per-sample test loss on a single replica for a batch.
 
-            Returns a scalar loss value scaled by the global batch size. This is
-            identical to compute_test_loss except model losses are ignored.
-
-            TODO: combine into one loss function with compute_test_loss.
+            Returns a scalar loss value scaled by the global batch size.
             """
 
             # Losses on each replica are calculated per batch so a reduce sum is
             # used here which is then scaled by the global batch size.
             mse_loss = tf.reduce_sum(
-                mse_loss_obj(y, y_pred)) * (1. / global_batch_size)
+                mse_loss_obj(y, y_pred)
+            ) * (1. / global_batch_size)
             bce_loss = tf.reduce_sum(
                 bce_loss_obj(y_status, y_pred_status)
             ) * (1. / global_batch_size)
@@ -401,37 +440,13 @@ if __name__ == '__main__':
                 mask_size = tf.math.count_nonzero(mask, dtype=tf.float32)
                 scale_factor = 1. / (mask_size * (1. * num_replicas))
                 mae_loss = c0 * tf.reduce_sum(mae_loss_obj(y, y_pred)) * scale_factor
-                loss = mse_loss + bce_loss + mae_loss
-            else:
-                loss = mse_loss + bce_loss
+                return mse_loss + bce_loss + mae_loss
 
-            return loss
+            return mse_loss + bce_loss
 
-        # Define metrics.
-        test_loss = tf.keras.metrics.Mean(name='test_loss')
-        test_mae = tf.keras.metrics.MeanAbsoluteError(name='test_mae')
-        test_mse = tf.keras.metrics.MeanSquaredError(name='test_mse')
-        mae = tf.keras.metrics.MeanAbsoluteError(name='train_mae')
-        mse = tf.keras.metrics.MeanSquaredError(name='train_mse')
-
-        optimizer = tf.keras.optimizers.Adam(
-            learning_rate=lr_schedule,
-            beta_1=0.9,
-            beta_2=0.999,
-            epsilon=1e-08
-        )
-
-        checkpoint = tf.train.Checkpoint(
-            optimizer=optimizer,
-            model=model,
-            best_test_loss=tf.Variable(0.0) # MirroredVariable
-        )
-
-        checkpoint_manager = tf.train.CheckpointManager(
-            checkpoint,
-            directory=checkpoint_filepath,
-            max_to_keep=3
-        )
+        ##########################
+        ### End strategy scope ###
+        ##########################
 
     # Resume training from last checkpoint or train from scratch.
     # The best test loss is tracked across checkpoints because it is used to
@@ -440,17 +455,18 @@ if __name__ == '__main__':
     if args.resume_training:
         if checkpoint_manager.latest_checkpoint is None:
             raise FileNotFoundError('Resume training specified but no checkpoints found.')
+        # Not using assert_consumed() method in restore,
+        # see https://github.com/tensorflow/tensorflow/issues/52346
         checkpoint.restore(checkpoint_manager.latest_checkpoint)
         # best_test_loss is a MirroredVariable that is identical across replicas, so
         # mean reduce it and convert to float for downstream processing.
         best_test_loss = strategy.reduce(
             'MEAN', checkpoint.best_test_loss, axis=None
         ).numpy()
-        logger.log(f'Restored checkpoint {checkpoint.save_counter.numpy()}.')
-        logger.log(f'Resuming training with best_test_loss {best_test_loss}.')
+        logger.log(f'Restored checkpoint: {checkpoint.save_counter.numpy()}')
+        logger.log(f'Resuming training with best_test_loss: {best_test_loss:.5g}')
     else:
         best_test_loss = float('inf')
-        logger.log('Training model from scratch.')
 
     def train_step(data):
         """Runs forward and backward passes on a batch."""
@@ -550,7 +566,8 @@ if __name__ == '__main__':
         steps = 0
         pbar = tf.keras.utils.Progbar(
             target=training_provider.__len__(), # number of batches
-            stateful_metrics=['mse', 'mae'])
+            stateful_metrics=['mse', 'mae']
+        )
         for d in train_dist_dataset: # iterate over batches
             total_loss += distributed_train_step(d)
             steps += 1 # each step is a batch
@@ -576,16 +593,16 @@ if __name__ == '__main__':
         test_loss = total_loss / steps
 
         logger.log(
-            f'epoch: {epoch + 1} loss: {train_loss:2.4f} '
-            f'mse: {mse.result():2.4f} mae: {mae.result():2.4f} '
-            f'val loss: {test_loss:2.4f} '
-            f'val mse: {test_mse.result():2.4f} val mae: {test_mae.result():2.4f}'
+            f'epoch: {epoch + 1} loss: {train_loss:.4g} '
+            f'mse: {mse.result():.4g} mae: {mae.result():.4g} '
+            f'val loss: {test_loss:.4g} '
+            f'val mse: {test_mse.result():.4g} val mae: {test_mae.result():.4g}'
         )
 
         if test_loss < best_test_loss:
             logger.log(
-                f'Current val loss of {test_loss:2.4f} < '
-                f'than val loss of {best_test_loss:2.4f}, '
+                f'Current val loss of {test_loss:.4g} < '
+                f'than val loss of {best_test_loss:.4g}, '
                 f'saving model to {savemodel_filepath}.'
             )
             model.save(savemodel_filepath)
@@ -609,14 +626,15 @@ if __name__ == '__main__':
         mse.reset_states()
         mae.reset_states()
 
-        PATIENCE = 6
         if wait_for_better_loss > PATIENCE:
             logger.log('Early termination of training.')
             break
 
     model.summary()
 
-    plot(history,
-         plot_name=f'train_{model_arch}',
-         plot_display=True,
-         appliance=appliance_name)
+    plot(
+        history,
+        plot_name=f'train_{model_arch}',
+        plot_display=True,
+        appliance=appliance_name
+    )

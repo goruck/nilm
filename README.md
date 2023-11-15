@@ -37,96 +37,19 @@ Past approaches have included factorial hidden Markov models (FHMM)¹ and variou
 
 Some of the disadvantages of of seq2seq leaning can mitigated by sequence-to-point learning (seq2point) for single-channel BSS⁴. You also use a sliding input signal window in this approach, however the network is trained to predict the output signal only at the midpoint of the window which makes the prediction problem easier on the network, leading to more accurate results.
 
-I selected the seq2point learning approach for my prototype system and my implementation was inspired and guided by work described by Michele D'Incecco, Stefano Squartini and Mingjun Zhong⁵. I developed a variety of seq2point learning models using Tensorflow as shown in the Python module [define_models.py](./ml/define_models.py) but focussed my work on the models `transformer` and `cnn` which are summarized below for an input sequence length of 599 samples.
+I selected the seq2point learning approach for my prototype system and my implementation was inspired and guided by work described by Michele D'Incecco, Stefano Squartini and Mingjun Zhong⁵. I developed a variety of seq2point learning models using Tensorflow as shown in the Python module [define_models.py](./ml/define_models.py) but focussed my work on the models `transformer` and `cnn`.
 
-```text
-Model: "cnn"
-_________________________________________________________________
- Layer (type)                Output Shape              Param #   
-=================================================================
- conv1d (Conv1D)             (None, 599, 16)           96        
-                                                                 
- max_pooling1d (MaxPooling1  (None, 300, 16)           0         
- D)                                                              
-                                                                 
- conv1d_1 (Conv1D)           (None, 300, 32)           1568      
-                                                                 
- max_pooling1d_1 (MaxPoolin  (None, 150, 32)           0         
- g1D)                                                            
-                                                                 
- conv1d_2 (Conv1D)           (None, 150, 64)           6208      
-                                                                 
- max_pooling1d_2 (MaxPoolin  (None, 75, 64)            0         
- g1D)                                                            
-                                                                 
- conv1d_3 (Conv1D)           (None, 75, 128)           24704     
-                                                                 
- max_pooling1d_3 (MaxPoolin  (None, 38, 128)           0         
- g1D)                                                            
-                                                                 
- conv1d_4 (Conv1D)           (None, 38, 256)           98560     
-                                                                 
- flatten (Flatten)           (None, 9728)              0         
-                                                                 
- dense (Dense)               (None, 1024)              9962496   
-                                                                 
- dense_1 (Dense)             (None, 512)               524800    
-                                                                 
- dense_2 (Dense)             (None, 1)                 513       
-                                                                 
-=================================================================
-Total params: 10618945 (40.51 MB)
-Trainable params: 10618945 (40.51 MB)
-Non-trainable params: 0 (0.00 Byte)
-```
+The cnn model is depicted below for an input sequence length of 599 samples.
 
-```text
-Model: "nilm_transformer_model"
-_________________________________________________________________
- Layer (type)                Output Shape              Param #   
-=================================================================
- conv1d (Conv1D)             multiple                  1536      
-                                                                 
- l2_norm_pooling1d (L2NormPo  multiple                 0         
- oling1D)                                                        
-                                                                 
- position_embedding (Positio  multiple                 153344    
- nEmbedding)                                                     
-                                                                 
- add_normalization (AddNorma  multiple                 512       
- lization)                                                       
-                                                                 
- dropout (Dropout)           multiple                  0         
-                                                                 
- transformer_block (Transfor  multiple                 658304    
- merBlock)                                                       
-                                                                 
- transformer_block_1 (Transf  multiple                 658304    
- ormerBlock)                                                     
-                                                                 
- relative_position_embedding  multiple                 38144     
-  (RelativePositionEmbedding                                     
- )                                                               
-                                                                 
- global_average_pooling1d (G  multiple                 0         
- lobalAveragePooling1D)                                          
-                                                                 
- dense_12 (Dense)            multiple                  263168    
-                                                                 
- dropout_5 (Dropout)         multiple                  0         
-                                                                 
- add_normalization_5 (AddNor  multiple                 512       
- malization)                                                     
-                                                                 
- dense_13 (Dense)            multiple                  1025      
-                                                                 
- activation (Activation)     multiple                  0         
-                                                                 
-=================================================================
-Total params: 1,774,849
-Trainable params: 1,774,849
-Non-trainable params: 0
-```
+![Alt text](./img/cnn_model_plot.png?raw=true "cnn model plot")
+
+The transformer model is depicted below for an input sequence length of 599 samples where the transformer block is a Bert-style encoder.
+
+![Alt text](./img/transformer_model_plot.png?raw=true "transformer model plot")
+
+The Bert-style encoder is depicted below.
+
+![Alt text](./img/bert-encoder.png?raw=true "bert-style encoder")
 
 ### Datasets
 
@@ -203,10 +126,10 @@ Typical performance metrics for the `transformer` model are shown in the table b
 |Appliance|$F1\uparrow$|$MCC\uparrow$|$ACC\uparrow$|$MAE$ $(W)$ $\downarrow$|$SAE\downarrow$|$NDE\downarrow$|$EpD_e$ ($\%$)$\downarrow$|
 | --- | --- | --- | --- | --- | --- | --- | --- |
 |kettle|0.8058|0.8044|0.9968|6.996|0.0590|0.3691|-5.864|
-|microwave|0.6752|0.6754|0.9946|7.385|0.2924|0.6513|-70.94|
-|fridge|0.7536|0.6354|0.8345|16.85|0.3336|0.6344|185.8|
-|dishwasher|0.6467|0.6846|0.9866|4.966|0.2870|0.4383|63.46|
-|washingmachine|0.8179|0.8139|0.9861|15.67|0.3239|0.1278|-98.58|
+|microwave|0.6849|0.6834|0.9954|5.553|0.0418|0.6710|4.184|
+|fridge|0.7817|0.6758|0.8508|13.51|0.1926|0.4704|19.26|
+|dishwasher|0.5785|0.6283|0.9782|5.787|0.3348|0.4247|33.47|
+|washingmachine|0.8435|0.8420|0.9886|14.19|0.2440|0.2440|-24.40|
 
 Average metrics across all appliances for both model architectures are compared in the table below.
 
@@ -215,7 +138,7 @@ Average metrics across all appliances for both model architectures are compared 
 |```cnn```|0.7161|0.7065|0.9643|9.852|0.1957|0.4528|19.57|
 |```transformer```|0.7528|0.7358|0.9599|10.32|0.2484|0.4174|84.29|
 
-You can see that the ```cnn``` and ```transformer``` models have similar performance even though the latter has about six times fewer parameters than the former. However, each ```transformer``` training step takes about seven times longer than ```cnn``` due to the `transformer` model's use of self-attention which has $O(n^4)$ complexity as compared to the `cnn` model's $O(n)$, where $n$ is the input sequence length. On the basis on training (and inference) efficiency, you can see that ```cnn``` is preferable with little loss in model performance.
+You can see that the ```cnn``` and ```transformer``` models have similar performance even though the latter has about six times fewer parameters than the former. However, each ```transformer``` training step takes about seven times longer than ```cnn``` due to the `transformer` model's use of self-attention which has $O(n^2)$ complexity as compared to the `cnn` model's $O(n)$, where $n$ is the input sequence length. On the basis on training (and inference) efficiency, you can see that ```cnn``` is preferable with little loss in model performance.
 
 You can find a variety of performance metrics in the literature to compare these results against, here are two examples. The middle column in the table<sup>5</sup> below shows another cnn-based model's performance. You can see the results of this project compare very favorably. 
 

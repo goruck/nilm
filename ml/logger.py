@@ -7,12 +7,14 @@ import logging
 import time
 
 class Logger():
-    def __init__(self, log_file_name=None) -> None:
+    def __init__(self, log_file_name:str=None, append:bool=False) -> None:
         if log_file_name is None:
             log_file_name = '{}.log'.format(time.strftime("%Y-%m-%d-%H:%M:%S").replace(':','-'))
-        with open(log_file_name, 'w'):
+
+        mode = 'a' if append else 'w'
+        with open(log_file_name, mode=mode, encoding='utf-8'):
             pass
-        
+
         self.rootLogger = logging.getLogger()
 
         logFormatter = logging.Formatter('%(asctime)s [%(levelname)-5.5s]  %(message)s')

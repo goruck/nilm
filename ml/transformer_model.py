@@ -24,7 +24,11 @@ import math
 import tensorflow as tf
 
 class GELU(tf.keras.layers.Layer):
-    """Applies the Gaussian error linear unit (GELU) activation function."""
+    """Applies the Gaussian error linear unit (GELU) activation function.
+    
+    This is an approximation to GELU per the following reference:
+    "Gaussian Error Linear Units (GELUs)" (https://arxiv.org/abs/1606.08415)
+    """
 
     def __init__(self, name='GELU', **kwargs):
         super().__init__(name=name, **kwargs)
@@ -353,8 +357,14 @@ class MultiHeadedAttention(tf.keras.layers.Layer):
 class PositionwiseFeedForward(tf.keras.layers.Layer):
     """PositionwiseFeedForward layer.
 
-    This is an implementation of position wise feed-forward as described in the
-    paper "Attention is all you Need" (Vaswani et al., 2017)."""
+    This follows the  implementation of position wise feed-forward as described in the
+    paper "Attention is all you Need" (Vaswani et al., 2017) except activation is gelu.
+
+    Using gelu instead of relu in the activation makes training converge faster and
+    generally increases accuracy but causes training and inference to be about 30% slower.
+    Since this model is meant to be deployed on the edge, its debatable if the increased
+    model accuracy is worth the inference impact, but will leave it to the user to decide.
+    """
 
     def __init__(self, d_model, d_ff, **kwargs):
         super().__init__(**kwargs)
@@ -363,12 +373,7 @@ class PositionwiseFeedForward(tf.keras.layers.Layer):
 
         self.fully_connected1 = tf.keras.layers.Dense(self.d_ff)
         self.fully_connected2 = tf.keras.layers.Dense(self.d_model)
-        # Using gelu instead of relu below makes training converge faster
-        # but each training and inference step is about 30% slower. Since
-        # this model is meant to be deployed on the edge, optimizing here
-        # for inference efficiency by using relu. Model accuracy is about
-        # the same using either relu or gelu.
-        self.activation = tf.keras.layers.Activation('relu')
+        self.activation = GELU() #tf.keras.layers.Activation('relu')
 
     def get_config(self):
         config = {
@@ -379,10 +384,8 @@ class PositionwiseFeedForward(tf.keras.layers.Layer):
         return dict(list(base_config.items()) + list(config.items()))
 
     def call(self, inputs):
-        # The input is passed into the two fully-connected layers,
-        # with ReLU activation in between.
         x_fc1 = self.fully_connected1(inputs)
-        return self.fully_connected2(self.activation((x_fc1)))
+        return self.fully_connected2(self.activation(x_fc1))
 
 
 class AddNormalization(tf.keras.layers.Layer):
@@ -739,11 +742,12 @@ class NILMTransformerModel(tf.keras.Model):
         self.decoder_hidden = 1024
         self.heads = 2
         self.n_layers = 2
-        self.pool_size = 2
+        self.l2_norm_pool_size = 2
 
         self.conv = tf.keras.layers.Conv1D(
-           filters=self.hidden, kernel_size=5, padding='same')
-        self.pool = L2NormPooling1D(pool_size=self.pool_size)
+           filters=self.hidden, kernel_size=5, padding='same'
+        )
+        self.l2_norm_pool = L2NormPooling1D(pool_size=self.l2_norm_pool_size)
         self.position = PositionEmbedding(max_length=self.original_len)
         self.add_norm1 = AddNormalization()
         self.dropout1 = tf.keras.layers.Dropout(rate=self.dropout_rate)
@@ -755,21 +759,21 @@ class NILMTransformerModel(tf.keras.Model):
         self.avg_pool = tf.keras.layers.GlobalAveragePooling1D()
         #self.max_pool = tf.keras.layers.GlobalMaxPooling1D()
         self.dense1 = tf.keras.layers.Dense(units=self.decoder_hidden, activation='relu')
-        self.dropout2 = tf.keras.layers.Dropout(rate=0.3)
-        self.dense2 = tf.keras.layers.Dense(units=self.decoder_hidden/2, activation='relu')
-        self.dropout3 = tf.keras.layers.Dropout(rate=0.3)
+        #self.dropout2 = tf.keras.layers.Dropout(rate=self.dropout_rate)
+        #self.dense2 = tf.keras.layers.Dense(units=self.decoder_hidden/2, activation='relu')
+        #self.dropout3 = tf.keras.layers.Dropout(rate=0.3)
         self.dense3 = tf.keras.layers.Dense(units=1)
         # If training with mixed-precision, ensure model output is float32.
         # This helps to avoids numerical instability.
         # See https://www.tensorflow.org/guide/mixed_precision#building_the_model
         self.output_activation = tf.keras.layers.Activation('linear', dtype=tf.float32)
 
-    def call(self, sequence:tf.Tensor, training:bool=None) -> tf.Tensor:
+    def call(self, sequence:tf.Tensor, training:bool) -> tf.Tensor:
         # Expected input sequence shape = (batch_size, original_len, 1)
 
         ### Encoder Layers ###
 
-        features = self.pool(self.conv(sequence))
+        features = self.l2_norm_pool(self.conv(sequence))
         # Expected output shape = (batch_size, latent_len, hidden)
         positional_embeddings = self.position(features, training=training)
         # Expected output shape = (batch_size, latent_len, hidden)
@@ -795,11 +799,11 @@ class NILMTransformerModel(tf.keras.Model):
         # Expected output shape = (batch_size, hidden)
         x = self.dense1(x)
         # Expected output shape = (batch_size, decoder_hidden)
-        x = self.dropout2(x, training=training)
+        #x = self.dropout2(x, training=training)
         # Expected output size = (batch_size, decoder_hidden)
-        x = self.dense2(x)
+        #x = self.dense2(x)
         # Expected output shape = (batch_size, decoder_hidden/2)
-        x = self.dropout3(x, training=training)
+        #x = self.dropout3(x, training=training)
         # Expected output size = (batch_size, decoder_hidden/2)
         # Apply sequence-to-point transformation.
         x = self.dense3(x)

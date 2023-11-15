@@ -8,8 +8,9 @@ Copyright (c) 2022~2023 Lindo St. Angel
 
 import tensorflow as tf
 
-from transformer_model import NILMTransformerModel, NILMTransformerModelFit
 from transformer_model import (
+    NILMTransformerModel,
+    NILMTransformerModelFit,
     L2NormPooling1D,
     PositionEmbedding,
     AddNormalization,
@@ -33,8 +34,6 @@ def transformer_fun(window_length=599, dropout_rate=0.1, d_model=256) -> tf.kera
     x = AddNormalization()(x, r)
     x = tf.keras.layers.GlobalAveragePooling1D()(x)
     x = tf.keras.layers.Dense(units=1024, activation='relu')(x)
-    x = tf.keras.layers.Dense(units=512, activation='relu')(x)
-    x = tf.keras.layers.Dropout(rate=dropout_rate)(x)
     out = tf.keras.layers.Dense(units=1, activation='linear')(x)
     return tf.keras.Model(inp, out)
 
@@ -42,13 +41,15 @@ def transformer(
         window_length=599,
         drop_out=0.1,
         d_model=256,
-        **kwargs) -> tf.keras.Model:
+        **kwargs
+    ) -> tf.keras.Model:
     """Specifies a transformer-based model to be trained in a loop."""
     return NILMTransformerModel(
         window_length=window_length,
         drop_out=drop_out,
         hidden=d_model,
-        **kwargs)
+        **kwargs
+    )
 
 def transformer_fit(
         window_length=599,
@@ -56,7 +57,8 @@ def transformer_fit(
         threshold=0.5,
         d_model=256,
         c0=1.0,
-        **kwargs) -> tf.keras.Model:
+        **kwargs
+    ) -> tf.keras.Model:
     """Specifies a transformer-based model to be trained by .fit()."""
     return NILMTransformerModelFit(
         window_length=window_length,
@@ -64,7 +66,8 @@ def transformer_fit(
         threshold=threshold,
         hidden=d_model,
         c0=c0,
-        **kwargs)
+        **kwargs
+    )
 
 def cnn() -> tf.keras.Sequential:
     """Specifies a 1D seq2point cnn model using the Keras Sequential API.
