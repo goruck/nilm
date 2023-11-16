@@ -47,9 +47,9 @@ The transformer model is depicted below for an input sequence length of 599 samp
 
 ![Alt text](./img/transformer_model_plot.png?raw=true "transformer model plot")
 
-The Bert-style encoder is depicted below.
+The Bert-style transformer encoder is depicted below.
 
-![Alt text](./img/bert-encoder.png?raw=true "bert-style encoder")
+![Alt text](./img/transformer_block_plot.png?raw=true "bert-style encoder")
 
 ### Datasets
 
