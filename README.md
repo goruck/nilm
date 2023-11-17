@@ -39,11 +39,11 @@ Some of the disadvantages of of seq2seq leaning can mitigated by sequence-to-poi
 
 I selected the seq2point learning approach for my prototype system and my implementation was inspired and guided by work described by Michele D'Incecco, Stefano Squartini and Mingjun Zhong⁵. I developed a variety of seq2point learning models using Tensorflow as shown in the Python module [define_models.py](./ml/define_models.py) but focussed my work on the models `transformer` and `cnn`.
 
-The cnn model is depicted below for an input sequence length of 599 samples.
+The cnn model is depicted below for an input sequence length of 599 samples. The model generally follows traditional cnn concepts from vision use cases where several convolutional layers are used to extract features from the input power sequence at gradually finer details as the input traverses through the network. These features are the on-off patterns of the appliances as well as their power consumption levels. Max pooling is used to manage the complexity of the model after each convolutional layer. Finally, dense layers are used to output the final single point power consumption estimate for the window which is de-normalized before using in downstream processing. There are about 40 million parameters in this model using the default values.
 
 ![Alt text](./img/cnn_model_plot.png?raw=true "cnn model plot")
 
-The transformer model is depicted below for an input sequence length of 599 samples where the transformer block is a Bert-style encoder.
+The transformer model is depicted below for an input sequence length of 599 samples where the transformer block is a Bert-style encoder. The input sequence is first passed through a convolutional layer to expand it into a latent space which is analogous to the feature extraction in the cnn model case. These features are pooled and L2 normalized to reduce model complexity and to mitigate the effects of outliers. Next, the sequence features are processed by a Bert-style transformer lineup which includes positional embedding and transformer blocks that applies importance weighting. The output of the encoder is decoded by several layers which are comprised of relative position embedding which applies symmetric weights around the mid-point of the signal, average pooling which reduces the sequence to a single value per feature and then finally dense layers that output the final single point estimated power value for the window which again is de-normalized for downstream processing. There are about seven million parameters in this model using the default values.
 
 ![Alt text](./img/transformer_model_plot.png?raw=true "transformer model plot")
 
@@ -63,7 +63,7 @@ Note that these datasets are typically very imbalanced because the majority of t
 
 ### Model Training
 
-I used TensorFlow to train and test the model. All code associated with this section can be found on the Machine Learning section of the project’s GitHub, NILM⁹. The seq2point learning models for the appliances were trained individually on z-score standardized or normalized to [0, appliance maximum on power] REFIT data.
+I used TensorFlow to train and test the model. All code associated with this section can be found on the Machine Learning section of the project’s GitHub, NILM⁹. The seq2point learning models for the appliances were trained individually on z-score standardized or normalized to $[0, P_m]$, where $P_m$ is the maximum power consumption of an appliance in its active state. REFIT data.
 
 I used the following metrics to evaluate the model’s performance. You can view the code that calculates these metrics [here](./ml/nilm_metric.py).
 
@@ -109,11 +109,9 @@ $$L(x, s) = (\hat{x} - x)^2 -(\hat{s}\log{s}+(1-\hat{s})\log{(1-s)}) + (\lambda|
 
 Where $x, \hat{x}\in[0, 1]$ are the ground truth and predicted power usage single point values divided by the maximum power limit per appliance and $s, \hat{s}\in\set{0, 1}$ are the appliance state label and prediction, and $O$ is the set of predictions when either the status label is on or the prediction is incorrect. The hyperparameter $\lambda$ tunes the absolute loss term on an a per-appliance basis. 
 
-~~The training program monitors losses for both training and validation data with early stopping to reduce over-fitting. The datasets contain a large number of samples (many 10’s of millions) with repeating patterns; it was not uncommon that over-fitting occurred after only a single epoch for some appliances. To mitigate against this, I used a subset of the training data, typically between 5 and 10 million samples.~~
-
 You can find the training results for each appliance in the [models](./ml/models/) folder. Typical performance metrics for the `cnn` model are shown in the table below.
 
-|Appliance|$F1\uparrow$|$MCC\uparrow$|$ACC\uparrow$|$MAE$ $(W)$ $\downarrow$|$SAE\downarrow$|$NDE\downarrow$|$EpD_e$ ($\%$)$\downarrow$|
+|Appliance|$F1\uparrow$|$MCC\uparrow$|$ACC\uparrow$|$MAE$ $(W)$ $\downarrow$|$SAE\downarrow$|$NDE\downarrow$|$EpD_e$ $(\%)$ $\downarrow$|
 | --- | --- | --- | --- | --- | --- | --- | --- |
 |kettle|0.7199|0.7298|0.9960|8.723|0.3091|0.4705|-30.91|
 |microwave|0.6328|0.6303|0.9950|6.070|0.2102|0.6876|-21.02|
@@ -123,12 +121,12 @@ You can find the training results for each appliance in the [models](./ml/models
 
 Typical performance metrics for the `transformer` model are shown in the table below.
 
-|Appliance|$F1\uparrow$|$MCC\uparrow$|$ACC\uparrow$|$MAE$ $(W)$ $\downarrow$|$SAE\downarrow$|$NDE\downarrow$|$EpD_e$ ($\%$)$\downarrow$|
+|Appliance|$F1\uparrow$|$MCC\uparrow$|$ACC\uparrow$|$MAE$ $(W)$ $\downarrow$|$SAE\downarrow$|$NDE\downarrow$|$EpD_e$ $(\%)$ $\downarrow$|
 | --- | --- | --- | --- | --- | --- | --- | --- |
-|kettle|0.8058|0.8044|0.9968|6.996|0.0590|0.3691|-5.864|
+|kettle|0.8206|0.8247|0.9966|7.478|0.2577|0.3848|25.77|
 |microwave|0.6849|0.6834|0.9954|5.553|0.0418|0.6710|4.184|
 |fridge|0.7817|0.6758|0.8508|13.51|0.1926|0.4704|19.26|
-|dishwasher|0.5785|0.6283|0.9782|5.787|0.3348|0.4247|33.47|
+|dishwasher|0.6914|0.7119|0.9873|5.373|0.0690|0.3906|-6.904|
 |washingmachine|0.8435|0.8420|0.9886|14.19|0.2440|0.2440|-24.40|
 
 Average metrics across all appliances for both model architectures are compared in the table below.
@@ -150,7 +148,9 @@ The table<sup>12</sup> below shows the results from two transformer-based models
 
 ### Model Quantization
 
-I quantized the model’s weights and activation functions from Float32 to INT8 using TensorFlow Lite to improve inference performance on edge hardware, including the Raspberry Pi and the Google Edge TPU. See [convert_keras_to_tflite.py](./ml/convert_keras_to_tflite.py) for the code that does this quantization which also uses [TFLite's quantization debugger](https://www.tensorflow.org/lite/performance/quantization_debugger) to check how well each layer in the model was quantized. The quantized inference results are shown in the tables below, where $R_{x86}$ is the inference rate on a 3.8 GHz x86 machine using eight tflite interpreter threads with XNNPACK and $R_{\pi}$ is the inference rate on a Raspberry Pi 4. You will observed a slight degradation in performance after quantization but this is acceptable for most use cases.
+I quantized the ```cnn``` model’s weights and activation functions from Float32 to INT8 using TensorFlow Lite to improve inference performance on edge hardware, including the Raspberry Pi and the Google Edge TPU. Only the weights for the ```transformer``` model were quantized to INT8, the activations needed to be kept in Float32 to maintain accptable accuracy. See [convert_keras_to_tflite.py](./ml/convert_keras_to_tflite.py) for the code that does this quantization which also uses [TFLite's quantization debugger](https://www.tensorflow.org/lite/performance/quantization_debugger) to check how well each layer in the model was quantized. The quantized inference results are shown in the tables below, where $R_{x86}$ is the inference rate on a 3.8 GHz x86 machine using eight tflite interpreter threads with XNNPACK and $R_{\pi}$ is the inference rate on a Raspberry Pi 4. You will observed a slight degradation in performance after quantization but this is acceptable for most use cases.
+
+The quantized results for the ```cnn``` model are shown in the table below.
 
 |Appliance|$F1\uparrow$|$MCC\uparrow$|$ACC\uparrow$|$MAE$ $(W)$ $\downarrow$|$SAE\downarrow$|$NDE\downarrow$|$EpD_e$ ($\%$)|$R_{x86}$ ($Hz$)|$R_{\pi}$ ($Hz$)|
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -160,23 +160,15 @@ I quantized the model’s weights and activation functions from Float32 to INT8 
 |dishwasher|0.6645|0.6775|0.9842|5.874|0.0167|0.3895|-1.668|5050|x|
 |washingmachine|0.8910|0.8872|0.9926|15.08|0.3796|0.3442|-37.96|5094|x|
 
+The quantized results for the ```transformer``` model are shown in the table below (TBD).
 
-~~A typical result is shown below, note that the floating point model was not fine-tuned using QAT nor pruned before INT8 conversion.~~
-
-```text
-### Fridge Float32 vs INT8 Model Performance ###
-
-Float32 tflite Model (Running on x86 w/XNNPACK):
-MAE 17.10(Watts)
-NDE 0.373
-SAE 0.283
-
-Inference Rate 701.0 HzINT8 tflite Model (running on Raspberry Pi 4):
-MAE: 12.75 (Watts)
-NDE 0.461
-SAE 0.120
-Inference Rate 163.5 Hz
-```
+|Appliance|$F1\uparrow$|$MCC\uparrow$|$ACC\uparrow$|$MAE$ $(W)$ $\downarrow$|$SAE\downarrow$|$NDE\downarrow$|$EpD_e$ ($\%$)|$R_{x86}$ ($Hz$)|$R_{\pi}$ ($Hz$)|
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+|kettle|0.6313|0.6510|0.9957|9.220|0.4034|0.5768|-40.34|5081|x|
+|microwave|0.6221|0.6283|0.9943|7.652|0.4811|0.6841|-48.11|5128|x|
+|fridge|0.5980|0.4354|0.7665|19.17|0.1101|0.7746|-10.88|5108|x|
+|dishwasher|0.6645|0.6775|0.9842|5.874|0.0167|0.3895|-1.668|5050|x|
+|washingmachine|0.8910|0.8872|0.9926|15.08|0.3796|0.3442|-37.96|5094|x|
 
 ## NILM Prototype System Components
 
@@ -242,154 +234,3 @@ A photograph of an early version of my prototype system is shown below.
 The schematic for the Analog Signal Conditioning circuitry is shown below.
 
 ![Alt text](./img/pan-ard-inf-v1.1.jpg?raw=true "Analog Signal Conditioning Schematic")
-
-### Model Training Results
-
-Typical model performance evaluated against the metrics described above are as follows.
-
-```text
-### Dishwasher ###
-2022–06–05 12:48:09,322 [INFO ] Appliance target is: dishwasher
-2022–06–05 12:48:09,322 [INFO ] File for test: dishwasher_test_H20.csv
-2022–06–05 12:48:09,322 [INFO ] Loading from: ./dataset_management/refit/dishwasher/dishwasher_test_H20.csv
-2022–06–05 12:48:10,010 [INFO ] There are 5.169M test samples.
-2022–06–05 12:48:10,015 [INFO ] Loading saved model from ./models/dishwasher/checkpoints.
-2022–06–05 12:48:35,045 [INFO ] aggregate_mean: 522
-2022–06–05 12:48:35,046 [INFO ] aggregate_std: 814
-2022–06–05 12:48:35,046 [INFO ] appliance_mean: 700
-2022–06–05 12:48:35,046 [INFO ] appliance_std: 1000
-2022–06–05 12:48:35,121 [INFO ] true positives=5168007.0
-2022–06–05 12:48:35,121 [INFO ] false negatives=0.0
-2022–06–05 12:48:35,121 [INFO ] recall=1.0
-2022–06–05 12:48:35,173 [INFO ] true positives=5168007.0
-2022–06–05 12:48:35,173 [INFO ] false positives=0.0
-2022–06–05 12:48:35,173 [INFO ] precision=1.0
-2022–06–05 12:48:35,173 [INFO ] F1:1.0
-2022–06–05 12:48:35,184 [INFO ] NDE:0.45971032977104187
-2022–06–05 12:48:35,657 [INFO ] 
-MAE: 10.477645874023438
- -std: 104.59112548828125
- -min: 0.0
- -max: 3588.0
- -q1: 0.0
- -median: 0.0
- -q2: 0.78582763671875
-2022–06–05 12:48:35,675 [INFO ] SAE: 0.1882956475019455
-2022–06–05 12:48:35,691 [INFO ] Energy per Day: 145.72999548734632
-
-### Microwave ###
-2022-06-05 18:14:05,471 [INFO ]  Appliance target is: microwave
-2022-06-05 18:14:05,471 [INFO ]  File for test: microwave_test_H4.csv
-2022-06-05 18:14:05,471 [INFO ]  Loading from: ./dataset_management/refit/microwave/microwave_test_H4.csv
-2022-06-05 18:14:06,476 [INFO ]  There are 6.761M test samples.
-2022-06-05 18:14:06,482 [INFO ]  Loading saved model from ./models/microwave/checkpoints.
-2022-06-05 18:14:38,385 [INFO ]  aggregate_mean: 522
-2022-06-05 18:14:38,385 [INFO ]  aggregate_std: 814
-2022-06-05 18:14:38,385 [INFO ]  appliance_mean: 500
-2022-06-05 18:14:38,385 [INFO ]  appliance_std: 800
-2022-06-05 18:14:38,478 [INFO ]  true positives=6759913.0
-2022-06-05 18:14:38,478 [INFO ]  false negatives=0.0
-2022-06-05 18:14:38,478 [INFO ]  recall=1.0
-2022-06-05 18:14:38,549 [INFO ]  true positives=6759913.0
-2022-06-05 18:14:38,549 [INFO ]  false positives=0.0
-2022-06-05 18:14:38,549 [INFO ]  precision=1.0
-2022-06-05 18:14:38,549 [INFO ]  F1:1.0
-2022-06-05 18:14:38,568 [INFO ]  NDE:0.6228251457214355
-2022-06-05 18:14:39,469 [INFO ]  
-MAE: 7.6666789054870605
-    -std: 73.37799835205078
-    -min: 0.0
-    -max: 3591.474365234375
-    -q1: 0.757080078125
-    -median: 1.178070068359375
-    -q2: 1.459686279296875
-2022-06-05 18:14:39,493 [INFO ]  SAE: 0.2528369128704071
-2022-06-05 18:14:39,512 [INFO ]  Energy per Day: 99.00535584592438
-
-### Fridge ###
-2022-06-06 05:14:39,830 [INFO ]  Appliance target is: fridge
-2022-06-06 05:14:39,830 [INFO ]  File for test: fridge_test_H15.csv
-2022-06-06 05:14:39,830 [INFO ]  Loading from: ./dataset_management/refit/fridge/fridge_test_H15.csv
-2022-06-06 05:14:40,671 [INFO ]  There are 6.226M test samples.
-2022-06-06 05:14:40,677 [INFO ]  Loading saved model from ./models/fridge/checkpoints.
-2022-06-06 05:15:11,539 [INFO ]  aggregate_mean: 522
-2022-06-06 05:15:11,539 [INFO ]  aggregate_std: 814
-2022-06-06 05:15:11,539 [INFO ]  appliance_mean: 200
-2022-06-06 05:15:11,539 [INFO ]  appliance_std: 400
-2022-06-06 05:15:11,649 [INFO ]  true positives=6225098.0
-2022-06-06 05:15:11,649 [INFO ]  false negatives=0.0
-2022-06-06 05:15:11,649 [INFO ]  recall=1.0
-2022-06-06 05:15:11,713 [INFO ]  true positives=6225098.0
-2022-06-06 05:15:11,713 [INFO ]  false positives=0.0
-2022-06-06 05:15:11,713 [INFO ]  precision=1.0
-2022-06-06 05:15:11,713 [INFO ]  F1:1.0
-2022-06-06 05:15:11,728 [INFO ]  NDE:0.390367716550827
-2022-06-06 05:15:12,732 [INFO ]  
-MAE: 18.173030853271484
-    -std: 22.19791030883789
-    -min: 0.0
-    -max: 2045.119873046875
-    -q1: 5.2667236328125
-    -median: 12.299388885498047
-    -q2: 24.688186645507812
-2022-06-06 05:15:12,754 [INFO ]  SAE: 0.3662513792514801
-2022-06-06 05:15:12,774 [INFO ]  Energy per Day: 219.63657335193759
-
-### Washing Machine ###
-2022-06-05 05:49:17,614 [INFO ]  Appliance target is: washingmachine
-2022-06-05 05:49:17,614 [INFO ]  File for test: washingmachine_test_H8.csv
-2022-06-05 05:49:17,614 [INFO ]  Loading from: ./dataset_management/refit/washingmachine/washingmachine_test_H8.csv
-2022-06-05 05:49:18,762 [INFO ]  There are 6.118M test samples.
-2022-06-05 05:49:18,767 [INFO ]  Loading saved model from ./models/washingmachine/checkpoints.
-2022-06-05 05:49:47,965 [INFO ]  aggregate_mean: 522
-2022-06-05 05:49:47,965 [INFO ]  aggregate_std: 814
-2022-06-05 05:49:47,965 [INFO ]  appliance_mean: 400
-2022-06-05 05:49:47,965 [INFO ]  appliance_std: 700
-2022-06-05 05:49:48,054 [INFO ]  true positives=6117871.0
-2022-06-05 05:49:48,055 [INFO ]  false negatives=0.0
-2022-06-05 05:49:48,055 [INFO ]  recall=1.0
-2022-06-05 05:49:48,115 [INFO ]  true positives=6117871.0
-2022-06-05 05:49:48,115 [INFO ]  false positives=0.0
-2022-06-05 05:49:48,115 [INFO ]  precision=1.0
-2022-06-05 05:49:48,115 [INFO ]  F1:1.0
-2022-06-05 05:49:48,128 [INFO ]  NDE:0.4052383601665497
-2022-06-05 05:49:48,835 [INFO ]  
-MAE: 20.846961975097656
-    -std: 155.17930603027344
-    -min: 0.0
-    -max: 3972.0
-    -q1: 3.0517578125e-05
-    -median: 0.25152587890625
-    -q2: 1.6888427734375
-2022-06-05 05:49:48,856 [INFO ]  SAE: 0.3226347267627716
-2022-06-05 05:49:48,876 [INFO ]  Energy per Day: 346.94591079354274
-
-### Kettle ###
-2022-05-25 15:19:15,366 [INFO ]  Appliance target is: kettle
-2022-05-25 15:19:15,366 [INFO ]  File for test: kettle_test_H2.csv
-2022-05-25 15:19:15,366 [INFO ]  Loading from: ./dataset_management/refit/kettle/kettle_test_H2.csv
-2022-05-25 15:19:16,109 [INFO ]  There are 5.734M test samples.
-2022-05-25 15:19:16,115 [INFO ]  Loading saved model from ./models/kettle/checkpoints.
-2022-05-25 15:19:44,459 [INFO ]  aggregate_mean: 522
-2022-05-25 15:19:44,459 [INFO ]  aggregate_std: 814
-2022-05-25 15:19:44,459 [INFO ]  appliance_mean: 700
-2022-05-25 15:19:44,459 [INFO ]  appliance_std: 1000
-2022-05-25 15:19:44,540 [INFO ]  true positives=5732928.0
-2022-05-25 15:19:44,540 [INFO ]  false negatives=0.0
-2022-05-25 15:19:44,540 [INFO ]  recall=1.0
-2022-05-25 15:19:44,597 [INFO ]  true positives=5732928.0
-2022-05-25 15:19:44,597 [INFO ]  false positives=0.0
-2022-05-25 15:19:44,597 [INFO ]  precision=1.0
-2022-05-25 15:19:44,597 [INFO ]  F1:1.0
-2022-05-25 15:19:44,610 [INFO ]  NDE:0.2578023374080658
-2022-05-25 15:19:45,204 [INFO ]  
-MAE: 18.681659698486328
-    -std: 125.82673645019531
-    -min: 0.0
-    -max: 3734.59228515625
-    -q1: 0.0
-    -median: 0.20867919921875
-    -q2: 1.63885498046875
-2022-05-25 15:19:45,224 [INFO ]  SAE: 0.2403179109096527
-2022-05-25 15:19:45,243 [INFO ]  Energy per Day: 155.25137268110353
-```
