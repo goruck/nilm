@@ -1,0 +1,7 @@
+* Dual ideal LMC6482 opamp ngspice model
+.subckt LMC6482 1out 1in- 1in+ vee 2in+ 2in- 2out vcc
+.include ideal_opamp.lib
+* in+ in- out v+ v-
+XU1A 1in+ 1in- 1out vcc vee opamp
+XU1B 2in+ 2in- 2out vcc vee opamp
+.ends

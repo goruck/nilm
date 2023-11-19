@@ -1,0 +1,6 @@
+* Dual LMC6482 opamp ngspice model
+.subckt LMC6482 1out 1in- 1in+ vee 2in+ 2in- 2out vcc
+.include LMC648x.LIB
+XU1A 1in+ 1in- vcc vee 1out LMC648x
+XU1B 2in+ 2in- vcc vee 2out LMC648x
+.ends

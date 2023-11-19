@@ -1,0 +1,9 @@
+* Quad CD4066 Analog Switch
+.subckt CD4066-quad aio aoi bio boi bctrl cctrl vss cio coi dio doi dctrl actrl vdd
+.include CD4066.LIB
+* Control In Out Vdd Vss
+XU1A actrl aio aoi vdd vss CD4066
+XU1B bctrl bio boi vdd vss CD4066
+XU1C cctrl cio coi vdd vss CD4066
+XU1D dctrl dio doi vdd vss CD4066
+.ends

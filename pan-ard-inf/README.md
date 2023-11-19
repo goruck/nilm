@@ -11,11 +11,11 @@ This subsystem was calibrated with an external power meter, yielding parameters 
 
 ## Schematic
 
-![Alt text](../img/pan-ard-inf-v1.1.jpg?raw=true "Analog Signal Conditioning Schematic")
+![Alt text](../img/pan-ard-inf-v1.2.png?raw=true "Analog Signal Conditioning Schematic")
 
-## Layout
+## PCB
 
-![Alt text](../img/pan-ard-inf-lo-v1.1.jpg?raw=true "Analog Signal Conditioning Schematic")
+![Alt text](../img/pan-ard-inf-lo-v1.1.png?raw=true "Analog Signal Conditioning Schematic")
 
 ## References
 

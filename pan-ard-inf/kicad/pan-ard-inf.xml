@@ -1,0 +1,1295 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<export version="E">
+  <design>
+    <source>/home/lindo/pcbs/nilm/pan-ard-inf/pan-ard-inf.kicad_sch</source>
+    <date>Wed 17 Aug 2022 05:05:03 PDT</date>
+    <tool>Eeschema 6.0.7-f9a2dced07~116~ubuntu20.04.1</tool>
+    <sheet number="1" name="/" tstamps="/">
+      <title_block>
+        <title>Panel to Aurduino Interface</title>
+        <company>Copyright 2022 Lindo St. Angel</company>
+        <rev>1.0</rev>
+        <date>2022-08-12</date>
+        <source>pan-ard-inf.kicad_sch</source>
+        <comment number="1" value="Resistors 1%, 1/4W unless otherwise noted"/>
+        <comment number="2" value="Polarized capacitors 16V unless otherwise noted"/>
+        <comment number="3" value=""/>
+        <comment number="4" value=""/>
+        <comment number="5" value=""/>
+        <comment number="6" value=""/>
+        <comment number="7" value=""/>
+        <comment number="8" value=""/>
+        <comment number="9" value=""/>
+      </title_block>
+    </sheet>
+  </design>
+  <components>
+    <comp ref="C1">
+      <value>10uF</value>
+      <footprint>Capacitor_Tantalum_SMD:CP_EIA-6032-20_AVX-F_Pad2.25x2.35mm_HandSolder</footprint>
+      <datasheet>https://www.jameco.com/Jameco/Products/ProdDS/135319.pdf</datasheet>
+      <libsource lib="Device" part="C_Polarized_US" description="Polarized capacitor, US symbol"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="pan-ard-inf.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>c58e5620-ec29-4724-9d52-67573fca6d6c</tstamps>
+    </comp>
+    <comp ref="C2">
+      <value>47uF</value>
+      <footprint>Capacitor_Tantalum_SMD:CP_EIA-6032-20_AVX-F_Pad2.25x2.35mm_HandSolder</footprint>
+      <libsource lib="Device" part="C_Polarized_US" description="Polarized capacitor, US symbol"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="pan-ard-inf.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>881883e4-5bfe-46f9-a1f5-3f700b280957</tstamps>
+    </comp>
+    <comp ref="C3">
+      <value>47uF</value>
+      <footprint>Capacitor_Tantalum_SMD:CP_EIA-6032-20_AVX-F_Pad2.25x2.35mm_HandSolder</footprint>
+      <libsource lib="Device" part="C_Polarized_US" description="Polarized capacitor, US symbol"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="pan-ard-inf.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>85d20fea-0614-46d9-a814-c907ff939c9d</tstamps>
+    </comp>
+    <comp ref="C4">
+      <value>0.01uF</value>
+      <footprint>Capacitor_SMD:C_1206_3216Metric_Pad1.33x1.80mm_HandSolder</footprint>
+      <libsource lib="Device" part="C" description="Unpolarized capacitor"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="pan-ard-inf.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>a5b2536c-088f-4730-ab90-fb05d748173b</tstamps>
+    </comp>
+    <comp ref="C5">
+      <value>0.01uF</value>
+      <footprint>Capacitor_SMD:C_1206_3216Metric_Pad1.33x1.80mm_HandSolder</footprint>
+      <libsource lib="Device" part="C" description="Unpolarized capacitor"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="pan-ard-inf.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>494ba712-4b6e-46d8-b346-074b875b3f30</tstamps>
+    </comp>
+    <comp ref="C6">
+      <value>47uF</value>
+      <footprint>Capacitor_Tantalum_SMD:CP_EIA-6032-20_AVX-F_Pad2.25x2.35mm_HandSolder</footprint>
+      <libsource lib="Device" part="C_Polarized_US" description="Polarized capacitor, US symbol"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="pan-ard-inf.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>4a6d3812-8de3-4944-94d6-cdda74b6d764</tstamps>
+    </comp>
+    <comp ref="C7">
+      <value>0.1uF</value>
+      <footprint>Capacitor_SMD:C_1206_3216Metric_Pad1.33x1.80mm_HandSolder</footprint>
+      <libsource lib="Device" part="C" description="Unpolarized capacitor"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="pan-ard-inf.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>ef91f5a2-3555-4681-8ad2-dce2d24df6fd</tstamps>
+    </comp>
+    <comp ref="C8">
+      <value>0.01uF</value>
+      <footprint>Capacitor_SMD:C_1206_3216Metric_Pad1.33x1.80mm_HandSolder</footprint>
+      <libsource lib="Device" part="C" description="Unpolarized capacitor"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="pan-ard-inf.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>ebb84abb-f947-4ed8-bb99-cdc57c8f4ef1</tstamps>
+    </comp>
+    <comp ref="C9">
+      <value>0.1uF</value>
+      <footprint>Capacitor_SMD:C_1206_3216Metric_Pad1.33x1.80mm_HandSolder</footprint>
+      <libsource lib="Device" part="C" description="Unpolarized capacitor"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="pan-ard-inf.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>78bf20c9-fe77-4dce-8a63-07b2218832d2</tstamps>
+    </comp>
+    <comp ref="J1">
+      <value>Power</value>
+      <footprint>Connector_PinHeader_2.54mm:PinHeader_1x08_P2.54mm_Vertical</footprint>
+      <fields>
+        <field name="Spice_Model">Power</field>
+        <field name="Spice_Netlist_Enabled">N</field>
+        <field name="Spice_Primitive">J</field>
+      </fields>
+      <libsource lib="Connector_Generic" part="Conn_01x08" description="Generic connector, single row, 01x08, script generated (kicad-library-utils/schlib/autogen/connector/)"/>
+      <property name="Spice_Primitive" value="J"/>
+      <property name="Spice_Model" value="Power"/>
+      <property name="Spice_Netlist_Enabled" value="N"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="pan-ard-inf.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>00000000-0000-0000-0000-000056d71773</tstamps>
+    </comp>
+    <comp ref="J2">
+      <value>Analog</value>
+      <footprint>Connector_PinHeader_2.54mm:PinHeader_1x08_P2.54mm_Vertical</footprint>
+      <fields>
+        <field name="Spice_Model">Analog</field>
+        <field name="Spice_Netlist_Enabled">N</field>
+        <field name="Spice_Primitive">J</field>
+      </fields>
+      <libsource lib="Connector_Generic" part="Conn_01x08" description="Generic connector, single row, 01x08, script generated (kicad-library-utils/schlib/autogen/connector/)"/>
+      <property name="Spice_Primitive" value="J"/>
+      <property name="Spice_Model" value="Analog"/>
+      <property name="Spice_Netlist_Enabled" value="N"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="pan-ard-inf.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>00000000-0000-0000-0000-000056d72f1c</tstamps>
+    </comp>
+    <comp ref="J3">
+      <value>Analog</value>
+      <footprint>Connector_PinHeader_2.54mm:PinHeader_1x08_P2.54mm_Vertical</footprint>
+      <fields>
+        <field name="Spice_Netlist_Enabled">N</field>
+        <field name="Spice_Primitive">I</field>
+      </fields>
+      <libsource lib="Connector_Generic" part="Conn_01x08" description="Generic connector, single row, 01x08, script generated (kicad-library-utils/schlib/autogen/connector/)"/>
+      <property name="Spice_Primitive" value="I"/>
+      <property name="Spice_Netlist_Enabled" value="N"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="pan-ard-inf.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>00000000-0000-0000-0000-000056d73a0e</tstamps>
+    </comp>
+    <comp ref="J4">
+      <value>Digital</value>
+      <footprint>Connector_PinHeader_2.54mm:PinHeader_2x18_P2.54mm_Vertical</footprint>
+      <fields>
+        <field name="Spice_Model">Digital</field>
+        <field name="Spice_Netlist_Enabled">N</field>
+        <field name="Spice_Primitive">J</field>
+      </fields>
+      <libsource lib="Connector_Generic" part="Conn_02x18_Odd_Even" description="Generic connector, double row, 02x18, odd/even pin numbering scheme (row 1 odd numbers, row 2 even numbers), script generated (kicad-library-utils/schlib/autogen/connector/)"/>
+      <property name="Spice_Primitive" value="J"/>
+      <property name="Spice_Model" value="Digital"/>
+      <property name="Spice_Netlist_Enabled" value="N"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="pan-ard-inf.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>00000000-0000-0000-0000-000056d743b5</tstamps>
+    </comp>
+    <comp ref="J5">
+      <value>PWM</value>
+      <footprint>Connector_PinHeader_2.54mm:PinHeader_1x10_P2.54mm_Vertical</footprint>
+      <fields>
+        <field name="Spice_Model">PWM</field>
+        <field name="Spice_Netlist_Enabled">N</field>
+        <field name="Spice_Primitive">J</field>
+      </fields>
+      <libsource lib="Connector_Generic" part="Conn_01x10" description="Generic connector, single row, 01x10, script generated (kicad-library-utils/schlib/autogen/connector/)"/>
+      <property name="Spice_Primitive" value="J"/>
+      <property name="Spice_Model" value="PWM"/>
+      <property name="Spice_Netlist_Enabled" value="N"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="pan-ard-inf.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>00000000-0000-0000-0000-000056d72368</tstamps>
+    </comp>
+    <comp ref="J6">
+      <value>PWM</value>
+      <footprint>Connector_PinHeader_2.54mm:PinHeader_1x08_P2.54mm_Vertical</footprint>
+      <fields>
+        <field name="Spice_Model">PWM</field>
+        <field name="Spice_Netlist_Enabled">N</field>
+        <field name="Spice_Primitive">J</field>
+      </fields>
+      <libsource lib="Connector_Generic" part="Conn_01x08" description="Generic connector, single row, 01x08, script generated (kicad-library-utils/schlib/autogen/connector/)"/>
+      <property name="Spice_Primitive" value="J"/>
+      <property name="Spice_Model" value="PWM"/>
+      <property name="Spice_Netlist_Enabled" value="N"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="pan-ard-inf.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>00000000-0000-0000-0000-000056d734d0</tstamps>
+    </comp>
+    <comp ref="J7">
+      <value>Communication</value>
+      <footprint>Connector_PinHeader_2.54mm:PinHeader_1x08_P2.54mm_Vertical</footprint>
+      <fields>
+        <field name="Spice_Model">Communication</field>
+        <field name="Spice_Netlist_Enabled">N</field>
+        <field name="Spice_Primitive">J</field>
+      </fields>
+      <libsource lib="Connector_Generic" part="Conn_01x08" description="Generic connector, single row, 01x08, script generated (kicad-library-utils/schlib/autogen/connector/)"/>
+      <property name="Spice_Primitive" value="J"/>
+      <property name="Spice_Model" value="Communication"/>
+      <property name="Spice_Netlist_Enabled" value="N"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="pan-ard-inf.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>00000000-0000-0000-0000-000056d73f2c</tstamps>
+    </comp>
+    <comp ref="J8">
+      <value>SJ1-3534N</value>
+      <footprint>SJ1-3534N:CUI_SJ1-3534N</footprint>
+      <datasheet>https://www.cuidevices.com/product/resource/sj1-353xn-series.pdf</datasheet>
+      <fields>
+        <field name="AVAILABILITY">Unavailable</field>
+        <field name="CUI_PURCHASE_URL">https://www.cuidevices.com/product/interconnect/connectors/audio-connectors/jacks/sj1-353xn-series?utm_source=snapeda.com&amp;utm_medium=referral&amp;utm_campaign=snapedaBOM</field>
+        <field name="DESCRIPTION">3.5 mm, Stereo, Right Angle, Through Hole, Audio Jack Connector</field>
+        <field name="MF">CUI Devices</field>
+        <field name="MP">SJ1-3534N</field>
+        <field name="PACKAGE">None</field>
+        <field name="PRICE">None</field>
+        <field name="Spice_Model">SJ1-3534N</field>
+        <field name="Spice_Netlist_Enabled">N</field>
+        <field name="Spice_Primitive">J</field>
+      </fields>
+      <libsource lib="SJ1-3534N" part="SJ1-3534N" description=""/>
+      <property name="AVAILABILITY" value="Unavailable"/>
+      <property name="PACKAGE" value="None"/>
+      <property name="MP" value="SJ1-3534N"/>
+      <property name="PRICE" value="None"/>
+      <property name="CUI_PURCHASE_URL" value="https://www.cuidevices.com/product/interconnect/connectors/audio-connectors/jacks/sj1-353xn-series?utm_source=snapeda.com&amp;utm_medium=referral&amp;utm_campaign=snapedaBOM"/>
+      <property name="DESCRIPTION" value="3.5 mm, Stereo, Right Angle, Through Hole, Audio Jack Connector"/>
+      <property name="MF" value="CUI Devices"/>
+      <property name="Spice_Primitive" value="J"/>
+      <property name="Spice_Model" value="SJ1-3534N"/>
+      <property name="Spice_Netlist_Enabled" value="N"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="pan-ard-inf.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>6befe336-e64e-41bf-8c56-3664e253273f</tstamps>
+    </comp>
+    <comp ref="J9">
+      <value>SJ1-3534N</value>
+      <footprint>SJ1-3534N:CUI_SJ1-3534N</footprint>
+      <datasheet>https://www.cuidevices.com/product/resource/sj1-353xn-series.pdf</datasheet>
+      <fields>
+        <field name="AVAILABILITY">Unavailable</field>
+        <field name="CUI_PURCHASE_URL">https://www.cuidevices.com/product/interconnect/connectors/audio-connectors/jacks/sj1-353xn-series?utm_source=snapeda.com&amp;utm_medium=referral&amp;utm_campaign=snapedaBOM</field>
+        <field name="DESCRIPTION">3.5 mm, Stereo, Right Angle, Through Hole, Audio Jack Connector</field>
+        <field name="MF">CUI Devices</field>
+        <field name="MP">SJ1-3534N</field>
+        <field name="PACKAGE">None</field>
+        <field name="PRICE">None</field>
+        <field name="Spice_Model">SJ1-3534N</field>
+        <field name="Spice_Netlist_Enabled">N</field>
+        <field name="Spice_Primitive">J</field>
+      </fields>
+      <libsource lib="SJ1-3534N" part="SJ1-3534N" description=""/>
+      <property name="AVAILABILITY" value="Unavailable"/>
+      <property name="PACKAGE" value="None"/>
+      <property name="MP" value="SJ1-3534N"/>
+      <property name="PRICE" value="None"/>
+      <property name="CUI_PURCHASE_URL" value="https://www.cuidevices.com/product/interconnect/connectors/audio-connectors/jacks/sj1-353xn-series?utm_source=snapeda.com&amp;utm_medium=referral&amp;utm_campaign=snapedaBOM"/>
+      <property name="DESCRIPTION" value="3.5 mm, Stereo, Right Angle, Through Hole, Audio Jack Connector"/>
+      <property name="MF" value="CUI Devices"/>
+      <property name="Spice_Primitive" value="J"/>
+      <property name="Spice_Model" value="SJ1-3534N"/>
+      <property name="Spice_Netlist_Enabled" value="N"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="pan-ard-inf.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>37ab21fc-dc26-4ff1-a3fd-d2aad00b83e8</tstamps>
+    </comp>
+    <comp ref="J10">
+      <value>PJ-037A</value>
+      <footprint>PJ-037A:CUI_PJ-037A</footprint>
+      <datasheet>https://www.cuidevices.com/product/resource/pj-037a.pdf</datasheet>
+      <fields>
+        <field name="Spice_Model">PJ-037A</field>
+        <field name="Spice_Netlist_Enabled">N</field>
+        <field name="Spice_Primitive">J</field>
+      </fields>
+      <libsource lib="Connector" part="Barrel_Jack" description="DC Barrel Jack"/>
+      <property name="Spice_Primitive" value="J"/>
+      <property name="Spice_Model" value="PJ-037A"/>
+      <property name="Spice_Netlist_Enabled" value="N"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="pan-ard-inf.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>9fc115a8-7ea2-43a9-ae93-886c286cc879</tstamps>
+    </comp>
+    <comp ref="L1">
+      <value>10uH</value>
+      <footprint>Inductor_SMD:L_1008_2520Metric_Pad1.43x2.20mm_HandSolder</footprint>
+      <libsource lib="Device" part="L_Ferrite" description="Inductor with ferrite core"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="pan-ard-inf.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>2700f2d1-e5df-4af4-9dad-e37bf7032aee</tstamps>
+    </comp>
+    <comp ref="R1">
+      <value>14</value>
+      <footprint>Resistor_SMD:R_1206_3216Metric_Pad1.30x1.75mm_HandSolder</footprint>
+      <datasheet>https://www.vishay.com/docs/28722/sfr16s25.pdf</datasheet>
+      <libsource lib="Device" part="R_US" description="Resistor, US symbol"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="pan-ard-inf.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>546332c2-e184-432e-923c-8d49d4fe65f1</tstamps>
+    </comp>
+    <comp ref="R2">
+      <value>1M</value>
+      <footprint>Resistor_SMD:R_1206_3216Metric_Pad1.30x1.75mm_HandSolder</footprint>
+      <datasheet>https://www.vishay.com/docs/28722/sfr16s25.pdf</datasheet>
+      <libsource lib="Device" part="R_US" description="Resistor, US symbol"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="pan-ard-inf.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>1d29fa6b-991e-4c40-9759-af5b2e689d48</tstamps>
+    </comp>
+    <comp ref="R3">
+      <value>634k</value>
+      <footprint>Resistor_SMD:R_1206_3216Metric_Pad1.30x1.75mm_HandSolder</footprint>
+      <datasheet>https://www.vishay.com/docs/28722/sfr16s25.pdf</datasheet>
+      <libsource lib="Device" part="R_US" description="Resistor, US symbol"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="pan-ard-inf.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>1c5d1cce-6c95-46c0-9a62-5db2e04726b1</tstamps>
+    </comp>
+    <comp ref="R4">
+      <value>14</value>
+      <footprint>Resistor_SMD:R_1206_3216Metric_Pad1.30x1.75mm_HandSolder</footprint>
+      <datasheet>https://www.vishay.com/docs/28722/sfr16s25.pdf</datasheet>
+      <libsource lib="Device" part="R_US" description="Resistor, US symbol"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="pan-ard-inf.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>26feaea1-ac4d-46eb-bf32-e11972360e51</tstamps>
+    </comp>
+    <comp ref="R5">
+      <value>7.5k</value>
+      <footprint>Resistor_SMD:R_1206_3216Metric_Pad1.30x1.75mm_HandSolder</footprint>
+      <datasheet>https://www.vishay.com/docs/28722/sfr16s25.pdf</datasheet>
+      <libsource lib="Device" part="R_US" description="Resistor, US symbol"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="pan-ard-inf.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>cfad0c43-22fb-4272-ba4d-08fd45fcd65a</tstamps>
+    </comp>
+    <comp ref="R6">
+      <value>7.5k</value>
+      <footprint>Resistor_SMD:R_1206_3216Metric_Pad1.30x1.75mm_HandSolder</footprint>
+      <datasheet>https://www.vishay.com/docs/28722/sfr16s25.pdf</datasheet>
+      <libsource lib="Device" part="R_US" description="Resistor, US symbol"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="pan-ard-inf.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>a0ebe139-d19c-4ed2-bfd9-738c5b6dd438</tstamps>
+    </comp>
+    <comp ref="R7">
+      <value>39.2k</value>
+      <footprint>Resistor_SMD:R_1206_3216Metric_Pad1.30x1.75mm_HandSolder</footprint>
+      <datasheet>https://www.vishay.com/docs/28722/sfr16s25.pdf</datasheet>
+      <libsource lib="Device" part="R_US" description="Resistor, US symbol"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="pan-ard-inf.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>ae34183b-c64c-42fb-98ec-0081de65b79f</tstamps>
+    </comp>
+    <comp ref="R8">
+      <value>39.2k</value>
+      <footprint>Resistor_SMD:R_1206_3216Metric_Pad1.30x1.75mm_HandSolder</footprint>
+      <datasheet>https://www.vishay.com/docs/28722/sfr16s25.pdf</datasheet>
+      <libsource lib="Device" part="R_US" description="Resistor, US symbol"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="pan-ard-inf.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>d5689872-5fc7-4cdf-a6fb-06509d2224f3</tstamps>
+    </comp>
+    <comp ref="R9">
+      <value>332k</value>
+      <footprint>Resistor_SMD:R_1206_3216Metric_Pad1.30x1.75mm_HandSolder</footprint>
+      <datasheet>https://www.vishay.com/docs/28722/sfr16s25.pdf</datasheet>
+      <libsource lib="Device" part="R_US" description="Resistor, US symbol"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="pan-ard-inf.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>5e98c193-0b97-4476-9684-7c0361d47203</tstamps>
+    </comp>
+    <comp ref="R10">
+      <value>332k</value>
+      <footprint>Resistor_SMD:R_1206_3216Metric_Pad1.30x1.75mm_HandSolder</footprint>
+      <datasheet>https://www.vishay.com/docs/28722/sfr16s25.pdf</datasheet>
+      <libsource lib="Device" part="R_US" description="Resistor, US symbol"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="pan-ard-inf.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>7294bf92-4ed8-4d7f-87b4-67b73f37cc92</tstamps>
+    </comp>
+    <comp ref="R11">
+      <value>475k</value>
+      <footprint>Resistor_SMD:R_1206_3216Metric_Pad1.30x1.75mm_HandSolder</footprint>
+      <datasheet>https://www.vishay.com/docs/28722/sfr16s25.pdf</datasheet>
+      <libsource lib="Device" part="R_US" description="Resistor, US symbol"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="pan-ard-inf.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>0e291110-378a-479a-84db-1d87efc09f29</tstamps>
+    </comp>
+    <comp ref="R12">
+      <value>475k</value>
+      <footprint>Resistor_SMD:R_1206_3216Metric_Pad1.30x1.75mm_HandSolder</footprint>
+      <datasheet>https://www.vishay.com/docs/28722/sfr16s25.pdf</datasheet>
+      <libsource lib="Device" part="R_US" description="Resistor, US symbol"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="pan-ard-inf.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>659146ea-1b80-4f64-82a6-5d1aecd90183</tstamps>
+    </comp>
+    <comp ref="R13">
+      <value>7.5k</value>
+      <footprint>Resistor_SMD:R_1206_3216Metric_Pad1.30x1.75mm_HandSolder</footprint>
+      <datasheet>https://www.vishay.com/docs/28722/sfr16s25.pdf</datasheet>
+      <libsource lib="Device" part="R_US" description="Resistor, US symbol"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="pan-ard-inf.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>51af0a37-a08e-4b7f-9fc0-12aa507c89d4</tstamps>
+    </comp>
+    <comp ref="R14">
+      <value>7.5k</value>
+      <footprint>Resistor_SMD:R_1206_3216Metric_Pad1.30x1.75mm_HandSolder</footprint>
+      <datasheet>https://www.vishay.com/docs/28722/sfr16s25.pdf</datasheet>
+      <libsource lib="Device" part="R_US" description="Resistor, US symbol"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="pan-ard-inf.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>1e082ab1-f340-4eef-821e-9c4b3442a1ca</tstamps>
+    </comp>
+    <comp ref="R15">
+      <value>7.5k</value>
+      <footprint>Resistor_SMD:R_1206_3216Metric_Pad1.30x1.75mm_HandSolder</footprint>
+      <datasheet>https://www.vishay.com/docs/28722/sfr16s25.pdf</datasheet>
+      <libsource lib="Device" part="R_US" description="Resistor, US symbol"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="pan-ard-inf.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>9d927541-64e7-44d1-b087-2ada456fbae6</tstamps>
+    </comp>
+    <comp ref="R16">
+      <value>1k</value>
+      <footprint>Resistor_SMD:R_1206_3216Metric_Pad1.30x1.75mm_HandSolder</footprint>
+      <datasheet>https://www.vishay.com/docs/28722/sfr16s25.pdf</datasheet>
+      <libsource lib="Device" part="R_US" description="Resistor, US symbol"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="pan-ard-inf.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>6de15173-f370-490f-a152-2416a9b8d7d8</tstamps>
+    </comp>
+    <comp ref="R17">
+      <value>1M</value>
+      <footprint>Resistor_SMD:R_1206_3216Metric_Pad1.30x1.75mm_HandSolder</footprint>
+      <datasheet>https://www.vishay.com/docs/28722/sfr16s25.pdf</datasheet>
+      <fields>
+        <field name="Spice_Model">1Meg</field>
+        <field name="Spice_Netlist_Enabled">Y</field>
+        <field name="Spice_Primitive">R</field>
+      </fields>
+      <libsource lib="Device" part="R_US" description="Resistor, US symbol"/>
+      <property name="Spice_Primitive" value="R"/>
+      <property name="Spice_Model" value="1Meg"/>
+      <property name="Spice_Netlist_Enabled" value="Y"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="pan-ard-inf.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>f3dc5ea9-2a33-45c8-9b18-ad5d6e0c1f78</tstamps>
+    </comp>
+    <comp ref="R18">
+      <value>634k</value>
+      <footprint>Resistor_SMD:R_1206_3216Metric_Pad1.30x1.75mm_HandSolder</footprint>
+      <datasheet>https://www.vishay.com/docs/28722/sfr16s25.pdf</datasheet>
+      <libsource lib="Device" part="R_US" description="Resistor, US symbol"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="pan-ard-inf.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>ec048508-84d9-44bc-8775-dd9c53b840b4</tstamps>
+    </comp>
+    <comp ref="R19">
+      <value>7.5k</value>
+      <footprint>Resistor_SMD:R_1206_3216Metric_Pad1.30x1.75mm_HandSolder</footprint>
+      <datasheet>https://www.vishay.com/docs/28722/sfr16s25.pdf</datasheet>
+      <libsource lib="Device" part="R_US" description="Resistor, US symbol"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="pan-ard-inf.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>767bdc5f-3462-4389-afa7-b7059933bc64</tstamps>
+    </comp>
+    <comp ref="U1">
+      <value>CD4066B</value>
+      <footprint>Package_SO:SOIC-14_3.9x8.7mm_P1.27mm</footprint>
+      <datasheet>https://www.ti.com/lit/ds/symlink/cd4066b.pdf?ts=1659354242888&amp;ref_url=https%253A%252F%252Fwww.ti.com%252Fproduct%252FCD4066B%252Fpart-details%252FCD4066BPW</datasheet>
+      <fields>
+        <field name="Spice_Lib_File">CD4066-quad.LIB</field>
+        <field name="Spice_Model">CD4066-quad</field>
+        <field name="Spice_Netlist_Enabled">Y</field>
+        <field name="Spice_Primitive">X</field>
+      </fields>
+      <libsource lib="4xxx" part="4066" description="Quad Analog Switches"/>
+      <property name="Spice_Primitive" value="X"/>
+      <property name="Spice_Model" value="CD4066-quad"/>
+      <property name="Spice_Netlist_Enabled" value="Y"/>
+      <property name="Spice_Lib_File" value="CD4066-quad.LIB"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="pan-ard-inf.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>a2e715e4-c697-4329-8064-99ad96b359c5 2300c3af-b68b-4997-b67b-9fb296eb612d 450d1d35-44ba-49f8-8fcb-6dcd7a4d9352 f5bc6a5a-8c57-4734-8ded-f58c1eeea39f 026b9174-f68c-4e4d-ab77-805e94597789</tstamps>
+    </comp>
+    <comp ref="U2">
+      <value>LMC6482</value>
+      <footprint>Package_DIP:DIP-8_W10.16mm</footprint>
+      <datasheet>http://www.ti.com/lit/ds/symlink/lmc6482.pdf</datasheet>
+      <fields>
+        <field name="Spice_Lib_File">LMC6482-ideal.LIB</field>
+        <field name="Spice_Model">LMC6482</field>
+        <field name="Spice_Netlist_Enabled">Y</field>
+        <field name="Spice_Primitive">X</field>
+      </fields>
+      <libsource lib="Amplifier_Operational" part="LMC6482" description="Dual CMOS Rail-to-Rail Input and Output Operational Amplifier, DIP-8/SOIC-8, SSOP-8"/>
+      <property name="Spice_Primitive" value="X"/>
+      <property name="Spice_Model" value="LMC6482"/>
+      <property name="Spice_Netlist_Enabled" value="Y"/>
+      <property name="Spice_Lib_File" value="LMC6482-ideal.LIB"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="pan-ard-inf.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>f70a98ef-65aa-48c5-995b-a713385649da 72527e46-5564-4970-b102-337d4d8fa1ac 52b95c7e-7e36-4104-b56f-c162e8d8e637</tstamps>
+    </comp>
+  </components>
+  <libparts>
+    <libpart lib="4xxx" part="4066">
+      <description>Quad Analog Switches</description>
+      <docs>http://www.ti.com/lit/ds/symlink/cd4066b.pdf</docs>
+      <footprints>
+        <fp>DIP?14*</fp>
+      </footprints>
+      <fields>
+        <field name="Reference">U</field>
+        <field name="Value">4066</field>
+        <field name="Datasheet">http://www.ti.com/lit/ds/symlink/cd4066b.pdf</field>
+      </fields>
+      <pins>
+        <pin num="1" name="" type="passive"/>
+        <pin num="2" name="" type="passive"/>
+        <pin num="3" name="" type="passive"/>
+        <pin num="4" name="" type="passive"/>
+        <pin num="5" name="" type="input"/>
+        <pin num="6" name="" type="input"/>
+        <pin num="7" name="VSS" type="power_in"/>
+        <pin num="8" name="" type="passive"/>
+        <pin num="9" name="" type="passive"/>
+        <pin num="10" name="" type="passive"/>
+        <pin num="11" name="" type="passive"/>
+        <pin num="12" name="" type="input"/>
+        <pin num="13" name="" type="input"/>
+        <pin num="14" name="VDD" type="power_in"/>
+      </pins>
+    </libpart>
+    <libpart lib="Amplifier_Operational" part="LMC6482">
+      <description>Dual CMOS Rail-to-Rail Input and Output Operational Amplifier, DIP-8/SOIC-8, SSOP-8</description>
+      <docs>http://www.ti.com/lit/ds/symlink/lmc6482.pdf</docs>
+      <footprints>
+        <fp>SOIC*3.9x4.9mm*P1.27mm*</fp>
+        <fp>DIP*W7.62mm*</fp>
+        <fp>TO*99*</fp>
+        <fp>OnSemi*Micro8*</fp>
+        <fp>TSSOP*3x3mm*P0.65mm*</fp>
+        <fp>TSSOP*4.4x3mm*P0.65mm*</fp>
+        <fp>MSOP*3x3mm*P0.65mm*</fp>
+        <fp>SSOP*3.9x4.9mm*P0.635mm*</fp>
+        <fp>LFCSP*2x2mm*P0.5mm*</fp>
+        <fp>*SIP*</fp>
+        <fp>SOIC*5.3x6.2mm*P1.27mm*</fp>
+      </footprints>
+      <fields>
+        <field name="Reference">U</field>
+        <field name="Value">LMC6482</field>
+        <field name="Datasheet">http://www.ti.com/lit/ds/symlink/lmc6482.pdf</field>
+      </fields>
+      <pins>
+        <pin num="1" name="" type="output"/>
+        <pin num="2" name="-" type="input"/>
+        <pin num="3" name="+" type="input"/>
+        <pin num="4" name="V-" type="power_in"/>
+        <pin num="5" name="+" type="input"/>
+        <pin num="6" name="-" type="input"/>
+        <pin num="7" name="" type="output"/>
+        <pin num="8" name="V+" type="power_in"/>
+      </pins>
+    </libpart>
+    <libpart lib="Connector" part="Barrel_Jack">
+      <description>DC Barrel Jack</description>
+      <docs>~</docs>
+      <footprints>
+        <fp>BarrelJack*</fp>
+      </footprints>
+      <fields>
+        <field name="Reference">J</field>
+        <field name="Value">Barrel_Jack</field>
+        <field name="Datasheet">~</field>
+      </fields>
+      <pins>
+        <pin num="1" name="" type="passive"/>
+        <pin num="2" name="" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="Connector_Generic" part="Conn_01x08">
+      <description>Generic connector, single row, 01x08, script generated (kicad-library-utils/schlib/autogen/connector/)</description>
+      <docs>~</docs>
+      <footprints>
+        <fp>Connector*:*_1x??_*</fp>
+      </footprints>
+      <fields>
+        <field name="Reference">J</field>
+        <field name="Value">Conn_01x08</field>
+        <field name="Datasheet">~</field>
+      </fields>
+      <pins>
+        <pin num="1" name="Pin_1" type="passive"/>
+        <pin num="2" name="Pin_2" type="passive"/>
+        <pin num="3" name="Pin_3" type="passive"/>
+        <pin num="4" name="Pin_4" type="passive"/>
+        <pin num="5" name="Pin_5" type="passive"/>
+        <pin num="6" name="Pin_6" type="passive"/>
+        <pin num="7" name="Pin_7" type="passive"/>
+        <pin num="8" name="Pin_8" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="Connector_Generic" part="Conn_01x10">
+      <description>Generic connector, single row, 01x10, script generated (kicad-library-utils/schlib/autogen/connector/)</description>
+      <docs>~</docs>
+      <footprints>
+        <fp>Connector*:*_1x??_*</fp>
+      </footprints>
+      <fields>
+        <field name="Reference">J</field>
+        <field name="Value">Conn_01x10</field>
+        <field name="Datasheet">~</field>
+      </fields>
+      <pins>
+        <pin num="1" name="Pin_1" type="passive"/>
+        <pin num="2" name="Pin_2" type="passive"/>
+        <pin num="3" name="Pin_3" type="passive"/>
+        <pin num="4" name="Pin_4" type="passive"/>
+        <pin num="5" name="Pin_5" type="passive"/>
+        <pin num="6" name="Pin_6" type="passive"/>
+        <pin num="7" name="Pin_7" type="passive"/>
+        <pin num="8" name="Pin_8" type="passive"/>
+        <pin num="9" name="Pin_9" type="passive"/>
+        <pin num="10" name="Pin_10" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="Connector_Generic" part="Conn_02x18_Odd_Even">
+      <description>Generic connector, double row, 02x18, odd/even pin numbering scheme (row 1 odd numbers, row 2 even numbers), script generated (kicad-library-utils/schlib/autogen/connector/)</description>
+      <docs>~</docs>
+      <footprints>
+        <fp>Connector*:*_2x??_*</fp>
+      </footprints>
+      <fields>
+        <field name="Reference">J</field>
+        <field name="Value">Conn_02x18_Odd_Even</field>
+        <field name="Datasheet">~</field>
+      </fields>
+      <pins>
+        <pin num="1" name="Pin_1" type="passive"/>
+        <pin num="2" name="Pin_2" type="passive"/>
+        <pin num="3" name="Pin_3" type="passive"/>
+        <pin num="4" name="Pin_4" type="passive"/>
+        <pin num="5" name="Pin_5" type="passive"/>
+        <pin num="6" name="Pin_6" type="passive"/>
+        <pin num="7" name="Pin_7" type="passive"/>
+        <pin num="8" name="Pin_8" type="passive"/>
+        <pin num="9" name="Pin_9" type="passive"/>
+        <pin num="10" name="Pin_10" type="passive"/>
+        <pin num="11" name="Pin_11" type="passive"/>
+        <pin num="12" name="Pin_12" type="passive"/>
+        <pin num="13" name="Pin_13" type="passive"/>
+        <pin num="14" name="Pin_14" type="passive"/>
+        <pin num="15" name="Pin_15" type="passive"/>
+        <pin num="16" name="Pin_16" type="passive"/>
+        <pin num="17" name="Pin_17" type="passive"/>
+        <pin num="18" name="Pin_18" type="passive"/>
+        <pin num="19" name="Pin_19" type="passive"/>
+        <pin num="20" name="Pin_20" type="passive"/>
+        <pin num="21" name="Pin_21" type="passive"/>
+        <pin num="22" name="Pin_22" type="passive"/>
+        <pin num="23" name="Pin_23" type="passive"/>
+        <pin num="24" name="Pin_24" type="passive"/>
+        <pin num="25" name="Pin_25" type="passive"/>
+        <pin num="26" name="Pin_26" type="passive"/>
+        <pin num="27" name="Pin_27" type="passive"/>
+        <pin num="28" name="Pin_28" type="passive"/>
+        <pin num="29" name="Pin_29" type="passive"/>
+        <pin num="30" name="Pin_30" type="passive"/>
+        <pin num="31" name="Pin_31" type="passive"/>
+        <pin num="32" name="Pin_32" type="passive"/>
+        <pin num="33" name="Pin_33" type="passive"/>
+        <pin num="34" name="Pin_34" type="passive"/>
+        <pin num="35" name="Pin_35" type="passive"/>
+        <pin num="36" name="Pin_36" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="Device" part="C">
+      <description>Unpolarized capacitor</description>
+      <docs>~</docs>
+      <footprints>
+        <fp>C_*</fp>
+      </footprints>
+      <fields>
+        <field name="Reference">C</field>
+        <field name="Value">C</field>
+        <field name="Datasheet">~</field>
+      </fields>
+      <pins>
+        <pin num="1" name="" type="passive"/>
+        <pin num="2" name="" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="Device" part="C_Polarized_US">
+      <description>Polarized capacitor, US symbol</description>
+      <docs>~</docs>
+      <footprints>
+        <fp>CP_*</fp>
+      </footprints>
+      <fields>
+        <field name="Reference">C</field>
+        <field name="Value">C_Polarized_US</field>
+        <field name="Datasheet">~</field>
+      </fields>
+      <pins>
+        <pin num="1" name="" type="passive"/>
+        <pin num="2" name="" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="Device" part="L_Ferrite">
+      <description>Inductor with ferrite core</description>
+      <docs>~</docs>
+      <footprints>
+        <fp>Choke_*</fp>
+        <fp>*Coil*</fp>
+        <fp>Inductor_*</fp>
+        <fp>L_*</fp>
+      </footprints>
+      <fields>
+        <field name="Reference">L</field>
+        <field name="Value">L_Ferrite</field>
+        <field name="Datasheet">~</field>
+      </fields>
+      <pins>
+        <pin num="1" name="1" type="passive"/>
+        <pin num="2" name="2" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="Device" part="R_US">
+      <description>Resistor, US symbol</description>
+      <docs>~</docs>
+      <footprints>
+        <fp>R_*</fp>
+      </footprints>
+      <fields>
+        <field name="Reference">R</field>
+        <field name="Value">R_US</field>
+        <field name="Datasheet">~</field>
+      </fields>
+      <pins>
+        <pin num="1" name="" type="passive"/>
+        <pin num="2" name="" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="Device" part="Transformer_1P_1S">
+      <description>Transformer, single primary, single secondary</description>
+      <docs>~</docs>
+      <fields>
+        <field name="Reference">T</field>
+        <field name="Value">Transformer_1P_1S</field>
+        <field name="Datasheet">~</field>
+      </fields>
+      <pins>
+        <pin num="1" name="AA" type="passive"/>
+        <pin num="2" name="AB" type="passive"/>
+        <pin num="3" name="SA" type="passive"/>
+        <pin num="4" name="SB" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="SJ1-3534N" part="SJ1-3534N">
+      <fields>
+        <field name="Reference">J</field>
+        <field name="Value">SJ1-3534N</field>
+        <field name="Footprint">CUI_SJ1-3534N</field>
+        <field name="AVAILABILITY">Unavailable</field>
+        <field name="PACKAGE">None</field>
+        <field name="MP">SJ1-3534N</field>
+        <field name="PRICE">None</field>
+        <field name="CUI_PURCHASE_URL">https://www.cuidevices.com/product/interconnect/connectors/audio-connectors/jacks/sj1-353xn-series?utm_source=snapeda.com&amp;utm_medium=referral&amp;utm_campaign=snapedaBOM</field>
+        <field name="DESCRIPTION">3.5 mm, Stereo, Right Angle, Through Hole, Audio Jack Connector</field>
+        <field name="MF">CUI Devices</field>
+      </fields>
+      <pins>
+        <pin num="1" name="" type="passive"/>
+        <pin num="2" name="" type="passive"/>
+        <pin num="3" name="" type="passive"/>
+        <pin num="4" name="" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="Simulation_SPICE" part="ISIN">
+      <description>Current source, sinusoidal</description>
+      <docs>~</docs>
+      <fields>
+        <field name="Reference">I</field>
+        <field name="Value">ISIN</field>
+        <field name="Datasheet">~</field>
+        <field name="Spice_Netlist_Enabled">Y</field>
+        <field name="Spice_Primitive">I</field>
+        <field name="Spice_Model">sin(0 1 1k)</field>
+      </fields>
+      <pins>
+        <pin num="1" name="" type="passive"/>
+        <pin num="2" name="" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="Simulation_SPICE" part="VDC">
+      <description>Voltage source, DC</description>
+      <docs>~</docs>
+      <fields>
+        <field name="Reference">V</field>
+        <field name="Value">VDC</field>
+        <field name="Datasheet">~</field>
+        <field name="Spice_Netlist_Enabled">Y</field>
+        <field name="Spice_Primitive">V</field>
+        <field name="Spice_Model">dc(1)</field>
+      </fields>
+      <pins>
+        <pin num="1" name="" type="passive"/>
+        <pin num="2" name="" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="Simulation_SPICE" part="VPULSE">
+      <description>Voltage source, pulse</description>
+      <docs>~</docs>
+      <fields>
+        <field name="Reference">V</field>
+        <field name="Value">VPULSE</field>
+        <field name="Datasheet">~</field>
+        <field name="Spice_Netlist_Enabled">Y</field>
+        <field name="Spice_Primitive">V</field>
+        <field name="Spice_Model">pulse(0 1 2n 2n 2n 50n 100n)</field>
+      </fields>
+      <pins>
+        <pin num="1" name="" type="passive"/>
+        <pin num="2" name="" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="Simulation_SPICE" part="VSIN">
+      <description>Voltage source, sinusoidal</description>
+      <docs>~</docs>
+      <fields>
+        <field name="Reference">V</field>
+        <field name="Value">VSIN</field>
+        <field name="Datasheet">~</field>
+        <field name="Spice_Netlist_Enabled">Y</field>
+        <field name="Spice_Primitive">V</field>
+        <field name="Spice_Model">sin(0 1 1k)</field>
+      </fields>
+      <pins>
+        <pin num="1" name="" type="passive"/>
+        <pin num="2" name="" type="passive"/>
+      </pins>
+    </libpart>
+  </libparts>
+  <libraries>
+    <library logical="4xxx">
+      <uri>/usr/share/kicad/symbols//4xxx.kicad_sym</uri>
+    </library>
+    <library logical="Amplifier_Operational">
+      <uri>/usr/share/kicad/symbols//Amplifier_Operational.kicad_sym</uri>
+    </library>
+    <library logical="Connector">
+      <uri>/usr/share/kicad/symbols//Connector.kicad_sym</uri>
+    </library>
+    <library logical="Connector_Generic">
+      <uri>/usr/share/kicad/symbols//Connector_Generic.kicad_sym</uri>
+    </library>
+    <library logical="Device">
+      <uri>/usr/share/kicad/symbols//Device.kicad_sym</uri>
+    </library>
+    <library logical="SJ1-3534N">
+      <uri>/home/lindo/pcbs/nilm/pan-ard-inf/SJ1-3534N/SJ1-3534N.kicad_sym</uri>
+    </library>
+    <library logical="Simulation_SPICE">
+      <uri>/usr/share/kicad/symbols//Simulation_SPICE.kicad_sym</uri>
+    </library>
+  </libraries>
+  <nets>
+    <net code="1" name="+3V3">
+      <node ref="C7" pin="1" pintype="passive"/>
+      <node ref="J1" pin="4" pinfunction="Pin_4" pintype="passive"/>
+      <node ref="R17" pin="1" pintype="passive"/>
+      <node ref="R2" pin="1" pintype="passive"/>
+      <node ref="U2" pin="8" pinfunction="V+" pintype="power_in"/>
+    </net>
+    <net code="2" name="+5V">
+      <node ref="J1" pin="5" pinfunction="Pin_5" pintype="passive"/>
+      <node ref="J4" pin="35" pinfunction="Pin_35" pintype="passive"/>
+      <node ref="J4" pin="36" pinfunction="Pin_36" pintype="passive"/>
+      <node ref="L1" pin="1" pinfunction="1" pintype="passive"/>
+    </net>
+    <net code="3" name="/*2">
+      <node ref="J6" pin="6" pinfunction="Pin_6" pintype="passive"/>
+    </net>
+    <net code="4" name="/*3">
+      <node ref="J6" pin="5" pinfunction="Pin_5" pintype="passive"/>
+    </net>
+    <net code="5" name="/*4">
+      <node ref="J6" pin="4" pinfunction="Pin_4" pintype="passive"/>
+    </net>
+    <net code="6" name="/*5">
+      <node ref="J6" pin="3" pinfunction="Pin_3" pintype="passive"/>
+    </net>
+    <net code="7" name="/*6">
+      <node ref="J6" pin="2" pinfunction="Pin_2" pintype="passive"/>
+    </net>
+    <net code="8" name="/*7">
+      <node ref="J6" pin="1" pinfunction="Pin_1" pintype="passive"/>
+    </net>
+    <net code="9" name="/*8">
+      <node ref="J5" pin="10" pinfunction="Pin_10" pintype="passive"/>
+    </net>
+    <net code="10" name="/*9">
+      <node ref="J5" pin="9" pinfunction="Pin_9" pintype="passive"/>
+    </net>
+    <net code="11" name="/*10">
+      <node ref="J5" pin="8" pinfunction="Pin_8" pintype="passive"/>
+    </net>
+    <net code="12" name="/*11">
+      <node ref="J5" pin="7" pinfunction="Pin_7" pintype="passive"/>
+    </net>
+    <net code="13" name="/*12">
+      <node ref="J5" pin="6" pinfunction="Pin_6" pintype="passive"/>
+    </net>
+    <net code="14" name="/*13">
+      <node ref="J5" pin="5" pinfunction="Pin_5" pintype="passive"/>
+    </net>
+    <net code="15" name="/*44">
+      <node ref="J4" pin="11" pinfunction="Pin_11" pintype="passive"/>
+    </net>
+    <net code="16" name="/*45">
+      <node ref="J4" pin="12" pinfunction="Pin_12" pintype="passive"/>
+    </net>
+    <net code="17" name="/*46">
+      <node ref="J4" pin="9" pinfunction="Pin_9" pintype="passive"/>
+    </net>
+    <net code="18" name="/*52">
+      <node ref="J4" pin="3" pinfunction="Pin_3" pintype="passive"/>
+    </net>
+    <net code="19" name="/22">
+      <node ref="J4" pin="33" pinfunction="Pin_33" pintype="passive"/>
+    </net>
+    <net code="20" name="/23">
+      <node ref="J4" pin="34" pinfunction="Pin_34" pintype="passive"/>
+    </net>
+    <net code="21" name="/24">
+      <node ref="J4" pin="31" pinfunction="Pin_31" pintype="passive"/>
+    </net>
+    <net code="22" name="/25">
+      <node ref="J4" pin="32" pinfunction="Pin_32" pintype="passive"/>
+    </net>
+    <net code="23" name="/26">
+      <node ref="J4" pin="29" pinfunction="Pin_29" pintype="passive"/>
+    </net>
+    <net code="24" name="/27">
+      <node ref="J4" pin="30" pinfunction="Pin_30" pintype="passive"/>
+    </net>
+    <net code="25" name="/28">
+      <node ref="J4" pin="27" pinfunction="Pin_27" pintype="passive"/>
+    </net>
+    <net code="26" name="/29">
+      <node ref="J4" pin="28" pinfunction="Pin_28" pintype="passive"/>
+    </net>
+    <net code="27" name="/30">
+      <node ref="J4" pin="25" pinfunction="Pin_25" pintype="passive"/>
+    </net>
+    <net code="28" name="/31">
+      <node ref="J4" pin="26" pinfunction="Pin_26" pintype="passive"/>
+    </net>
+    <net code="29" name="/32">
+      <node ref="J4" pin="23" pinfunction="Pin_23" pintype="passive"/>
+    </net>
+    <net code="30" name="/33">
+      <node ref="J4" pin="24" pinfunction="Pin_24" pintype="passive"/>
+    </net>
+    <net code="31" name="/34">
+      <node ref="J4" pin="21" pinfunction="Pin_21" pintype="passive"/>
+    </net>
+    <net code="32" name="/35">
+      <node ref="J4" pin="22" pinfunction="Pin_22" pintype="passive"/>
+    </net>
+    <net code="33" name="/36">
+      <node ref="J4" pin="19" pinfunction="Pin_19" pintype="passive"/>
+    </net>
+    <net code="34" name="/37">
+      <node ref="J4" pin="20" pinfunction="Pin_20" pintype="passive"/>
+    </net>
+    <net code="35" name="/38">
+      <node ref="J4" pin="17" pinfunction="Pin_17" pintype="passive"/>
+    </net>
+    <net code="36" name="/39">
+      <node ref="J4" pin="18" pinfunction="Pin_18" pintype="passive"/>
+    </net>
+    <net code="37" name="/40">
+      <node ref="J4" pin="15" pinfunction="Pin_15" pintype="passive"/>
+    </net>
+    <net code="38" name="/41">
+      <node ref="J4" pin="16" pinfunction="Pin_16" pintype="passive"/>
+    </net>
+    <net code="39" name="/42">
+      <node ref="J4" pin="13" pinfunction="Pin_13" pintype="passive"/>
+      <node ref="U1" pin="12" pintype="input"/>
+    </net>
+    <net code="40" name="/43">
+      <node ref="J4" pin="14" pinfunction="Pin_14" pintype="passive"/>
+      <node ref="U1" pin="6" pintype="input"/>
+    </net>
+    <net code="41" name="/47">
+      <node ref="J4" pin="10" pinfunction="Pin_10" pintype="passive"/>
+    </net>
+    <net code="42" name="/48">
+      <node ref="J4" pin="7" pinfunction="Pin_7" pintype="passive"/>
+      <node ref="U1" pin="5" pintype="input"/>
+    </net>
+    <net code="43" name="/49">
+      <node ref="J4" pin="8" pinfunction="Pin_8" pintype="passive"/>
+      <node ref="U1" pin="13" pintype="input"/>
+    </net>
+    <net code="44" name="/50">
+      <node ref="J4" pin="5" pinfunction="Pin_5" pintype="passive"/>
+    </net>
+    <net code="45" name="/51">
+      <node ref="J4" pin="6" pinfunction="Pin_6" pintype="passive"/>
+    </net>
+    <net code="46" name="/53">
+      <node ref="J4" pin="4" pinfunction="Pin_4" pintype="passive"/>
+    </net>
+    <net code="47" name="/A0">
+      <node ref="C8" pin="1" pintype="passive"/>
+      <node ref="J2" pin="1" pinfunction="Pin_1" pintype="passive"/>
+      <node ref="R19" pin="2" pintype="passive"/>
+    </net>
+    <net code="48" name="/A1">
+      <node ref="C5" pin="1" pintype="passive"/>
+      <node ref="J2" pin="2" pinfunction="Pin_2" pintype="passive"/>
+      <node ref="R14" pin="2" pintype="passive"/>
+    </net>
+    <net code="49" name="/A2">
+      <node ref="C4" pin="1" pintype="passive"/>
+      <node ref="J2" pin="3" pinfunction="Pin_3" pintype="passive"/>
+      <node ref="R13" pin="2" pintype="passive"/>
+    </net>
+    <net code="50" name="/A3">
+      <node ref="J2" pin="4" pinfunction="Pin_4" pintype="passive"/>
+    </net>
+    <net code="51" name="/A4">
+      <node ref="J2" pin="5" pinfunction="Pin_5" pintype="passive"/>
+    </net>
+    <net code="52" name="/A5">
+      <node ref="J2" pin="6" pinfunction="Pin_6" pintype="passive"/>
+    </net>
+    <net code="53" name="/A6">
+      <node ref="J2" pin="7" pinfunction="Pin_7" pintype="passive"/>
+    </net>
+    <net code="54" name="/A7">
+      <node ref="J2" pin="8" pinfunction="Pin_8" pintype="passive"/>
+    </net>
+    <net code="55" name="/A8">
+      <node ref="J3" pin="1" pinfunction="Pin_1" pintype="passive"/>
+    </net>
+    <net code="56" name="/A9">
+      <node ref="J3" pin="2" pinfunction="Pin_2" pintype="passive"/>
+    </net>
+    <net code="57" name="/A10">
+      <node ref="J3" pin="3" pinfunction="Pin_3" pintype="passive"/>
+    </net>
+    <net code="58" name="/A11">
+      <node ref="J3" pin="4" pinfunction="Pin_4" pintype="passive"/>
+    </net>
+    <net code="59" name="/A12">
+      <node ref="J3" pin="5" pinfunction="Pin_5" pintype="passive"/>
+    </net>
+    <net code="60" name="/A13">
+      <node ref="J3" pin="6" pinfunction="Pin_6" pintype="passive"/>
+    </net>
+    <net code="61" name="/A14">
+      <node ref="J3" pin="7" pinfunction="Pin_7" pintype="passive"/>
+    </net>
+    <net code="62" name="/A15">
+      <node ref="J3" pin="8" pinfunction="Pin_8" pintype="passive"/>
+    </net>
+    <net code="63" name="/AREF">
+      <node ref="J5" pin="3" pinfunction="Pin_3" pintype="passive"/>
+    </net>
+    <net code="64" name="/IOREF">
+      <node ref="J1" pin="2" pinfunction="Pin_2" pintype="passive"/>
+    </net>
+    <net code="65" name="/P1">
+      <node ref="C3" pin="2" pintype="passive"/>
+      <node ref="J9" pin="3" pintype="passive"/>
+      <node ref="R4" pin="1" pintype="passive"/>
+    </net>
+    <net code="66" name="/P2">
+      <node ref="C2" pin="2" pintype="passive"/>
+      <node ref="J8" pin="3" pintype="passive"/>
+      <node ref="R1" pin="1" pintype="passive"/>
+    </net>
+    <net code="67" name="/RESETB">
+      <node ref="J1" pin="3" pinfunction="Pin_3" pintype="passive"/>
+    </net>
+    <net code="68" name="/RX0{slash}0">
+      <node ref="J6" pin="8" pinfunction="Pin_8" pintype="passive"/>
+    </net>
+    <net code="69" name="/RX1{slash}19">
+      <node ref="J7" pin="6" pinfunction="Pin_6" pintype="passive"/>
+    </net>
+    <net code="70" name="/RX2{slash}17">
+      <node ref="J7" pin="4" pinfunction="Pin_4" pintype="passive"/>
+    </net>
+    <net code="71" name="/RX3{slash}15">
+      <node ref="J7" pin="2" pinfunction="Pin_2" pintype="passive"/>
+    </net>
+    <net code="72" name="/SCL{slash}21">
+      <node ref="J5" pin="1" pinfunction="Pin_1" pintype="passive"/>
+      <node ref="J7" pin="8" pinfunction="Pin_8" pintype="passive"/>
+    </net>
+    <net code="73" name="/SDA{slash}20">
+      <node ref="J5" pin="2" pinfunction="Pin_2" pintype="passive"/>
+      <node ref="J7" pin="7" pinfunction="Pin_7" pintype="passive"/>
+    </net>
+    <net code="74" name="/TX0{slash}1">
+      <node ref="J6" pin="7" pinfunction="Pin_7" pintype="passive"/>
+    </net>
+    <net code="75" name="/TX1{slash}18">
+      <node ref="J7" pin="5" pinfunction="Pin_5" pintype="passive"/>
+    </net>
+    <net code="76" name="/TX2{slash}16">
+      <node ref="J7" pin="3" pinfunction="Pin_3" pintype="passive"/>
+    </net>
+    <net code="77" name="/TX3{slash}14">
+      <node ref="J7" pin="1" pinfunction="Pin_1" pintype="passive"/>
+    </net>
+    <net code="78" name="/VAC">
+      <node ref="J10" pin="2" pintype="passive"/>
+      <node ref="R15" pin="1" pintype="passive"/>
+    </net>
+    <net code="79" name="GND">
+      <node ref="C1" pin="2" pintype="passive"/>
+      <node ref="C4" pin="2" pintype="passive"/>
+      <node ref="C5" pin="2" pintype="passive"/>
+      <node ref="C7" pin="2" pintype="passive"/>
+      <node ref="C8" pin="2" pintype="passive"/>
+      <node ref="C9" pin="2" pintype="passive"/>
+      <node ref="J1" pin="6" pinfunction="Pin_6" pintype="passive"/>
+      <node ref="J1" pin="7" pinfunction="Pin_7" pintype="passive"/>
+      <node ref="J10" pin="1" pintype="passive"/>
+      <node ref="J4" pin="1" pinfunction="Pin_1" pintype="passive"/>
+      <node ref="J4" pin="2" pinfunction="Pin_2" pintype="passive"/>
+      <node ref="J5" pin="4" pinfunction="Pin_4" pintype="passive"/>
+      <node ref="J8" pin="1" pintype="passive"/>
+      <node ref="J9" pin="1" pintype="passive"/>
+      <node ref="R1" pin="2" pintype="passive"/>
+      <node ref="R16" pin="2" pintype="passive"/>
+      <node ref="R18" pin="2" pintype="passive"/>
+      <node ref="R3" pin="2" pintype="passive"/>
+      <node ref="R4" pin="2" pintype="passive"/>
+      <node ref="U1" pin="7" pinfunction="VSS" pintype="power_in"/>
+      <node ref="U2" pin="4" pinfunction="V-" pintype="power_in"/>
+    </net>
+    <net code="80" name="Net-(C1-Pad1)">
+      <node ref="C1" pin="1" pintype="passive"/>
+      <node ref="R2" pin="2" pintype="passive"/>
+      <node ref="R3" pin="1" pintype="passive"/>
+      <node ref="U2" pin="3" pinfunction="+" pintype="input"/>
+      <node ref="U2" pin="5" pinfunction="+" pintype="input"/>
+    </net>
+    <net code="81" name="Net-(C2-Pad1)">
+      <node ref="C2" pin="1" pintype="passive"/>
+      <node ref="R5" pin="1" pintype="passive"/>
+    </net>
+    <net code="82" name="Net-(C3-Pad1)">
+      <node ref="C3" pin="1" pintype="passive"/>
+      <node ref="R6" pin="2" pintype="passive"/>
+    </net>
+    <net code="83" name="Net-(C6-Pad1)">
+      <node ref="C6" pin="1" pintype="passive"/>
+      <node ref="R17" pin="2" pintype="passive"/>
+      <node ref="R18" pin="1" pintype="passive"/>
+      <node ref="R19" pin="1" pintype="passive"/>
+    </net>
+    <net code="84" name="Net-(C6-Pad2)">
+      <node ref="C6" pin="2" pintype="passive"/>
+      <node ref="R15" pin="2" pintype="passive"/>
+      <node ref="R16" pin="1" pintype="passive"/>
+    </net>
+    <net code="85" name="Net-(C9-Pad1)">
+      <node ref="C9" pin="1" pintype="passive"/>
+      <node ref="L1" pin="2" pinfunction="2" pintype="passive"/>
+      <node ref="U1" pin="14" pinfunction="VDD" pintype="power_in"/>
+    </net>
+    <net code="86" name="Net-(R5-Pad2)">
+      <node ref="R5" pin="2" pintype="passive"/>
+      <node ref="R7" pin="1" pintype="passive"/>
+      <node ref="U1" pin="4" pintype="passive"/>
+    </net>
+    <net code="87" name="Net-(R6-Pad1)">
+      <node ref="R6" pin="1" pintype="passive"/>
+      <node ref="R8" pin="2" pintype="passive"/>
+      <node ref="U1" pin="8" pintype="passive"/>
+    </net>
+    <net code="88" name="Net-(R7-Pad2)">
+      <node ref="R7" pin="2" pintype="passive"/>
+      <node ref="R9" pin="1" pintype="passive"/>
+      <node ref="U1" pin="1" pintype="passive"/>
+    </net>
+    <net code="89" name="Net-(R10-Pad1)">
+      <node ref="R10" pin="1" pintype="passive"/>
+      <node ref="R8" pin="1" pintype="passive"/>
+      <node ref="U1" pin="11" pintype="passive"/>
+    </net>
+    <net code="90" name="Net-(R10-Pad2)">
+      <node ref="R10" pin="2" pintype="passive"/>
+      <node ref="R12" pin="1" pintype="passive"/>
+      <node ref="U1" pin="10" pintype="passive"/>
+      <node ref="U1" pin="9" pintype="passive"/>
+      <node ref="U2" pin="6" pinfunction="-" pintype="input"/>
+    </net>
+    <net code="91" name="Net-(R11-Pad1)">
+      <node ref="R11" pin="1" pintype="passive"/>
+      <node ref="R9" pin="2" pintype="passive"/>
+      <node ref="U1" pin="2" pintype="passive"/>
+      <node ref="U1" pin="3" pintype="passive"/>
+      <node ref="U2" pin="2" pinfunction="-" pintype="input"/>
+    </net>
+    <net code="92" name="Net-(R11-Pad2)">
+      <node ref="R11" pin="2" pintype="passive"/>
+      <node ref="R13" pin="1" pintype="passive"/>
+      <node ref="U2" pin="1" pintype="output"/>
+    </net>
+    <net code="93" name="Net-(R12-Pad2)">
+      <node ref="R12" pin="2" pintype="passive"/>
+      <node ref="R14" pin="1" pintype="passive"/>
+      <node ref="U2" pin="7" pintype="output"/>
+    </net>
+    <net code="96" name="VCC">
+      <node ref="J1" pin="8" pinfunction="Pin_8" pintype="passive"/>
+    </net>
+    <net code="97" name="unconnected-(J1-Pad1)">
+      <node ref="J1" pin="1" pinfunction="Pin_1" pintype="passive+no_connect"/>
+    </net>
+    <net code="98" name="unconnected-(J8-Pad2)">
+      <node ref="J8" pin="2" pintype="passive"/>
+    </net>
+    <net code="99" name="unconnected-(J8-Pad4)">
+      <node ref="J8" pin="4" pintype="passive"/>
+    </net>
+    <net code="100" name="unconnected-(J9-Pad2)">
+      <node ref="J9" pin="2" pintype="passive"/>
+    </net>
+    <net code="101" name="unconnected-(J9-Pad4)">
+      <node ref="J9" pin="4" pintype="passive"/>
+    </net>
+  </nets>
+</export>
