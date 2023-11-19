@@ -358,22 +358,27 @@ class PositionwiseFeedForward(tf.keras.layers.Layer):
     """PositionwiseFeedForward layer.
 
     This follows the  implementation of position wise feed-forward as described in the
-    paper "Attention is all you Need" (Vaswani et al., 2017) except activation is gelu.
-
-    Using gelu instead of relu in the activation makes training converge faster and
-    generally increases accuracy but causes training and inference to be about 30% slower.
-    Since this model is meant to be deployed on the edge, its debatable if the increased
-    model accuracy is worth the inference impact, but will leave it to the user to decide.
+    paper "Attention is all you Need" (Vaswani et al., 2017).
     """
 
-    def __init__(self, d_model, d_ff, **kwargs):
+    def __init__(self, d_model, d_ff, use_relu=False, **kwargs):
         super().__init__(**kwargs)
         self.d_model = d_model
         self.d_ff = d_ff
 
         self.fully_connected1 = tf.keras.layers.Dense(self.d_ff)
         self.fully_connected2 = tf.keras.layers.Dense(self.d_model)
-        self.activation = GELU() #tf.keras.layers.Activation('relu')
+
+        # Using gelu instead of relu in the activation makes training converge faster
+        # and generally increases accuracy but causes training and inference to be
+        # about 30% slower. Since this model is meant to be deployed on the edge,
+        # its debatable if the increased model accuracy is worth the inference
+        # impact, but will leave it to the user to decide. relu was used in the
+        # original paper cited above.
+        if use_relu:
+            self.activation = tf.keras.layers.Activation('relu')
+        else:
+            self.activation = GELU()
 
     def get_config(self):
         config = {
@@ -739,7 +744,6 @@ class NILMTransformerModel(tf.keras.Model):
         self.dropout_rate = drop_out
         self.hidden = hidden
 
-        self.decoder_hidden = 1024
         self.heads = 2
         self.n_layers = 2
         self.l2_norm_pool_size = 2
@@ -758,11 +762,8 @@ class NILMTransformerModel(tf.keras.Model):
         self.add_norm2 = AddNormalization()
         self.avg_pool = tf.keras.layers.GlobalAveragePooling1D()
         #self.max_pool = tf.keras.layers.GlobalMaxPooling1D()
-        self.dense1 = tf.keras.layers.Dense(units=self.decoder_hidden, activation='relu')
-        #self.dropout2 = tf.keras.layers.Dropout(rate=self.dropout_rate)
-        #self.dense2 = tf.keras.layers.Dense(units=self.decoder_hidden/2, activation='relu')
-        #self.dropout3 = tf.keras.layers.Dropout(rate=0.3)
-        self.dense3 = tf.keras.layers.Dense(units=1)
+        self.dense1 = tf.keras.layers.Dense(units=self.hidden, activation='relu')
+        self.dense2 = tf.keras.layers.Dense(units=1)
         # If training with mixed-precision, ensure model output is float32.
         # This helps to avoids numerical instability.
         # See https://www.tensorflow.org/guide/mixed_precision#building_the_model
@@ -798,14 +799,8 @@ class NILMTransformerModel(tf.keras.Model):
         x = self.avg_pool(x) #self.max_pool(x)
         # Expected output shape = (batch_size, hidden)
         x = self.dense1(x)
-        # Expected output shape = (batch_size, decoder_hidden)
-        #x = self.dropout2(x, training=training)
-        # Expected output size = (batch_size, decoder_hidden)
-        #x = self.dense2(x)
-        # Expected output shape = (batch_size, decoder_hidden/2)
-        #x = self.dropout3(x, training=training)
-        # Expected output size = (batch_size, decoder_hidden/2)
+        # Expected output shape = (batch_size, hidden)
         # Apply sequence-to-point transformation.
-        x = self.dense3(x)
+        x = self.dense2(x)
         # Expected output_size = (batch_size, 1)
         return self.output_activation(x)

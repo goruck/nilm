@@ -33,17 +33,19 @@ $$x(t)=\sum_{i=1}^My_i(t)+\epsilon_{noise}(t) \tag{1}$$
 
 Where $\epsilon_{noise}$ is a noise term. The goal of this project is to solve the inverse problem and estimate the appliance power consumption $y_i$, given the aggregate power signal $x$, and to do so in a manner suitable for deployment at the edge. 
 
-Past approaches have included factorial hidden Markov models (FHMM)¹ and various event-based methods with some success⁶. You can also solve the single-channel BSS problem can by using sequence-to-sequence (seq2seq) learning with neural networks, and it can applied to the NILM problem using transformers, convolutional and recurrent neural networks³. Seq2seq learning involves training a deep network to map between an input time series, such as the aggregate power readings the case of NILM, and a output sequence, such as the estimated energy consumption of a single appliance. A sliding input window is typically used to training the network which generates a corresponding window of the output. This method produces multiple predictions for each appliance in the output so an average of the predictions is used for the final result. Some of the predictions will be more accurate than others, especially those near the midpoint of the input sliding window. The averaging will tend to lower the overall accuracy of the predictions.
+Past approaches have included factorial hidden Markov models (FHMM)¹ and various event-based methods with some success⁶. You can also solve the single-channel BSS problem can by using sequence-to-sequence (seq2seq) learning with neural networks, and it can applied to the NILM problem using transformers, convolutional and recurrent neural networks³. Seq2seq learning involves training a neural network to map between an input time series, such as the aggregate power readings the case of NILM, and a output sequence, such as the estimated energy consumption of a single appliance. A sliding input window is typically used to training the network which generates a corresponding window of the output. This method produces multiple predictions for each appliance in the output so an average of the predictions is used for the final result. Some of the predictions will be more accurate than others, especially those near the midpoint of the input sliding window. The averaging will tend to lower the overall accuracy of the predictions.
 
 Some of the disadvantages of of seq2seq leaning can mitigated by sequence-to-point learning (seq2point) for single-channel BSS⁴. You also use a sliding input signal window in this approach, however the network is trained to predict the output signal only at the midpoint of the window which makes the prediction problem easier on the network, leading to more accurate results.
 
 I selected the seq2point learning approach for my prototype system and my implementation was inspired and guided by work described by Michele D'Incecco, Stefano Squartini and Mingjun Zhong⁵. I developed a variety of seq2point learning models using Tensorflow as shown in the Python module [define_models.py](./ml/define_models.py) but focussed my work on the models `transformer` and `cnn`.
 
-The cnn model is depicted below for an input sequence length of 599 samples. The model generally follows traditional cnn concepts from vision use cases where several convolutional layers are used to extract features from the input power sequence at gradually finer details as the input traverses through the network. These features are the on-off patterns of the appliances as well as their power consumption levels. Max pooling is used to manage the complexity of the model after each convolutional layer. Finally, dense layers are used to output the final single point power consumption estimate for the window which is de-normalized before using in downstream processing. There are about 40 million parameters in this model using the default values.
+### Neural Network Models
+
+The ```cnn``` model is depicted below for an input sequence length of 599 samples. The model generally follows traditional cnn concepts from vision use cases where several convolutional layers are used to extract features from the input power sequence at gradually finer details as the input traverses through the network. These features are the on-off patterns of the appliances as well as their power consumption levels. Max pooling is used to manage the complexity of the model after each convolutional layer. Finally, dense layers are used to output the final single point power consumption estimate for the window which is de-normalized before using in downstream processing. There are about 40 million parameters in this model using the default values.
 
 ![Alt text](./img/cnn_model_plot.png?raw=true "cnn model plot")
 
-The transformer model is depicted below for an input sequence length of 599 samples where the transformer block is a Bert-style encoder. The input sequence is first passed through a convolutional layer to expand it into a latent space which is analogous to the feature extraction in the cnn model case. These features are pooled and L2 normalized to reduce model complexity and to mitigate the effects of outliers. Next, the sequence features are processed by a Bert-style transformer lineup which includes positional embedding and transformer blocks that applies importance weighting. The output of the encoder is decoded by several layers which are comprised of relative position embedding which applies symmetric weights around the mid-point of the signal, average pooling which reduces the sequence to a single value per feature and then finally dense layers that output the final single point estimated power value for the window which again is de-normalized for downstream processing. There are about seven million parameters in this model using the default values.
+The ```transformer``` model is depicted below for an input sequence length of 599 samples where the transformer block is a Bert-style encoder. The input sequence is first passed through a convolutional layer to expand it into a latent space which is analogous to the feature extraction in the cnn model case. These features are pooled and L2 normalized to reduce model complexity and to mitigate the effects of outliers. Next, the sequence features are processed by a Bert-style transformer lineup which includes positional embedding and transformer blocks that applies importance weighting. The output of the encoder is decoded by several layers which are comprised of relative position embedding which applies symmetric weights around the mid-point of the signal, average pooling which reduces the sequence to a single value per feature and then finally dense layers that output the final single point estimated power value for the window which again is de-normalized for downstream processing. There are about six million parameters in this model using the default values.
 
 ![Alt text](./img/transformer_model_plot.png?raw=true "transformer model plot")
 
@@ -63,7 +65,7 @@ Note that these datasets are typically very imbalanced because the majority of t
 
 ### Model Training
 
-I used TensorFlow to train and test the model. All code associated with this section can be found on the Machine Learning section of the project’s GitHub, NILM⁹. The seq2point learning models for the appliances were trained individually on z-score standardized or normalized to $[0, P_m]$, where $P_m$ is the maximum power consumption of an appliance in its active state. REFIT data.
+I used TensorFlow to train and test the model. All code associated with this section can be found on the Machine Learning section of the project’s GitHub, NILM⁹. The seq2point learning models for the appliances were trained individually on z-score standardized REFIT data or normalized to $[0, P_m]$, where $P_m$ is the maximum power consumption of an appliance in its active state. Using normalized data tended to give the best model performance so it is used by default.
 
 I used the following metrics to evaluate the model’s performance. You can view the code that calculates these metrics [here](./ml/nilm_metric.py).
 
@@ -83,7 +85,7 @@ $$EpD = \frac{1}{D}\sum_{n=1}^{D}e\tag{4}$$
 
 $$NDE = \frac{\sum_{i,t}(x_{i,t}-\hat{x_{i,t}})^2}{\sum_{i,t}x_{i,t}^2}\tag{5}$$
 
-I also used accuracy ($ACC$), F1-score ($F1$) and Matthew’s correlation coefficient ($MCC$) to assess if the model can perform well with the severely imbalanced datasets used to train and test the model. These metrics depend on the on-off status of the device and are computed using the parameters in the [common.py](./ml/common.py) module. $ACC$ is equal to the number of correctly predicted time points over the test dataset. F1 and MCC are computed according to the equations below where $TP$ stands for true positives, $TN$ stands for true negatives, $FP$ stands for false positives and $FN$ stands for false negatives.
+I also used accuracy ($ACC$), F1-score ($F1$) and Matthew’s correlation coefficient ($MCC$) to assess if the model can perform well with the severely imbalanced datasets used to train and test the model. These metrics depend on the on-off status of the device and are computed using the parameters in the [common.py](./ml/common.py) module. $ACC$ is equal to the number of correctly predicted time points over the test dataset. $F1$ and $MCC$ are computed according to the equations below where $TP$ stands for true positives, $TN$ stands for true negatives, $FP$ stands for false positives and $FN$ stands for false negatives.
 
 $$F1=\frac{TP}{TP+\frac{1}{2}(FP+FN)}\tag{6}$$
 
@@ -97,7 +99,7 @@ You can see the code I used to train the model in [train_distributed.py](./ml/tr
 
 The key hyper-parameters for training and the optimizer are summarized below.
 * Input Window Size: 599 samples
-* Batch size: 1024 samples.
+* Global Batch size: 1024 samples.
 * From scratch Learning Rate: 1e-04
 * QAT and Prune Learning Rate: 1e-05
 * Adam Optimizer: beta_1=0.9, beta_2=0.999, epsilon=1e-08.
@@ -123,18 +125,18 @@ Typical performance metrics for the `transformer` model are shown in the table b
 
 |Appliance|$F1\uparrow$|$MCC\uparrow$|$ACC\uparrow$|$MAE$ $(W)$ $\downarrow$|$SAE\downarrow$|$NDE\downarrow$|$EpD_e$ $(\%)$ $\downarrow$|
 | --- | --- | --- | --- | --- | --- | --- | --- |
-|kettle|0.8206|0.8247|0.9966|7.478|0.2577|0.3848|25.77|
-|microwave|0.6849|0.6834|0.9954|5.553|0.0418|0.6710|4.184|
-|fridge|0.7817|0.6758|0.8508|13.51|0.1926|0.4704|19.26|
+|kettle|0.8177|0.8176|0.9967|7.264|0.1348|0.3760|13.48|
+|microwave|0.6428|0.6413|0.9953|6.247|0.1976|0.7456|-19.76|
+|fridge|0.8138|0.7262|0.8799|11.02|0.0559|0.3743|5.590|
 |dishwasher|0.6914|0.7119|0.9873|5.373|0.0690|0.3906|-6.904|
 |washingmachine|0.8435|0.8420|0.9886|14.19|0.2440|0.2440|-24.40|
 
 Average metrics across all appliances for both model architectures are compared in the table below.
 
-|Architecture|$\overline{F1}\uparrow$|$\overline{MCC}\uparrow$|$\overline{ACC}\uparrow$|$\overline{MAE}$ $(W)$ $\downarrow$|$\overline{SAE}\downarrow$|$\overline{NDE}\downarrow$|$\overline{\|EpD_e\|}$ $(Wh)$ $\downarrow$|
+|Architecture|$\overline{F1}\uparrow$|$\overline{MCC}\uparrow$|$\overline{ACC}\uparrow$|$\overline{MAE}$ $(W)$ $\downarrow$|$\overline{SAE}\downarrow$|$\overline{NDE}\downarrow$|$\overline{\|EpD_e\|}$ $(\%)$ $\downarrow$|
 | --- | --- | --- | --- | --- | --- | --- | --- |
 |```cnn```|0.7161|0.7065|0.9643|9.852|0.1957|0.4528|19.57|
-|```transformer```|0.7528|0.7358|0.9599|10.32|0.2484|0.4174|84.29|
+|```transformer```|0.7618|0.7478|0.9696|8.819|0.1403|0.4261|14.03|
 
 You can see that the ```cnn``` and ```transformer``` models have similar performance even though the latter has about six times fewer parameters than the former. However, each ```transformer``` training step takes about seven times longer than ```cnn``` due to the `transformer` model's use of self-attention which has $O(n^2)$ complexity as compared to the `cnn` model's $O(n)$, where $n$ is the input sequence length. On the basis on training (and inference) efficiency, you can see that ```cnn``` is preferable with little loss in model performance.
 
@@ -233,4 +235,4 @@ A photograph of an early version of my prototype system is shown below.
 
 The schematic for the Analog Signal Conditioning circuitry is shown below.
 
-![Alt text](./img/pan-ard-inf-v1.1.jpg?raw=true "Analog Signal Conditioning Schematic")
+![Alt text](./img/pan-ard-inf-v1.2.png?raw=true "Analog Signal Conditioning Schematic")

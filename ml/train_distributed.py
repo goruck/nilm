@@ -133,7 +133,7 @@ def get_arguments():
     parser.add_argument(
         '--batchsize',
         type=int,
-        default=1024,
+        default=512,
         help='mini-batch size'
     )
     parser.add_argument(

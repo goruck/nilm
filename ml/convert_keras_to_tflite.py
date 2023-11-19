@@ -1,5 +1,5 @@
 """
-Convert trained Keras models to tflite.
+Convert Keras models trained for energy disaggregation to tflite.
 
 Generates a quantized tflite model that can be complied for the edge tpu
 or used for on-device inference on a Raspberry Pi or other edge compute.
@@ -24,11 +24,16 @@ rng = np.random.default_rng()
 
 # Check how well model was quantized (only for full INT8 quant).
 DEBUG_MODEL = False
+
 # Attempt to improve model accuracy at expense of performance.
 FIX_MODEL = False
+
 # Number of samples for post-training quantization calibration.
 # 43200 (4 * 10800) is 4 * 24 = 96 hours @ 8 sec per sample.
 NUM_CAL = 43200
+
+# Name of purned model checkpoints.
+PRUNED_CHECKPOINT_DIR = 'pruned_model_for_export'
 
 class ConvertModel():
     """Convert a Keras model to tflite and quantize.
@@ -494,7 +499,6 @@ if __name__ == '__main__':
     model_filepath = os.path.join(args.save_dir, appliance_name)
     if args.prune:
         # Load Keras model from best pruned checkpoint during training.
-        PRUNED_CHECKPOINT_DIR = 'pruned_model_for_export'
         pruned_filepath = os.path.join(model_filepath, PRUNED_CHECKPOINT_DIR)
         model = tf.keras.models.load_model(pruned_filepath)
     else:
@@ -553,6 +557,7 @@ if __name__ == '__main__':
         file.write(tflite_model_quant)
     logger.log(f'Quantized tflite model saved to {filepath}.')
 
+    # Evaluate quantized model performance.
     if args.evaluate:
         evaluate_tflite(
             args.num_eval,
