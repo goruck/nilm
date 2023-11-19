@@ -6,7 +6,7 @@ This folder contains most of the machine learning related code for training and 
 
 **images/** - Folder that contains various visualizations and test results as image files.
 
-**models/** - Folder that contains the fitted models per appliance with images of their loss curves.
+**models/** - Folder that contains the fitted models per appliance with images of their loss curves, training results and test results.
 
 **plots/** - Folder that contains various scripts used in interpreting and visualizing the models. 
 
@@ -26,6 +26,12 @@ This folder contains most of the machine learning related code for training and 
 
 `quantize.py` - Deprecated and replaced by `convert_keras_to_tflite.py`.
 
-`test.py` - Main script used for training the models from scratch with options to prune and for quantize aware training.
+`train.py` - Script used for training the models from scratch with options to prune and for quantize aware training.
 
-`train.py` - Script used for testing the trained models on data disjoint from test and validation data.
+`train_distributed.py` - Script used for training the models from scratch or resumption of training using distributed GPU compute. Mainly supersedes `train.py`.
+
+`test.py` - Script used for testing the trained models on data disjoint from test and validation data.
+
+`visualize_keras_model.py` - Script that generates network diagrams from Keras models.
+
+`transformer_model.py` - Defines NILM transformer-based model using Keras subclassed layers and models.
