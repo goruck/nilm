@@ -15,7 +15,7 @@ This subsystem was calibrated with an external power meter, yielding parameters 
 
 ## PCB
 
-![Alt text](../img/pan-ard-inf-lo-v1.1.png?raw=true "Analog Signal Conditioning Schematic")
+![Alt text](../img/pan-ard-inf-lo-v1.1.png?raw=true "Analog Signal Conditioning PCB")
 
 ## References
 
