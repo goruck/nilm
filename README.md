@@ -126,7 +126,7 @@ Typical performance metrics for the `transformer` model are shown in the table b
 |Appliance|$F1\uparrow$|$MCC\uparrow$|$ACC\uparrow$|$MAE$ $(W)$ $\downarrow$|$SAE\downarrow$|$NDE\downarrow$|$EpD_e\thinspace(\%)\downarrow$|
 | --- | --- | --- | --- | --- | --- | --- | --- |
 |kettle|0.8177|0.8176|0.9967|7.264|0.1348|0.3760|13.48|
-|microwave|0.6428|0.6413|0.9953|6.247|0.1976|0.7456|-19.76|
+|microwave|0.6530|0.6506|0.9952|6.428|0.1454|0.7496|-14.54|
 |fridge|0.8138|0.7262|0.8799|11.02|0.0559|0.3743|5.590|
 |dishwasher|0.6914|0.7119|0.9873|5.373|0.0690|0.3906|-6.904|
 |washingmachine|0.8435|0.8420|0.9886|14.19|0.2440|0.2440|-24.40|
@@ -136,7 +136,7 @@ Average metrics across all appliances for both model architectures are compared 
 |Architecture|$\overline{F1}\uparrow$|$\overline{MCC}\uparrow$|$\overline{ACC}\uparrow$|$\overline{MAE}$ $(W)$ $\downarrow$|$\overline{SAE}\downarrow$|$\overline{NDE}\downarrow$|$\overline{\|EpD_e\|}\thinspace(\%)\downarrow$|
 | --- | --- | --- | --- | --- | --- | --- | --- |
 |```cnn```|0.7161|0.7065|0.9643|9.852|0.1957|0.4528|19.57|
-|```transformer```|0.7618|0.7478|0.9696|8.819|0.1403|0.4261|14.03|
+|```transformer```|0.7639|0.7497|0.9695|8.855|0.1298|0.3781|12.98|
 
 You can see that the ```cnn``` and ```transformer``` models have similar performance even though the latter has about six times fewer parameters than the former. However, each ```transformer``` training step takes about seven times longer than ```cnn``` due to the `transformer` model's use of self-attention which has $O(n^2)$ complexity as compared to the `cnn` model's $O(n)$, where $n$ is the input sequence length. On the basis on training (and inference) efficiency, you can see that ```cnn``` is preferable with little loss in model performance.
 
