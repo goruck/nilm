@@ -113,7 +113,7 @@ Where $x, \hat{x}\in[0, 1]$ are the ground truth and predicted power usage singl
 
 You can find the training results for each appliance in the [models](./ml/models/) folder. Typical performance metrics for the `cnn` model are shown in the table below.
 
-|Appliance|$F1\uparrow$|$MCC\uparrow$|$ACC\uparrow$|$MAE$ $(W)$ $\downarrow$|$SAE\downarrow$|$NDE\downarrow$|$EpD_e$ $(\%)$ $\downarrow$|
+|Appliance|$F1\uparrow$|$MCC\uparrow$|$ACC\uparrow$|$MAE$ $(W)$ $\downarrow$|$SAE\downarrow$|$NDE\downarrow$|$EpD_e\thinspace(\%)\downarrow$|
 | --- | --- | --- | --- | --- | --- | --- | --- |
 |kettle|0.7199|0.7298|0.9960|8.723|0.3091|0.4705|-30.91|
 |microwave|0.6328|0.6303|0.9950|6.070|0.2102|0.6876|-21.02|
@@ -123,7 +123,7 @@ You can find the training results for each appliance in the [models](./ml/models
 
 Typical performance metrics for the `transformer` model are shown in the table below.
 
-|Appliance|$F1\uparrow$|$MCC\uparrow$|$ACC\uparrow$|$MAE$ $(W)$ $\downarrow$|$SAE\downarrow$|$NDE\downarrow$|$EpD_e$ $(\%)$ $\downarrow$|
+|Appliance|$F1\uparrow$|$MCC\uparrow$|$ACC\uparrow$|$MAE$ $(W)$ $\downarrow$|$SAE\downarrow$|$NDE\downarrow$|$EpD_e\thinspace(\%)\downarrow$|
 | --- | --- | --- | --- | --- | --- | --- | --- |
 |kettle|0.8177|0.8176|0.9967|7.264|0.1348|0.3760|13.48|
 |microwave|0.6428|0.6413|0.9953|6.247|0.1976|0.7456|-19.76|
@@ -133,7 +133,7 @@ Typical performance metrics for the `transformer` model are shown in the table b
 
 Average metrics across all appliances for both model architectures are compared in the table below.
 
-|Architecture|$\overline{F1}\uparrow$|$\overline{MCC}\uparrow$|$\overline{ACC}\uparrow$|$\overline{MAE}$ $(W)$ $\downarrow$|$\overline{SAE}\downarrow$|$\overline{NDE}\downarrow$|$\overline{\|EpD_e\|}$ $(\%)$ $\downarrow$|
+|Architecture|$\overline{F1}\uparrow$|$\overline{MCC}\uparrow$|$\overline{ACC}\uparrow$|$\overline{MAE}$ $(W)$ $\downarrow$|$\overline{SAE}\downarrow$|$\overline{NDE}\downarrow$|$\overline{\|EpD_e\|}\thinspace(\%)\downarrow$|
 | --- | --- | --- | --- | --- | --- | --- | --- |
 |```cnn```|0.7161|0.7065|0.9643|9.852|0.1957|0.4528|19.57|
 |```transformer```|0.7618|0.7478|0.9696|8.819|0.1403|0.4261|14.03|
