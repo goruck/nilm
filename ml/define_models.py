@@ -33,7 +33,7 @@ def transformer_fun(window_length=599, dropout_rate=0.1, d_model=256) -> tf.kera
     r = RelativePositionEmbedding(max_length=latent_len)(x)
     x = AddNormalization()(x, r)
     x = tf.keras.layers.GlobalAveragePooling1D()(x)
-    x = tf.keras.layers.Dense(units=1024, activation='relu')(x)
+    x = tf.keras.layers.Dense(units=d_model, activation='relu')(x)
     out = tf.keras.layers.Dense(units=1, activation='linear')(x)
     return tf.keras.Model(inp, out)
 
