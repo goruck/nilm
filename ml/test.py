@@ -14,6 +14,7 @@ import matplotlib.pyplot as plt
 from logger import Logger
 import nilm_metric
 import common
+from window_generator import WindowGenerator
 
 def get_arguments():
     parser = argparse.ArgumentParser(description='Predict appliance\
@@ -114,13 +115,13 @@ if __name__ == '__main__':
     else:
         logger.log('Using default standardization.')
 
-    WindowGenerator = common.get_window_generator()
     test_provider = WindowGenerator(
         dataset=(test_set_x, None, None),
         window_length=window_length,
         batch_size=args.batch_size,
         train=False,
-        shuffle=False)
+        shuffle=False
+    )
 
     # Load best saved trained model for appliance.
     model_file_path = os.path.join(
@@ -134,7 +135,8 @@ if __name__ == '__main__':
         x=test_provider,
         verbose=1,
         workers=24,
-        use_multiprocessing=True)
+        use_multiprocessing=True
+    )
 
     # Find ground truth which is center of test target (y) windows.
     # Calculate center sample index of a window.
@@ -143,8 +145,9 @@ if __name__ == '__main__':
     ground_truth_indices = np.arange(test_set_y.size - window_length) + center
     # Grab only the center point of each window in target set.
     ground_truth = test_set_y[ground_truth_indices]
-    # Adjust number of samples since predictions may not use a partial batch size.
-    #ground_truth = ground_truth[:test_prediction.size]
+    # Adjustment since test_provider defaults to producing complete batches.
+    # See `allow_partial_batches' parameter in window_generator.
+    ground_truth = ground_truth[:test_prediction.size]
 
     # De-normalize appliance power predictions.
     if common.USE_APPLIANCE_NORMALIZATION:
@@ -173,6 +176,9 @@ if __name__ == '__main__':
     # Calculate ground truth and prediction status.
     prediction_status = np.array(common.compute_status(prediction, appliance_name))
     ground_truth_status = test_set_y_status[ground_truth_indices]
+    # Adjustment since test_provider defaults to producing complete batches.
+    # See `allow_partial_batches' parameter in window_generator.
+    ground_truth_status = ground_truth_status[:test_prediction.size]
     assert prediction_status.size == ground_truth_status.size
 
     # Metric evaluation.
