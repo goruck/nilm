@@ -1,77 +1,29 @@
-"""Computes NILM test metrics.
-
-Various metrics useful for evaluating predictions from NILM models.
-Data inputs are ground truth and predicted appliance power samples in Watts.
-The sample update period must be provided for energy calculations and
-an appliance on-off threshold must be provided to determine status.
-
-Typical usage example:
-    metrics = NILMTestMetrics(
-        target=ground_truth, prediction=prediction,
-        threshold=threshold, sample_period=SAMPLE_PERIOD)
-    f1 = metrics.get_f1()
-    predicted_energy_per_day: get_epd(prediction, SAMPLE_PERIOD)
+"""Class to computes NILM test metrics.
 
 Copyright (c) 2022~2023 Lindo St. Angel.
 """
 
 import numpy as np
 
-def get_statistics(data:np.ndarray) -> dict:
-    """Generate general statistics of a dataset."""
-    mean = np.mean(data)
-    std = np.std(data)
-    min_v = np.sort(data)[0]
-    max_v = np.sort(data)[-1]
-
-    quartile1 = np.percentile(data, 25)
-    median = np.percentile(data, 50)
-    quartile2 = np.percentile(data, 75)
-
-    return {'mean':mean,
-            'std':std,
-            'min':min_v,
-            'max':max_v,
-            'quartile1':quartile1,
-            'median':median,
-            'quartile2':quartile2}
-
-def get_epd(data:np.ndarray, sample_period:int) -> float:
-    '''Returns NILM dataset average energy per day in Watt-hours.
-
-    Args:
-        data: power consumption samples in Watts, updated every sample_period.
-        sample_period: sample update period in seconds.
-    '''
-    # Calculate number of samples per hour in dataset.
-    sph = 60 * 60 // sample_period
-
-    # Calculate total samples in dataset.
-    if data.size - sph < 1:
-        raise ValueError('Need at least one hour of samples to calculate epd.')
-    tps = data.size - sph
-
-    # Generate a list of power consumed for each hour in dataset.
-    # data[i:i+sph] is one hour of power consumption samples,
-    # summing those samples and dividing by number of samples
-    # gives energy in Watt-hours for that interval.
-    watt_hours = [np.sum(data[i:i+sph]) / sph for i in range(0, tps, sph)]
-
-    # Calculate number of days in dataset.
-    days = data.size / sph / 24
-
-    # Return average energy per day in Watt-hour for entire dataset.
-    return np.sum(watt_hours) / days
-
 class NILMTestMetrics():
     """Computes NILM-related test metrics.
 
+    Provides various metrics useful for evaluating predictions from NILM models.
+    Data inputs are ground truth and predicted appliance power samples in Watts.
+    The sample update period must be provided for energy calculations and
+    an appliance on-off threshold must be provided to determine status.
+
+    Typical usage example:
+    ```python
+    predicted_energy_per_day = NILMTestMetrics.get_epd(prediction, SAMPLE_PERIOD)
+    metrics = NILMTestMetrics(
+        target=ground_truth, prediction=prediction,
+        threshold=threshold, sample_period=SAMPLE_PERIOD)
+    f1 = metrics.get_f1()
+    ```
+
     Attributes:
-        target: ground truth power consumption samples in Watts.
-        target_status: ground truth on-off status.
-        prediction: predicted power consumption samples in Watts.
-        prediction_status: prediction on-off status.
-        sample_period: sample update period in seconds.
+        None
     """
     def __init__(
         self,
@@ -79,8 +31,20 @@ class NILMTestMetrics():
         target_status:np.ndarray,
         prediction:np.ndarray,
         prediction_status:np.ndarray,
-        sample_period:int) -> None:
+        sample_period:int
+    ) -> None:
+        """Initializes NILM metrics class.
+        
+        Args:
+            target: Ground truth power consumption samples in Watts.
+            target_status: Ground truth on-off status.
+            prediction: Predicted power consumption samples in Watts.
+            prediction_status: Prediction on-off status.
+            sample_period: Sample update period in seconds.
 
+        Raises:
+            ValueError if target and prediction datasets are not same size.
+        """
         if target.shape != prediction.shape:
             raise ValueError('Target and prediction must be same shape.')
         if target.shape != target_status.shape or prediction.shape != prediction_status.shape:
@@ -91,6 +55,27 @@ class NILMTestMetrics():
         self.prediction = prediction
         self.prediction_status = prediction_status
         self.sample_period = sample_period
+
+    def _get_statistics(self, data:np.ndarray) -> dict:
+        """Generate general statistics of a dataset."""
+        mean = np.mean(data)
+        std = np.std(data)
+        min_v = np.sort(data)[0]
+        max_v = np.sort(data)[-1]
+
+        quartile1 = np.percentile(data, 25)
+        median = np.percentile(data, 50)
+        quartile2 = np.percentile(data, 75)
+
+        return {
+            'mean':mean,
+            'std':std,
+            'min':min_v,
+            'max':max_v,
+            'quartile1':quartile1,
+            'median':median,
+            'quartile2':quartile2
+        }
 
     def get_tp(self) -> int:
         '''Returns the number of true positives between target and prediction.
@@ -194,7 +179,7 @@ class NILMTestMetrics():
         """
         data = np.abs(self.target * self.target_status - self.prediction * self.prediction_status)
 
-        return get_statistics(data)
+        return self._get_statistics(data)
 
     def get_nde(self) -> float:
         '''Returns the normalized disaggregation error (nde).
@@ -221,3 +206,31 @@ class NILMTestMetrics():
         rhat = np.sum(self.prediction * self.prediction_status * float(self.sample_period) / 3600.0)
 
         return np.abs(r - rhat) / r
+
+    @staticmethod
+    def get_epd(data:np.ndarray, sample_period:int) -> float:
+        '''Returns NILM dataset average energy per day in Watt-hours.
+
+        Args:
+            data: power consumption samples in Watts, updated every sample_period.
+            sample_period: sample update period in seconds.
+        '''
+        # Calculate number of samples per hour in dataset.
+        sph = 60 * 60 // sample_period
+
+        # Calculate total samples in dataset.
+        if data.size - sph < 1:
+            raise ValueError('Need at least one hour of samples to calculate epd.')
+        tps = data.size - sph
+
+        # Generate a list of power consumed for each hour in dataset.
+        # data[i:i+sph] is one hour of power consumption samples,
+        # summing those samples and dividing by number of samples
+        # gives energy in Watt-hours for that interval.
+        watt_hours = [np.sum(data[i:i+sph]) / sph for i in range(0, tps, sph)]
+
+        # Calculate number of days in dataset.
+        days = data.size / sph / 24
+
+        # Return average energy per day in Watt-hour for entire dataset.
+        return np.sum(watt_hours) / days

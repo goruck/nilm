@@ -14,7 +14,7 @@ import socket
 import tensorflow as tf
 import numpy as np
 
-import nilm_metric
+from nilm_metric import NILMTestMetrics
 import common
 from logger import Logger
 from convert_model import ConvertModel
@@ -110,7 +110,7 @@ def evaluate_tflite(num_eval, appliance, tflite_model, sample_provider, log):
     assert prediction_status.size == ground_truth_status.size
 
     # Metric evaluation.
-    metrics = nilm_metric.NILMTestMetrics(
+    metrics = NILMTestMetrics(
         target=ground_truth,
         target_status=ground_truth_status,
         prediction=prediction,
@@ -127,9 +127,9 @@ def evaluate_tflite(num_eval, appliance, tflite_model, sample_provider, log):
     log.log(f'MAE: {metrics.get_abs_error()["mean"]} (W)')
     log.log(f'NDE: {metrics.get_nde()}')
     log.log(f'SAE: {metrics.get_sae()}')
-    epd_gt = nilm_metric.get_epd(ground_truth * ground_truth_status, sample_period)
+    epd_gt = metrics.get_epd(ground_truth * ground_truth_status, sample_period)
     log.log(f'Ground truth EPD: {epd_gt} (Wh)')
-    epd_pred = nilm_metric.get_epd(prediction * prediction_status, sample_period)
+    epd_pred = metrics.get_epd(prediction * prediction_status, sample_period)
     log.log(f'Predicted EPD: {epd_pred} (Wh)')
     log.log(f'EPD Relative Error: {100.0 * (epd_pred - epd_gt) / epd_gt} (%)')
 

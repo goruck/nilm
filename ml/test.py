@@ -12,7 +12,7 @@ import tensorflow as tf
 import matplotlib.pyplot as plt
 
 from logger import Logger
-import nilm_metric
+from nilm_metric import NILMTestMetrics
 import common
 from window_generator import WindowGenerator
 
@@ -182,11 +182,13 @@ if __name__ == '__main__':
     assert prediction_status.size == ground_truth_status.size
 
     # Metric evaluation.
-    metrics = nilm_metric.NILMTestMetrics(target=ground_truth,
-                                          target_status=ground_truth_status,
-                                          prediction=prediction,
-                                          prediction_status=prediction_status,
-                                          sample_period=sample_period)
+    metrics = NILMTestMetrics(
+        target=ground_truth,
+        target_status=ground_truth_status,
+        prediction=prediction,
+        prediction_status=prediction_status,
+        sample_period=sample_period
+    )
     logger.log(f'True positives: {metrics.get_tp()}')
     logger.log(f'True negatives: {metrics.get_tn()}')
     logger.log(f'False positives: {metrics.get_fp()}')
@@ -197,9 +199,9 @@ if __name__ == '__main__':
     logger.log(f'MAE: {metrics.get_abs_error()["mean"]} (W)')
     logger.log(f'NDE: {metrics.get_nde()}')
     logger.log(f'SAE: {metrics.get_sae()}')
-    epd_gt = nilm_metric.get_epd(ground_truth * ground_truth_status, sample_period)
+    epd_gt = metrics.get_epd(ground_truth * ground_truth_status, sample_period)
     logger.log(f'Ground truth EPD: {epd_gt} (Wh)')
-    epd_pred = nilm_metric.get_epd(prediction * prediction_status, sample_period)
+    epd_pred = metrics.get_epd(prediction * prediction_status, sample_period)
     logger.log(f'Predicted EPD: {epd_pred} (Wh)')
     logger.log(f'EPD Relative Error: {100.0 * (epd_pred - epd_gt) / epd_gt} (%)')
 

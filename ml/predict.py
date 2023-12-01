@@ -16,12 +16,12 @@ import matplotlib.colors as mcolors
 from matplotlib.dates import AutoDateLocator, AutoDateFormatter
 import pandas as pd
 
-from logger import log
-from common import get_window_generator, params_appliance
-from nilm_metric import get_Epd
+from logger import Logger
+from common import params_appliance, SAMPLE_PERIOD
+from window_generator import WindowGenerator
+from nilm_metric import NILMTestMetrics
 
 WINDOW_LENGTH = 599 # input sample window length
-SAMPLE_PERIOD = 8 # input sample period in seconds
 
 if __name__ == '__main__':
     default_appliances = [
@@ -85,10 +85,17 @@ if __name__ == '__main__':
     parser.set_defaults(show_rt_preds=False)
     parser.set_defaults(threshold_rt_preds=False)
 
-    log(f'Machine name: {socket.gethostname()}')
     args = parser.parse_args()
-    log('Arguments: ')
-    log(args)
+
+    logger = Logger(
+        os.path.join(args.save_dir, args.appliance_name,
+                     f'{args.appliance_name}_predict_{args.model_arch}.log'
+                    )
+    )
+
+    logger.log(f'Machine name: {socket.gethostname()}')
+    logger.log('Arguments: ')
+    logger.log(args)
 
     # offset parameter from window length
     offset = int(0.5 * (WINDOW_LENGTH - 1.0))
@@ -99,25 +106,23 @@ if __name__ == '__main__':
         parse_dates=['date_time'], infer_datetime_format=True)
     date_times = df['date_time']
     aggregate = np.array(df['real_power'], dtype=np.float32)
-    log(f'There are {aggregate.size/10**6:.3f}M test samples.')
-
-    WindowGenerator = get_window_generator()
+    logger.log(f'There are {aggregate.size/10**6:.3f}M test samples.')
     
     def prediction(appliance: str, input: np.ndarray) -> np.ndarray:
         """Make appliance prediction and return post-processed result."""
-        log(f'Making prediction for {appliance}.')
+        logger.log(f'Making prediction for {appliance}.')
         model_file_path = os.path.join(
             args.trained_model_dir, appliance, args.ckpt_dir)
-        log(f'Loading saved model from {model_file_path}.')
+        logger.log(f'Loading saved model from {model_file_path}.')
         model = tf.keras.models.load_model(model_file_path)
         model.summary()
 
         # Normalize aggregate input with its own mean and training std.
         mean = np.mean(input)
         train_agg_std = params_appliance[appliance]['train_agg_std']
-        log('Normalizing aggregate input with:')
-        log(f'mean: {mean}')
-        log(f'train aggregate std: {train_agg_std}')
+        logger.log('Normalizing aggregate input with:')
+        logger.log(f'mean: {mean}')
+        logger.log(f'train aggregate std: {train_agg_std}')
         input = (input - mean) / train_agg_std
 
         test_provider = WindowGenerator(
@@ -135,9 +140,9 @@ if __name__ == '__main__':
         # De-normalize prediction output with training appliance mean and std.
         train_app_std = params_appliance[appliance]['train_app_std']
         train_app_mean = params_appliance[appliance]['train_app_mean']
-        log(f'De-normalizing {appliance} prediction with:')
-        log(f'train appliance mean: {train_app_mean}')
-        log(f'train appliance std: {train_app_std}')
+        logger.log(f'De-normalizing {appliance} prediction with:')
+        logger.log(f'train appliance mean: {train_app_mean}')
+        logger.log(f'train appliance std: {train_app_std}')
         prediction = prediction * train_app_std + train_app_mean
 
         # Zero out negative power predictions.
@@ -156,14 +161,12 @@ if __name__ == '__main__':
     }
 
     # Calculate metrics.
-    # get_Epd returns a relative metric between two powers, so zero out one.
-    target = np.zeros_like(aggregate)
-    aggregate_epd = get_Epd(target, aggregate, SAMPLE_PERIOD)
-    log('*** Metric Summary ***')
-    log(f'Aggregate energy: {aggregate_epd/1000:.3f} kWh per day')
+    aggregate_epd = NILMTestMetrics.get_epd(aggregate, SAMPLE_PERIOD)
+    logger.log('*** Metric Summary ***')
+    logger.log(f'Aggregate energy: {aggregate_epd/1000:.3f} kWh per day')
     for appliance in args.appliances:
-        epd = get_Epd(target, predictions[appliance], SAMPLE_PERIOD)
-        log(f'{appliance} energy: {epd/1000:.3f} kWh per day')
+        epd = NILMTestMetrics.get_epd(predictions[appliance], SAMPLE_PERIOD)
+        logger.log(f'{appliance} energy: {epd/1000:.3f} kWh per day')
 
     save_path = os.path.join(args.save_results_dir, args.panel)
     if not os.path.exists(save_path):
