@@ -26,7 +26,7 @@ This folder contains most of the machine learning related code for training and 
 
 `quantize.py` - Deprecated and replaced by `convert_keras_to_tflite.py`.
 
-`train.py` - Script used for training the models from scratch with options to prune and for quantize aware training.
+`train_keras.py` - Script used for training the models from scratch with options to prune and for quantize aware training.
 
 `train_distributed.py` - Script used for training the models from scratch or resumption of training using distributed GPU compute. Mainly supersedes `train.py`.
 
@@ -35,3 +35,9 @@ This folder contains most of the machine learning related code for training and 
 `visualize_keras_model.py` - Script that generates network diagrams from Keras models.
 
 `transformer_model.py` - Defines NILM transformer-based model using Keras subclassed layers and models.
+
+`distributed_trainer.py` - Class for `test.py`,
+
+`window_generator` - Class for window generator used by many modules in this project.
+
+`convert_model.py` - Class for converting quantizing Keras models to tflite. Used by `convert_keras_to_tflite.py`
