@@ -60,7 +60,7 @@ def get_epd(data:np.ndarray, sample_period:int) -> float:
     # Calculate number of days in dataset.
     days = data.size / sph / 24
 
-    # Return average energy per day in Watt-hour for entire dataset. 
+    # Return average energy per day in Watt-hour for entire dataset.
     return np.sum(watt_hours) / days
 
 class NILMTestMetrics():
@@ -80,12 +80,12 @@ class NILMTestMetrics():
         prediction:np.ndarray,
         prediction_status:np.ndarray,
         sample_period:int) -> None:
-        
+
         if target.shape != prediction.shape:
             raise ValueError('Target and prediction must be same shape.')
         if target.shape != target_status.shape or prediction.shape != prediction_status.shape:
             raise ValueError('Status shapes must match data shapes.')
-        
+
         self.target = target
         self.target_status = target_status
         self.prediction = prediction
@@ -133,14 +133,14 @@ class NILMTestMetrics():
         tn = float(self.get_tn())
         fp = float(self.get_fp())
         fn = float(self.get_fn())
-        
+
         return (tp*tn-fp*fn)/np.sqrt((tp+fp)*(tp+fn)*(tn+fp)*(tn+fn))
 
     def get_recall(self) -> float:
         '''Returns the recall rate.'''
         tp = float(self.get_tp())
         fn = float(self.get_fn())
-        
+
         if tp + fn <= 0.0:
             recall = tp / (tp + fn + 1e-9)
         else:
@@ -151,7 +151,7 @@ class NILMTestMetrics():
         '''Returns the precision rate.'''
         tp = float(self.get_tp())
         fp = float(self.get_fp())
-        
+
         if tp + fp <= 0.0:
             precision = tp / (tp + fp + 1e-9)
         else:
@@ -178,8 +178,13 @@ class NILMTestMetrics():
 
     def get_relative_error(self) -> float:
         '''Returns the relative error.'''
-        return np.mean(np.nan_to_num(
-            np.abs(self.target * self.target_status - self.prediction * self.prediction_status) / self.target.size))
+        return np.mean(
+            np.nan_to_num(
+                np.abs(
+                    self.target * self.target_status - self.prediction * self.prediction_status
+                ) / self.target.size
+            )
+        )
 
     def get_abs_error(self) -> dict:
         """Returns absolute error statistics.
@@ -197,7 +202,9 @@ class NILMTestMetrics():
         Evaluates the normalized error of the squared difference
         between the prediction and the ground truth.
         '''
-        return np.sum((self.target * self.target_status - self.prediction * self.prediction_status)**2) / np.sum((self.target**2))
+        return np.sum(
+            ( self.target * self.target_status - self.prediction * self.prediction_status)**2
+        ) / np.sum((self.target**2))
 
     def get_sae(self) -> float:
         '''Returns the signal aggregate error (sae).
