@@ -187,6 +187,8 @@ if __name__ == '__main__':
     logger.log(f'Checkpoint file path: {checkpoint_filepath}')
     savemodel_filepath = os.path.join(model_filepath, f'savemodel_{args.model_arch}')
     logger.log(f'SaveModel file path: {savemodel_filepath}')
+    history_filepath = os.path.join(model_filepath, f'history_{args.model_arch}')
+    logger.log(f'Training history file path: {history_filepath}')
 
     # Load datasets.
     train_dataset = common.load_dataset(training_path, args.crop_train_dataset)
@@ -220,7 +222,8 @@ if __name__ == '__main__':
         epochs=args.n_epoch,
         threshold=threshold,
         c0=c0,
-        savemodel_filepath=savemodel_filepath
+        savemodel_filepath=savemodel_filepath,
+        history_filepath = history_filepath
     )
 
     plot(

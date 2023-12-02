@@ -420,6 +420,7 @@ class DistributedTrainer():
             threshold:float,
             c0:float,
             savemodel_filepath:str,
+            history_filepath:str,
             patience:int=6,
             test_every_n_epochs:int=1
         ):
@@ -433,6 +434,7 @@ class DistributedTrainer():
             threshold: Normalized appliance active threshold.
             c0: Loss function L1 multiplication factor.
             savemodel_filepath: Path to save trained model.
+            history_filepath: Path to save model training history as numpy array.
             patience: Number of validation runs to wait for better (lower) loss.
             test_every_n_epoch: Number of epochs to run a validation loop.
         """
@@ -507,7 +509,7 @@ class DistributedTrainer():
             self._checkpoint_manager.save()
 
             # Save history.
-            save(savemodel_filepath, history)
+            save(history_filepath, history)
 
             if self._wait_for_better_loss == patience:
                 self._logger.log('Early termination of training.')
