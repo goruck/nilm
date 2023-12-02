@@ -7,6 +7,7 @@ import tensorflow as tf
 
 import define_models
 from window_generator import WindowGenerator
+from numpy import save
 
 class DistributedTrainer():
     """Distributed GPU custom training and test loops.
@@ -504,6 +505,9 @@ class DistributedTrainer():
 
             # Save checkpoint at end of current epoch.
             self._checkpoint_manager.save()
+
+            # Save history.
+            save(savemodel_filepath, history)
 
             if self._wait_for_better_loss == patience:
                 self._logger.log('Early termination of training.')
