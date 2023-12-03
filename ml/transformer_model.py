@@ -473,7 +473,7 @@ class TransformerBlock(tf.keras.layers.Layer):
 class NILMTransformerModelFit(tf.keras.Model):
     """NILM model based on a BERT-style transformer-based encoder.
 
-    This is implemented as a Keras subclassed Model and is meant to be trained by fit().
+    This is implemented as a Keras subclassed Model and is meant to be trained by model.fit().
 
     Args:
         window_length: The length of the input sequence of aggregate power samples.
@@ -500,16 +500,16 @@ class NILMTransformerModelFit(tf.keras.Model):
         self.dropout_rate = drop_out
         self.threshold = threshold
         self.hidden = hidden
-        self.l1_loss_c0 = c0
+        self.c0 = c0
 
-        self.decoder_hidden = 1024
         self.heads = 2
         self.n_layers = 2
-        self.pool_size = 2
+        self.l2_norm_pool_size = 2
 
         self.conv = tf.keras.layers.Conv1D(
-           filters=self.hidden, kernel_size=5, padding='same')
-        self.pool = L2NormPooling1D(pool_size=self.pool_size)
+           filters=self.hidden, kernel_size=5, padding='same'
+        )
+        self.l2_norm_pool = L2NormPooling1D(pool_size=self.l2_norm_pool_size)
         self.position = PositionEmbedding(max_length=self.original_len)
         self.add_norm1 = AddNormalization()
         self.dropout1 = tf.keras.layers.Dropout(rate=self.dropout_rate)
@@ -517,97 +517,86 @@ class NILMTransformerModelFit(tf.keras.Model):
             self.hidden, self.heads, self.hidden * 4, self.dropout_rate)
             for _ in range(self.n_layers)]
         self.relative_position = RelativePositionEmbedding(max_length=self.latent_len)
+        self.add_norm2 = AddNormalization()
         self.avg_pool = tf.keras.layers.GlobalAveragePooling1D()
         #self.max_pool = tf.keras.layers.GlobalMaxPooling1D()
-        self.dense1 = tf.keras.layers.Dense(units=self.decoder_hidden, activation='tanh')
-        #self.flatten = tf.keras.layers.Flatten()
-        self.dropout2 = tf.keras.layers.Dropout(rate=0.25)
-        self.add_norm2 = AddNormalization()
+        self.dense1 = tf.keras.layers.Dense(units=self.hidden, activation='relu')
         self.dense2 = tf.keras.layers.Dense(units=1)
         # If training with mixed-precision, ensure model output is float32.
         # This helps to avoids numerical instability.
         # See https://www.tensorflow.org/guide/mixed_precision#building_the_model
         self.output_activation = tf.keras.layers.Activation('linear', dtype=tf.float32)
 
-        self.loss_tracker = tf.keras.metrics.Mean(name='loss')
         self.mse = tf.keras.losses.MeanSquaredError(name='mse')
-        #self.kl = tf.keras.losses.KLDivergence(name='kl')
-        self.l1_on = tf.keras.losses.MeanAbsoluteError(name='l1_on')
-        #self.ll = TwoClassLogisticLoss(name='ll')
+        self.mae = tf.keras.losses.MeanAbsoluteError(name='mae')
         self.bce = tf.keras.losses.BinaryCrossentropy(name='bce')
 
+        self.loss_tracker = tf.keras.metrics.Mean(name='loss')
         self.mae_metric = tf.keras.metrics.MeanAbsoluteError(name='mae')
         self.msle_metric = tf.keras.metrics.MeanSquaredLogarithmicError(name='msle')
 
-    def compute_l1_loss(self, y, y_status, y_pred, y_pred_status):
-        """Compute L1 Loss if appliance is on or status is incorrect."""
-        y_on = (y_status > 0)
-        wrong = (y_status != y_pred_status)
-        mask = y_on | wrong
-        y = y[mask]
-        y_pred = y_pred[mask]
-        # masked_batch_size = tf.math.count_nonzero(mask)
-        # Expected output shape = (masked_batch_size,)
-        return tf.where(tf.reduce_any(mask), self.l1_on(y, y_pred), 0.0)
+    def _compute_train_loss(self, y, y_status, y_pred, y_pred_status):
+        """Calculate per-sample train loss on a single replica for a batch."""
+        mse_loss = self.mse(y, y_pred)
+        bce_loss = self.bce(y_status, y_pred_status)
+
+        # Add mae loss if appliance is on or status is incorrect.
+        mask = (y_status > 0) | (y_status != y_pred_status)
+        if tf.reduce_any(mask):
+            # Apply mask which will flatten tensor. Because of that add
+            # a dummy axis so that mae loss is calculated for each batch.
+            y = tf.reshape(y[mask], shape=[-1, 1])
+            y_pred = tf.reshape(y_pred[mask], shape=[-1, 1])
+            # Expected shape = (mask_size, 1)
+            mask_size = tf.math.count_nonzero(mask, dtype=tf.float32)
+            scale_factor = 1. / (mask_size * (1. * self._num_replicas))
+            mae_loss = self.c0 * tf.reduce_sum(self.mae(y, y_pred)) * scale_factor
+            loss = mse_loss + bce_loss + mae_loss
+        else:
+            loss = mse_loss + bce_loss
+
+        # Add model regularization losses.
+        if self.losses:
+            loss += tf.nn.scale_regularization_loss(tf.add_n(self.losses))
+
+        return loss
+
+    def _compute_test_loss(self, y, y_status, y_pred, y_pred_status):
+        """Calculate per-sample test loss."""
+        mse_loss = self.mse(y, y_pred)
+        bce_loss = self.bce(y_status, y_pred_status)
+
+        # Add mae loss if appliance is on or status is incorrect.
+        mask = (y_status > 0) | (y_status != y_pred_status)
+        if tf.reduce_any(mask):
+            # Apply mask which will flatten tensor. Because of that add
+            # a dummy axis so that mae loss is calculated for each batch.
+            y = tf.reshape(y[mask], shape=[-1, 1])
+            y_pred = tf.reshape(y_pred[mask], shape=[-1, 1])
+            # Expected shape = (mask_size, 1)
+            mask_size = tf.math.count_nonzero(mask, dtype=tf.float32)
+            scale_factor = 1. / (mask_size * (1. * self._num_replicas))
+            mae_loss = self.c0 * tf.reduce_sum(self.mae(y, y_pred)) * scale_factor
+            return mse_loss + bce_loss + mae_loss
+
+        return mse_loss + bce_loss
 
     def train_step(self, data):
-        """Function called by fit() that trains on every batch of data."""
-
-        # Unpack the data. Its structure depends on what is passed to `fit()`.
+        """Runs forward and backward passes on a batch."""
         x, y, y_status = data
-        # x expected input shape = (batch_size, original_length)
+        # x expected input shape = (batch_size, window_length)
         # y expected input shape = (batch_size,)
         # status expected input shape = (batch_size,)
 
-        # Make all inputs have consistent shape.
-        y = tf.reshape(y, [-1, 1])
-        y_status = tf.reshape(y_status, [-1, 1])
+        # Include a dummy axis so that reductions are done correctly.
+        y = tf.reshape(y, shape=[-1, 1])
+        y_status = tf.reshape(y_status, shape=[-1, 1])
         # Expected output shape = (batch_size, 1)
 
         with tf.GradientTape() as tape:
-            y_pred = self(x, training=True)  # Forward pass
-            # Expected output shape = (batch_size, 1)
-
-            # Compute loss values using only outputs from the
-            # randomly masked input sequence elements if using MLM.
-            # A masked input sequence element has a non-masked status.
-            mask = (y_status > -1) # -1=masked; 0=off; 1=on
-            # Expected output shape = (batch_size, 1)
-            # masked_batch_size = tf.math.count_nonzero(mask)
-            y = y[mask] # same as tf.boolean_mask(y, mask)
-            y_pred = y_pred[mask]
-            y_status = y_status[mask]
-            # Expected output shape = (masked_batch_size,)
-
-            #y_pred = tf.where(y_pred < 0.0, 0.0, y_pred)
-
-            # [0, 1] -> [-1, 1]
-            #y_status = y_status * 2.0 - 1.0
-
-            # Compute prediction status.
-            #y_pred_status = tf.where(y_pred >= self.threshold, 1.0, -1.0)
+            y_pred = self(x, training=True)
             y_pred_status = tf.where(y_pred >= self.threshold, 1.0, 0.0)
-            # Expected output shape = (masked_batch_size,)
-
-            # Calculate loss for current batch.
-            mse_loss = self.mse(y, y_pred)
-            bce_loss = self.bce(y_true=y_status, y_pred=y_pred_status)
-            l1_loss = self.compute_l1_loss(y, y_status, y_pred, y_pred_status)
-            loss = mse_loss + bce_loss + self.l1_loss_c0 * l1_loss
-            # Expected output shape = ()
-
-            # Run in Eager mode if debugging.
-            #debug_mask = tf.ones(tf.shape(y), dtype=tf.bool)
-            #if tf.reduce_any(debug_mask):
-                #print(f'\nx:{x[debug_mask]}')
-                #print(f'\ny: {y[debug_mask]}')
-                #print(f'\ny_pred: {y_pred[debug_mask]}')
-                #print(f'\ny_status: {y_status[debug_mask]}')
-                #print(f'\ny_pred_status: {y_pred_status[debug_mask]}')
-                #print(f'\nmse loss: {mse_loss}')
-                #print(f'\nlog loss: {log_loss}')
-                #print(f'\nl1 loss: {l1_loss}')
-                #print(f'\nloss: {loss}')
+            loss = self._compute_train_loss(y, y_status, y_pred, y_pred_status)
 
         # Compute gradients
         trainable_vars = self.trainable_variables
@@ -617,57 +606,44 @@ class NILMTransformerModelFit(tf.keras.Model):
         self.optimizer.apply_gradients(zip(gradients, trainable_vars))
 
         # Update loss and metrics
-        self.loss_tracker.update_state(loss)
-        self.mae_metric.update_state(y, y_pred)
-        self.msle_metric.update_state(y, y_pred)
+        self.loss_tracker.update_state(loss) #pylint: disable=not-callable
+        self.mae_metric.update_state(y, y_pred) #pylint: disable=not-callable
+        self.msle_metric.update_state(y, y_pred) #pylint: disable=not-callable
 
-        # Return a dict mapping loss and metric names to current values
-        return {'loss': self.loss_tracker.result(),
-                'mae': self.mae_metric.result(), 'msle': self.msle_metric.result()}
-
+        # Return a dict mapping loss and metric names to current values.
+        return {
+            'loss': self.loss_tracker.result(), #pylint: disable=not-callable
+            'mae': self.mae_metric.result(), #pylint: disable=not-callable
+            'msle': self.msle_metric.result() #pylint: disable=not-callable
+        }
+    
     def test_step(self, data):
-        """Function called by fit() that evaluates every batch of data."""
-
-        # Unpack the data. Its structure depends on what is passed to `fit()`.
+        """Runs forward pass on a batch."""
         x, y, y_status = data
-        # x expected input shape = (batch_size, original_length)
+        # x expected input shape = (batch_size, window_length)
         # y expected input shape = (batch_size,)
         # status expected input shape = (batch_size,)
 
-        # Make all inputs have consistent shape.
-        y = tf.reshape(y, [-1, 1])
-        y_status = tf.reshape(y_status, [-1, 1])
+        # Include a dummy axis so that reductions are done correctly.
+        y = tf.reshape(y, shape=[-1, 1])
+        y_status = tf.reshape(y_status, shape=[-1, 1])
         # Expected output shape = (batch_size, 1)
 
-        with tf.GradientTape() as tape:
-            y_pred = self(x, training=False)  # Forward pass
-            # Expected output shape = (batch_size, 1)
-
-            #y_pred = tf.where(y_pred < 0.0, 0.0, y_pred)
-
-            # [0, 1] -> [-1, 1]
-            #y_status = y_status * 2.0 - 1.0
-
-            # Compute prediction status.
-            #y_pred_status = tf.where(y_pred >= self.threshold, 1.0, -1.0)
-            y_pred_status = tf.where(y_pred >= self.threshold, 1.0, 0.0)
-            # Expected output shape = (masked_batch_size,)
-
-            # Calculate loss for current batch.
-            mse_loss = self.mse(y, y_pred)
-            bce_loss = self.bce(y_true=y_status, y_pred=y_pred_status)
-            l1_loss = self.compute_l1_loss(y, y_status, y_pred, y_pred_status)
-            loss = mse_loss + bce_loss + self.l1_loss_c0 * l1_loss
-            # Expected output shape = ()
+        y_pred = self._model(x, training=False)
+        y_pred_status = tf.where(y_pred >= self.threshold, 1.0, 0.0)
+        loss = self._compute_test_loss(y, y_status, y_pred, y_pred_status)
 
         # Update loss and metrics
-        self.loss_tracker.update_state(loss)
-        self.mae_metric.update_state(y, y_pred)
-        self.msle_metric.update_state(y, y_pred)
+        self.loss_tracker.update_state(loss) #pylint: disable=not-callable
+        self.mae_metric.update_state(y, y_pred) #pylint: disable=not-callable
+        self.msle_metric.update_state(y, y_pred) #pylint: disable=not-callable
 
-        # Return a dict mapping loss and metric names to current values
-        return {'loss': self.loss_tracker.result(),
-                'mae': self.mae_metric.result(), 'msle': self.msle_metric.result()}
+        # Return a dict mapping loss and metric names to current values.
+        return {
+            'loss': self.loss_tracker.result(), #pylint: disable=not-callable
+            'mae': self.mae_metric.result(), #pylint: disable=not-callable
+            'msle': self.msle_metric.result() #pylint: disable=not-callable
+        }
 
     @property
     def metrics(self):
@@ -675,16 +651,12 @@ class NILMTransformerModelFit(tf.keras.Model):
         # called automatically at the start of each epoch.
         return [self.loss_tracker, self.mae_metric, self.msle_metric]
 
-    def call(self, sequence:tf.Tensor, training:bool=None) -> tf.Tensor:
-        # Expected input sequence shape = (batch_size, original_len)
-
-        # Add sequence length axis.
-        sequence = tf.expand_dims(sequence, axis=-1)
-        # Expected output shape = (batch_size, original_len, 1)
+    def call(self, sequence:tf.Tensor, training:bool) -> tf.Tensor:
+        # Expected input sequence shape = (batch_size, original_len, 1)
 
         ### Encoder Layers ###
 
-        features = self.pool(self.conv(sequence))
+        features = self.l2_norm_pool(self.conv(sequence))
         # Expected output shape = (batch_size, latent_len, hidden)
         positional_embeddings = self.position(features, training=training)
         # Expected output shape = (batch_size, latent_len, hidden)
@@ -709,9 +681,7 @@ class NILMTransformerModelFit(tf.keras.Model):
         x = self.avg_pool(x) #self.max_pool(x)
         # Expected output shape = (batch_size, hidden)
         x = self.dense1(x)
-        # Expected output shape = (batch_size, decoder_hidden)
-        x = self.dropout2(x, training=training)
-        # Expected output size = (batch_size, decoder_hidden)
+        # Expected output shape = (batch_size, hidden)
         # Apply sequence-to-point transformation.
         x = self.dense2(x)
         # Expected output_size = (batch_size, 1)
@@ -722,7 +692,7 @@ class NILMTransformerModel(tf.keras.Model):
     """NILM model based on a BERT-style transformer-based encoder.
 
     This is implemented as a Keras subclassed Model and is meant to be trained in a
-    custom training loop, other than that it is identical to NILMTransformerModelFit.
+    custom training loop.
 
     Args:
         window_length: The length of the input sequence of aggregate power samples.
