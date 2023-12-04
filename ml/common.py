@@ -202,7 +202,7 @@ def tflite_infer(interpreter, provider, num_eval, eval_offset=0, log=print) -> l
     # Calculate num_eval sized indices of contiguous locations in provider.
     # Get number of samples per batch in provider. Since batch should always be
     # set to 1 for inference, this will simply return the total number of samples.
-    samples_per_batch = provider.__len__()
+    samples_per_batch = len(provider)
     if num_eval - eval_offset > samples_per_batch:
         raise ValueError('Not enough test samples to run evaluation.')
     eval_indices = list(range(samples_per_batch))[eval_offset:num_eval+eval_offset]
@@ -210,8 +210,9 @@ def tflite_infer(interpreter, provider, num_eval, eval_offset=0, log=print) -> l
     log(f'Running inference on {num_eval} samples...')
     start = time.time()
     def infer(i):
-        sample, target, _= provider.__getitem__(i)
-        if not sample.any(): return 0.0, 0.0 # ignore missing data
+        sample, target, _= provider[i]
+        if not sample.any():
+            return 0.0, 0.0 # ignore missing data
         ground_truth = np.squeeze(target)
         if not floating_input: # convert float to int
             sample = sample / input_scale + input_zero_point
@@ -251,7 +252,7 @@ def normalize(dataset):
     print(f'app median: {app_median}, app q1: {app_quartile1}, app q3: {app_quartile3}')
     def z_norm(dataset, mean, std):
         return (dataset - mean) / std
-    def robust_scaler(dataset, median, quartile1, quartile3):
+    def robust_scaler(dataset, median, quartile1, quartile3): #pylint: disable=unused-variable
         return (dataset - median) / (quartile3 - quartile1)
     return (
         z_norm(
