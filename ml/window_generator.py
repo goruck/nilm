@@ -1,14 +1,11 @@
 """Class for Window generator.
 
-Subclass of tf.keras.utils.Sequence.
-
 Copyright (c) 2023 Lindo St. Angel
 """
 
 import numpy as np
-import tensorflow as tf
 
-class WindowGenerator(tf.keras.utils.Sequence):
+class WindowGenerator():
     """Generates windowed time series samples, targets and status.
 
     If 'p' is not None the input samples are processed with random masking, 
@@ -40,7 +37,8 @@ class WindowGenerator(tf.keras.utils.Sequence):
         train=True,
         shuffle=True,
         allow_partial_batches=False,
-        p=None) -> None:
+        p=None
+    ) -> None:
         """Inits WindowGenerator.
 
         Args:

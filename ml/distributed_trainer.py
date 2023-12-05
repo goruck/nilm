@@ -84,7 +84,7 @@ class DistributedTrainer():
         self._wait_for_better_loss = 0 # keeps track of val runs for patience limit
 
         ### DO NOT USE MIXED-PRECISION - CURRENTLY GIVES POOR MODEL ACCURACY ###
-        # TODO: fix.
+        # TODO: fix
         # Run in mixed-precision mode for ~30% speedup vs TensorFloat-32
         # w/GPU compute capability = 8.6.
         if use_mixed_precision:
@@ -193,26 +193,36 @@ class DistributedTrainer():
 
     def _build_train_dataset(self, window_length):
         """Build replica dataset for training."""
-        iterator = lambda: (s for s in self._training_provider)
+        def gen():
+            for _, batch in enumerate(self._training_provider):
+                yield batch
+
         train_tf_dataset = tf.data.Dataset.from_generator(
-            iterator,
+            gen,
             output_signature=(
                 tf.TensorSpec(shape=(None, window_length, 1), dtype=tf.float32), # samples
                 tf.TensorSpec(shape=(None,), dtype=tf.float32), # targets
-                tf.TensorSpec(shape=(None,), dtype=tf.float32))) # statues
+                tf.TensorSpec(shape=(None,), dtype=tf.float32) # status
+            )
+        )
 
         # Distribute datasets to replicas.
         self._train_dist_dataset = self._strategy.experimental_distribute_dataset(train_tf_dataset)
 
     def _build_val_dataset(self, window_length):
         """Build replica dataset for testing (validation)."""
-        iterator = lambda: (s for s in self._validation_provider)
+        def gen():
+            for _, batch in enumerate(self._validation_provider):
+                yield batch
+
         val_tf_dataset = tf.data.Dataset.from_generator(
-            iterator,
+            gen,
             output_signature=(
                 tf.TensorSpec(shape=(None, window_length, 1), dtype=tf.float32), # samples
                 tf.TensorSpec(shape=(None,), dtype=tf.float32), # targets
-                tf.TensorSpec(shape=(None,), dtype=tf.float32))) # statues
+                tf.TensorSpec(shape=(None,), dtype=tf.float32) # status
+            )
+        )
 
         # Distribute datasets to replicas.
         self._test_dist_dataset = self._strategy.experimental_distribute_dataset(val_tf_dataset)
