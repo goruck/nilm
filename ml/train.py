@@ -223,7 +223,7 @@ if __name__ == '__main__':
         threshold=threshold,
         c0=c0,
         savemodel_filepath=savemodel_filepath,
-        history_filepath = history_filepath
+        history_filepath=history_filepath
     )
 
     plot(
