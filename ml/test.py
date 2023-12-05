@@ -123,6 +123,18 @@ if __name__ == '__main__':
         shuffle=False
     )
 
+    def gen():
+        """Yields batches of data from test_provider for tf.data.Dataset."""
+        for _, batch in enumerate(test_provider):
+            yield batch
+
+    test_dataset = tf.data.Dataset.from_generator(
+        gen,
+        output_signature=(
+            tf.TensorSpec(shape=(None, window_length, 1), dtype=tf.float32)
+        )
+    )
+
     # Load best saved trained model for appliance.
     model_file_path = os.path.join(
         args.trained_model_dir, appliance_name, f'savemodel_{args.model_arch}')
@@ -132,7 +144,8 @@ if __name__ == '__main__':
     model.summary()
 
     test_prediction = model.predict(
-        x=test_provider,
+        test_dataset,
+        steps=len(test_provider),
         verbose=1,
         workers=24,
         use_multiprocessing=True
