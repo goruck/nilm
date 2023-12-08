@@ -14,18 +14,11 @@ import socket
 import tensorflow as tf
 import numpy as np
 
-from nilm_metric import NILMTestMetrics
 import common
+from nilm_metric import NILMTestMetrics
 from logger import Logger
 from convert_model import ConvertModel
-
-rng = np.random.default_rng()
-
-# Check how well model was quantized (only for full INT8 quant).
-DEBUG_MODEL = False
-
-# Attempt to improve model accuracy at expense of performance.
-FIX_MODEL = False
+from window_generator import WindowGenerator
 
 # Number of samples for post-training quantization calibration.
 # 43200 (4 * 10800) is 4 * 24 = 96 hours @ 8 sec per sample.
@@ -212,16 +205,34 @@ def get_arguments():
             'w8_a16 - quantize weights to int8 and activations to int16'
         )
     )
+    parser.add_argument(
+        '--debug_model',
+        action='store_true',
+        help='If set, check how well model was quantized (only for full INT8 quant).'
+    )
+    parser.add_argument(
+        '--fix_model',
+        action='store_true',
+        help='If set, attempt to improve model accuracy at expense of performance.'
+    )
+    parser.add_argument(
+        '--use_tpu',
+        action='store_true',
+        help='If set, make model compatible with edge TPU compilation.'
+    )
     parser.set_defaults(evaluate=False)
     parser.set_defaults(prune=False)
+    parser.set_defaults(debug_model=False)
+    parser.set_defaults(fix_model=False)
+    parser.set_defaults(use_tpu=False)
     return parser.parse_args()
 
 if __name__ == '__main__':
     args = get_arguments()
     appliance_name = args.appliance_name
     logger = Logger(os.path.join(
-        args.save_dir,appliance_name,
-        f'{appliance_name}_{args.model_arch}_{args.quant_mode}.log')
+        args.save_dir, appliance_name,
+        f'{appliance_name}_{args.model_arch}_convert_{args.quant_mode}.log')
     )
     logger.log(f'Machine name: {socket.gethostname()}')
     logger.log('Arguments: ')
@@ -242,11 +253,18 @@ if __name__ == '__main__':
     # Since the edge TPU complier requires static batch sizes, change
     # loaded model batch size from None to 1.
     # This is currently only supported for the cnn model architecture.
-    if args.quant_mode == 'w8_a8':
-        if args.model_arch == 'cnn':
+    if args.use_tpu:
+        if args.quant_mode == 'w8_a8' and args.model_arch == 'cnn':
             model = change_model_batch_size(model)
         else:
-            raise ValueError('w8_a8 quant not supported for {args.model_arch}')
+            raise ValueError('tpu config must use quant_mode `w8_a8` and model_arch `cnn`')
+
+    # Check for currently unsupported conversions.
+    # TODO: fix
+    # INT16 conversions of transformer model currently lead to the following tflite interpreter runtime error:
+    # `RuntimeError: tensorflow/lite/kernels/elementwise.cc:105 Type INT16 is unsupported by op Rsqrt.Node number 31 (RSQRT) failed to prepare.``
+    if args.model_arch == 'transformer' and args.quant_mode == 'w8_a16':
+        raise ValueError('transformer conversions with INT16 types are not supported')
 
     model.summary()
 
@@ -260,22 +278,32 @@ if __name__ == '__main__':
     logger.log(f'Loaded {dataset[0].size/10**6:.3f}M samples from dataset.')
 
     # Provider of windowed dataset samples and single point targets.
-    WindowGenerator = common.get_window_generator()
     provider = WindowGenerator(
         dataset=dataset,
         batch_size=1, # batch size must be 1 for inference
         shuffle=False
     )
 
-    # Convert model to tflite and quantize.
+    # Convert keras model to tflite and quantize.
     logger.log(f'Converting model to tflite using {args.quant_mode} quantization.')
-    convert_model = ConvertModel(model, provider, NUM_CAL, logger, args.quant_mode)
-    debug_results_path = os.path.join(args.save_dir, appliance_name)
-    if DEBUG_MODEL:
-        tflite_model_quant = convert_model.debug(debug_results_path)
-    if FIX_MODEL:
-        tflite_model_quant = convert_model.fix(debug_results_path)
+    convert_model = ConvertModel(
+        keras_model=model,
+        quant_mode=args.quant_mode,
+        sample_provider=provider,
+        num_cal=NUM_CAL,
+        log=logger,
+        debug_results_filepath=os.path.join(args.save_dir, appliance_name),
+        debug_results_filename=f'{appliance_name}_{args.model_arch}_debug_{args.quant_mode}.csv',
+        debug_results_plot_name=f'{appliance_name}_{args.model_arch}_debug_{args.quant_mode}.png',
+    )
+    if args.debug_model:
+        # Convert model and check to see how well it was quantized.
+        tflite_model_quant = convert_model.debug()
+    elif args.fix_model:
+        # Convert model and attempt to fix troublesome converted layers.
+        tflite_model_quant = convert_model.fix()
     else:
+        # Just convert model.
         tflite_model_quant = convert_model.convert()
 
     # Save converted model.

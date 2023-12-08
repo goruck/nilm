@@ -25,10 +25,13 @@ class ConvertModel():
     def __init__(
             self,
             keras_model,
+            quant_mode,
             sample_provider,
             num_cal,
             log,
-            quant_mode='w8',
+            debug_results_filepath,
+            debug_results_filename,
+            debug_results_plot_name
         ) -> None:
         """Initializes instance and configures it based on quantization mode.
 
@@ -38,6 +41,9 @@ class ConvertModel():
             log: Logger object.
             quant_mode: Quantization mode.
             num_cal: Number of samples for post-training quantization calibration.
+            debug_results_filepath: Path to save the debugger results.
+            debug_results_filename: Name of raw debugger results file.
+            debug_results_plot_name: Name of debugger result plot file.
         
         Raises:
             ValueError: Unrecognized quantization mode.
@@ -47,6 +53,10 @@ class ConvertModel():
         self.num_cal = num_cal
         self.logger = log
         self.quant_mode = quant_mode
+        self.debug_results_filepath = debug_results_filepath
+        self.debug_results_filename = debug_results_filename
+        self.debug_results_plot_name = debug_results_plot_name
+
         self.converter = tf.lite.TFLiteConverter.from_keras_model(keras_model)
 
         # Converter optimization settings.
@@ -129,8 +139,9 @@ class ConvertModel():
         inactive = 0
         while True:
             if i > samples_per_batch: # out of samples
-                self.logger.log(f'Out of cal samples, act={active}, inact={inactive}.',
-                        level='warning')
+                self.logger.log(
+                    f'Out of cal samples, act={active}, inact={inactive}.', level='warning'
+                )
                 break
             sample, _, status = self.sample_provider[i]
             if sample.size == 0 or status.size == 0:
@@ -150,23 +161,35 @@ class ConvertModel():
                 break
 
     def _get_suspected_layers(
-            self, layer_stats:pd.DataFrame, high_quant_error:float=0.7
+            self, layer_stats:pd.DataFrame,
+            high_quant_error:float=0.7,
+            remove_large_ranges:bool=False,
+            remove_first_five_layers:bool=False
         ) -> list:
-        """Generate a list of suspected layers given model debug results."""
-        # The RMSE / scale is close to 1 / sqrt(12) (~ 0.289) when quantized
-        # distribution is similar to the original float distribution, indicating
-        # a well quantized model. The larger the value is, it's more likely for
-        # the layer not being quantized well. These layers can remain in float to
-        # generate a selectively quantized model that increases accuracy at the
-        # expense of inference performance. See:
-        #  https://www.tensorflow.org/lite/performance/quantization_debugger
+        """Generate a list of suspected layers given model debug results.
+
+        The RMSE / scale is close to 1 / sqrt(12) (~ 0.289) when quantized
+        distribution is similar to the original float distribution, indicating
+        a well quantized model. The larger the value is, it's more likely for
+        the layer not being quantized well. These layers can remain in float to
+        generate a selectively quantized model that increases accuracy at the
+        expense of inference performance. See:
+        https://www.tensorflow.org/lite/performance/quantization_debugger
+        """
         suspected_layers = list(
-            layer_stats[layer_stats['rmse/scale'] > high_quant_error]['tensor_name'])
+            layer_stats[layer_stats['rmse/scale'] > high_quant_error]['tensor_name']
+        )
+
         # Keep layers with range greater than 255 (8-bits) in float as well.
-        #suspected_layers.extend(
-            #list(layer_stats[layer_stats['range'] > 255.0]['tensor_name']))
+        if remove_large_ranges:
+            return suspected_layers.extend(
+                list(layer_stats[layer_stats['range'] > 255.0]['tensor_name'])
+            )
+
         # Let the first 5 layers remain in float as well.
-        #suspected_layers.extend(list(layer_stats[:5]['tensor_name']))
+        if remove_first_five_layers:
+            return suspected_layers.extend(list(layer_stats[:5]['tensor_name']))
+
         return suspected_layers
 
     def convert(self):
@@ -177,20 +200,10 @@ class ConvertModel():
         """
         return self.converter.convert()
 
-    def debug(
-            self,
-            save_path:str,
-            debug_file:str='debug_results.csv',
-            debug_plot:str='debug_results_plot.png'
-        ):
+    def debug(self):
         """Quantize model and check how well it was quantized.
 
         Works only for full INT8 quantization.
-
-        Args:
-            save_path: Path to save the debugger results.
-            debug_file: Name of raw debugger results file.
-            debug_plot: Name of debugger result plot file.
 
         Returns:
             Quantized model in tflite format.
@@ -209,7 +222,9 @@ class ConvertModel():
         )
         debugger.run()
 
-        debug_results_file = os.path.join(save_path, debug_file)
+        debug_results_file = os.path.join(
+            self.debug_results_filepath, self.debug_results_filename
+        )
         with open(debug_results_file, mode='w', encoding='utf-8') as f:
             debugger.layer_statistics_dump(f)
 
@@ -229,7 +244,9 @@ class ConvertModel():
         ax2 = plt.subplot(122)
         ax2.bar(np.arange(len(layer_stats)), layer_stats['rmse/scale'])
         ax2.set_ylabel('rmse/scale')
-        debug_results_plot = os.path.join(save_path, debug_plot)
+        debug_results_plot = os.path.join(
+            self.debug_results_filepath, self.debug_results_plot_name
+        )
         self.logger.log(f'Saving debug results plot to {debug_results_plot}.')
         plt.savefig(fname=debug_results_plot)
 
@@ -238,26 +255,26 @@ class ConvertModel():
 
         return debugger.get_nondebug_quantized_model()
 
-    def fix(
-            self,
-            results_path:str,
-            debug_file:str='debug_results.csv',
-            deny_ops:list=None
-        ):
+    def fix(self, deny_ops:list=None):
         """Quantize model but keep troublesome layers and ops in float.
 
         Args:
-            results_path: Path to debugger results.
-            debug_file: Name of raw debugger results file.
             deny_ops: List of operators to keep in float.
 
         Returns:
             Quantized model in tflite format.
         """
-        self.logger.log('Fixing model...')
-        debug_results_file = os.path.join(results_path, debug_file)
+        debug_results_file = os.path.join(
+            self.debug_results_filepath, self.debug_results_filename
+        )
+        self.logger.log(f'Fixing model using debug results file: {debug_results_file}.')
         layer_stats = pd.read_csv(debug_results_file)
+        layer_stats['range'] = 255.0 * layer_stats['scale']
+        layer_stats['rmse/scale'] = layer_stats.apply(
+            lambda row: np.sqrt(row['mean_squared_error']) / row['scale'], axis=1)
         suspected_layers = self._get_suspected_layers(layer_stats)
+        self.logger.log(f'Layers kept in float: {suspected_layers}')
+        self.logger.log(f'Ops kept in float: {deny_ops}')
         debug_options = tf.lite.experimental.QuantizationDebugOptions(
             denylisted_nodes=suspected_layers,
             denylisted_ops=deny_ops
