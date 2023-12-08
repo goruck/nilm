@@ -103,7 +103,7 @@ if __name__ == '__main__':
         log_file_name=os.path.join(
             args.save_dir,
             appliance_name,
-            f'{appliance_name}_test_rpi_{args.model_arch}.log'
+            f'{appliance_name}_{args.model_arch}_{args.quant_mode}_rpi_eval.log'
         )
     )
 
@@ -136,7 +136,7 @@ if __name__ == '__main__':
     )
 
     # Perform inference on windowed samples.
-    interpreter = tflite.Interpreter(model_path=model_filepath)
+    interpreter = tflite.Interpreter(model_path=model_filepath, num_threads=4)
     results = common.tflite_infer(
         interpreter=interpreter,
         provider=provider,
