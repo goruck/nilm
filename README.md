@@ -150,23 +150,23 @@ The table<sup>12</sup> below shows the results from two transformer-based models
 
 ### Model Quantization
 
-I quantized the ```cnn``` model’s weights and activation functions from Float32 to INT8 using TensorFlow Lite to improve inference performance on edge hardware, including the Raspberry Pi and the Google Edge TPU. Only the weights for the ```transformer``` model were quantized to INT8, the activations needed to be kept in Float32 to maintain accptable accuracy. See [convert_keras_to_tflite.py](./ml/convert_keras_to_tflite.py) for the code that does this quantization which also uses [TFLite's quantization debugger](https://www.tensorflow.org/lite/performance/quantization_debugger) to check how well each layer in the model was quantized. The quantized inference results are shown in the tables below, where $R_{x86}$ is the inference rate on a 3.8 GHz x86 machine using eight tflite interpreter threads with XNNPACK and $R_{\pi}$ is the inference rate on a Raspberry Pi 4. You will observed a slight degradation in performance after quantization but this is acceptable for most use cases.
+I quantized the ```cnn``` model’s weights and activation functions from Float32 to INT8 using TensorFlow Lite to improve inference performance on edge hardware, including the Raspberry Pi and the Google Edge TPU. Only the weights for the ```transformer``` model were quantized to INT8, the activations needed to be kept in Float32 to maintain accptable accuracy. See [convert_keras_to_tflite.py](./ml/convert_keras_to_tflite.py) for the code that does this quantization which also uses [TFLite's quantization debugger](https://www.tensorflow.org/lite/performance/quantization_debugger) to check how well each layer in the model was quantized. The quantized inference results are shown in the tables below, where $R_{x86}$ is the inference rate on a 3.8 GHz x86 machine using eight tflite interpreter threads with XNNPACK and $R_{\pi}$ is the inference rate on a Raspberry Pi 4 using four threads. You will observed a slight degradation in performance after quantization but this is acceptable for most use cases.
 
 The quantized results for the ```cnn``` model are shown in the table below.
 
 |Appliance|$F1\uparrow$|$MCC\uparrow$|$ACC\uparrow$|$MAE$ $(W)$ $\downarrow$|$SAE\downarrow$|$NDE\downarrow$|$EpD_e$ ($\%$)|$R_{x86}$ ($Hz$)|$R_{\pi}$ ($Hz$)|
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-|kettle|0.6313|0.6510|0.9957|9.220|0.4034|0.5768|-40.34|5081|x|
+|kettle|0.7211|0.7319|0.9966|7.462|0.3162|0.4604|-31.62|4637|232.0|
 |microwave|0.6221|0.6283|0.9943|7.652|0.4811|0.6841|-48.11|5128|x|
 |fridge|0.5980|0.4354|0.7665|19.17|0.1101|0.7746|-10.88|5108|x|
 |dishwasher|0.6645|0.6775|0.9842|5.874|0.0167|0.3895|-1.668|5050|x|
 |washingmachine|0.8910|0.8872|0.9926|15.08|0.3796|0.3442|-37.96|5094|x|
 
-The quantized results for the ```transformer``` model are shown in the table below (TBD).
+The quantized results for the ```transformer``` model are shown in the table below (**in progress**).
 
 |Appliance|$F1\uparrow$|$MCC\uparrow$|$ACC\uparrow$|$MAE$ $(W)$ $\downarrow$|$SAE\downarrow$|$NDE\downarrow$|$EpD_e$ ($\%$)|$R_{x86}$ ($Hz$)|$R_{\pi}$ ($Hz$)|
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-|kettle|0.6313|0.6510|0.9957|9.220|0.4034|0.5768|-40.34|5081|x|
+|kettle|0.8460|0.8483|0.9977|5.117|0.1761|0.2760|-17.61|46.07|11.59|
 |microwave|0.6221|0.6283|0.9943|7.652|0.4811|0.6841|-48.11|5128|x|
 |fridge|0.5980|0.4354|0.7665|19.17|0.1101|0.7746|-10.88|5108|x|
 |dishwasher|0.6645|0.6775|0.9842|5.874|0.0167|0.3895|-1.668|5050|x|
