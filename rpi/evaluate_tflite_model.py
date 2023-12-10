@@ -83,10 +83,11 @@ def get_arguments():
     parser.add_argument(
         '--quant_mode',
         type=str,
-        default='w8',
-        choices=['w8', 'w8_a8_fallback', 'w8_a8', 'w8_a16'],
+        default='convert_only',
+        choices=['convert_only', 'w8', 'w8_a8_fallback', 'w8_a8', 'w8_a16'],
         help=(
             'Quantization mode: '
+            'convert_only - no quantization '
             'w8 - quantize weights only to int8 '
             'w8_a8_fallback - quantize weights and activations to int8 with fallback to float '
             'w8_a8 - quantize weights and activations to int8 '
