@@ -195,10 +195,11 @@ def get_arguments():
     parser.add_argument(
         '--quant_mode',
         type=str,
-        default='w8',
-        choices=['w8', 'w8_a8_fallback', 'w8_a8', 'w8_a16'],
+        default='convert_only',
+        choices=['convert_only', 'w8', 'w8_a8_fallback', 'w8_a8', 'w8_a16'],
         help=(
             'Quantization mode: '
+            'convert_only - no quantization '
             'w8 - quantize weights only to int8 '
             'w8_a8_fallback - quantize weights and activations to int8 with fallback to float '
             'w8_a8 - quantize weights and activations to int8 '
@@ -230,10 +231,13 @@ def get_arguments():
 if __name__ == '__main__':
     args = get_arguments()
     appliance_name = args.appliance_name
-    logger = Logger(os.path.join(
-        args.save_dir, appliance_name,
-        f'{appliance_name}_{args.model_arch}_convert_{args.quant_mode}.log')
+    log_path = os.path.join(
+        args.save_dir,
+        appliance_name,
+        f'{appliance_name}_{args.model_arch}_convert_{args.quant_mode}_fixed.log' if args.fix_model
+        else f'{appliance_name}_{args.model_arch}_convert_{args.quant_mode}.log'
     )
+    logger = Logger(log_path)
     logger.log(f'Machine name: {socket.gethostname()}')
     logger.log('Arguments: ')
     logger.log(args)
@@ -304,13 +308,17 @@ if __name__ == '__main__':
         tflite_model_quant = convert_model.fix()
     else:
         # Just convert model.
-        tflite_model_quant = convert_model.convert()
+        tflite_model_quant = convert_model.convert(
+            set_input_type_int8 = args.use_tpu,
+            set_output_type_int8 = args.use_tpu
+        )
 
     # Save converted model.
     filepath = os.path.join(
         args.save_dir,
         appliance_name,
-        f'{appliance_name}_{args.model_arch}_{args.quant_mode}.tflite'
+        f'{appliance_name}_{args.model_arch}_{args.quant_mode}_fixed.tflite' if args.fix_model
+        else f'{appliance_name}_{args.model_arch}_{args.quant_mode}.tflite'
     )
     with open(filepath, 'wb') as file:
         file.write(tflite_model_quant)

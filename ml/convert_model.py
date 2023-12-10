@@ -1,4 +1,4 @@
-"""Class for converting quantizing Keras models to tflite.
+"""Class for converting and quantizing Keras models to tflite.
 
 Copyright (c) 2023 Lindo St. Angel
 """
@@ -59,39 +59,28 @@ class ConvertModel():
 
         self.converter = tf.lite.TFLiteConverter.from_keras_model(keras_model)
 
-        # Converter optimization settings.
-        # The DEFAULT optimization strategy quantizes model weights and
-        # activations and tries to optimize for size and latency, while
-        # minimizing the loss in accuracy.
-        # The EXPERIMENTAL_SPARSITY optimization tries to advantage of
-        # the sparse model weights trained with pruning if available.
-        self.converter.optimizations = [
-            tf.lite.Optimize.DEFAULT,
-            #tf.lite.Optimize.EXPERIMENTAL_SPARSITY #TODO will not work with debugger
-        ]
-
-        if self.quant_mode == 'w8':
+        if self.quant_mode == 'convert_only':
+            # Convert to tflite but keep all parameters in Float32 (no quantization).
+            pass
+        elif self.quant_mode == 'w8':
             # Quantize only weights from floating point to int8.
-            # Inputs and outputs are kept in float.
-            self.converter.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS]
+            self.converter.optimizations = [tf.lite.Optimize.DEFAULT]
         elif self.quant_mode == 'w8_a8_fallback':
             # Quantize weights and activations from floating point to int8 with
             # fallback to float if an operator does not have an int implementation.
-            # Inputs and outputs are kept in float.
-            self.converter.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS]
+            self.converter.optimizations = [tf.lite.Optimize.DEFAULT]
             self.converter.representative_dataset = tf.lite.RepresentativeDataset(self._rep_gen)
         elif self.quant_mode == 'w8_a8':
-            # Enforce full int8 quantization for all ops including the input and output.
+            # Enforce full int8 quantization for all ops.
+            self.converter.optimizations = [tf.lite.Optimize.DEFAULT]
             self.converter.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS_INT8]
             self.converter.representative_dataset = tf.lite.RepresentativeDataset(self._rep_gen)
-            self.converter.inference_input_type = tf.int8
-            self.converter.inference_output_type = tf.int8
         elif self.quant_mode == 'w8_a16':
             # Quantize activations based on their range to int16, weights
-            # to int8 and bias to int64 with fallback to float for
-            # unsupported operators. Inputs and outputs are kept in float.
+            # to int8 and bias to int64.
+            self.converter.optimizations = [tf.lite.Optimize.DEFAULT]
             self.converter.target_spec.supported_ops = [
-                tf.lite.OpsSet.TFLITE_BUILTINS,
+                #tf.lite.OpsSet.TFLITE_BUILTINS, # enables fallback to float
                 tf.lite.OpsSet.EXPERIMENTAL_TFLITE_BUILTINS_ACTIVATIONS_INT16_WEIGHTS_INT8
             ]
             self.converter.representative_dataset = tf.lite.RepresentativeDataset(self._rep_gen)
@@ -126,7 +115,7 @@ class ConvertModel():
         # Generate 'num_cal' samples at random locations in dataset.
         #indices = rng.choice(samples_per_batch, size=num_cal)
         #for i in indices:
-            #sample, _, _ = sample_provider.__getitem__(i)
+            #sample, _, _ = sample_provider[i]
             #yield [sample,]
 
         # Generate 'num_cal' samples from provider.
@@ -192,29 +181,42 @@ class ConvertModel():
 
         return suspected_layers
 
-    def convert(self):
+    def convert(self, set_input_type_int8:bool=False, set_output_type_int8:bool=False):
         """Quantize model.
+
+        Args:
+            set_input_type_int8: If True, sets quantized model input type to int8.
+                Defaults to False which sets Float32.
+            set_output_type_int8: If True, sets quantized model output type to int8.
+                Defaults to False which sets Float32.
 
         Returns:
             Quantized model in tflite format.
         """
+        if set_input_type_int8:
+            self.converter.inference_input_type = tf.int8
+        if set_output_type_int8:
+            self.converter.inference_output_type = tf.int8
+
         return self.converter.convert()
 
     def debug(self):
         """Quantize model and check how well it was quantized.
 
-        Works only for full INT8 quantization.
+        Debugger currently only works for full-integer quantization with int8 activations.
 
         Returns:
-            Quantized model in tflite format.
+            Quantized model in tflite format. Input and output types are set to Float32.
 
         Raises:
-            ValueError: Full INT8 quantization mode not specified.
+            ValueError: w8_a8 or w8_a8_fallback quantization mode not specified.
         """
         self.logger.log('Debugging model...')
 
-        if self.quant_mode in ['w8', 'w8_a16']:
-            raise ValueError('Model debug only works for full INT8 quant.')
+        if self.quant_mode not in ['w8_a8', 'w8_a8_fallback']:
+            raise ValueError(
+                'Debugger currently only works for full-integer quantization with int8 activations.'
+            )
 
         debugger = tf.lite.experimental.QuantizationDebugger(
             converter=self.converter,
@@ -225,6 +227,7 @@ class ConvertModel():
         debug_results_file = os.path.join(
             self.debug_results_filepath, self.debug_results_filename
         )
+        self.logger.log(f'Saving debug results to {debug_results_file}.')
         with open(debug_results_file, mode='w', encoding='utf-8') as f:
             debugger.layer_statistics_dump(f)
 
@@ -262,19 +265,30 @@ class ConvertModel():
             deny_ops: List of operators to keep in float.
 
         Returns:
-            Quantized model in tflite format.
+            Quantized model in tflite format. Input and output types are set to Float32.
+
+        Raises:
+            ValueError: w8_a8 or w8_a8_fallback quantization mode not specified.
         """
+        if self.quant_mode not in ['w8_a8', 'w8_a8_fallback']:
+            raise ValueError(
+                'Selective quantization currently only works for full-integer '
+                'quantization with int8 activations.'
+            )
+
         debug_results_file = os.path.join(
             self.debug_results_filepath, self.debug_results_filename
         )
-        self.logger.log(f'Fixing model using debug results file: {debug_results_file}.')
+        self.logger.log(
+            f'Selectively quantizing model using debug results file: {debug_results_file}.'
+        )
+
         layer_stats = pd.read_csv(debug_results_file)
         layer_stats['range'] = 255.0 * layer_stats['scale']
         layer_stats['rmse/scale'] = layer_stats.apply(
             lambda row: np.sqrt(row['mean_squared_error']) / row['scale'], axis=1)
         suspected_layers = self._get_suspected_layers(layer_stats)
-        self.logger.log(f'Layers kept in float: {suspected_layers}')
-        self.logger.log(f'Ops kept in float: {deny_ops}')
+
         debug_options = tf.lite.experimental.QuantizationDebugOptions(
             denylisted_nodes=suspected_layers,
             denylisted_ops=deny_ops
@@ -284,4 +298,8 @@ class ConvertModel():
             debug_dataset=self._rep_gen,
             debug_options=debug_options
         )
+
+        self.logger.log(f'Layers kept in float: {suspected_layers}')
+        self.logger.log(f'Ops kept in float: {deny_ops}')
+
         return debugger.get_nondebug_quantized_model()
