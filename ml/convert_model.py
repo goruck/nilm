@@ -63,21 +63,22 @@ class ConvertModel():
             # Convert to tflite but keep all parameters in Float32 (no quantization).
             pass
         elif self.quant_mode == 'w8':
-            # Quantize only weights from floating point to int8.
+            # Quantize weights from float32 to int8 and biases to int64.
             self.converter.optimizations = [tf.lite.Optimize.DEFAULT]
         elif self.quant_mode == 'w8_a8_fallback':
-            # Quantize weights and activations from floating point to int8 with
-            # fallback to float if an operator does not have an int implementation.
+            # Same as w8 for weights but quantize activations from float32 to int8.
+            # Fallback to float if an operator does not have an int implementation.
             self.converter.optimizations = [tf.lite.Optimize.DEFAULT]
             self.converter.representative_dataset = tf.lite.RepresentativeDataset(self._rep_gen)
         elif self.quant_mode == 'w8_a8':
+            # Same as w8 for weights but quantize activations from float32 to int8.
             # Enforce full int8 quantization for all ops.
             self.converter.optimizations = [tf.lite.Optimize.DEFAULT]
             self.converter.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS_INT8]
             self.converter.representative_dataset = tf.lite.RepresentativeDataset(self._rep_gen)
         elif self.quant_mode == 'w8_a16':
             # Quantize activations based on their range to int16, weights
-            # to int8 and bias to int64.
+            # to int8 and biases to int64.
             self.converter.optimizations = [tf.lite.Optimize.DEFAULT]
             self.converter.target_spec.supported_ops = [
                 #tf.lite.OpsSet.TFLITE_BUILTINS, # enables fallback to float
@@ -152,8 +153,8 @@ class ConvertModel():
     def _get_suspected_layers(
             self, layer_stats:pd.DataFrame,
             high_quant_error:float=0.7,
-            remove_large_ranges:bool=False,
-            remove_first_five_layers:bool=False
+            keep_large_ranges:bool=False,
+            keep_first_n_layers:int=0
         ) -> list:
         """Generate a list of suspected layers given model debug results.
 
@@ -170,14 +171,14 @@ class ConvertModel():
         )
 
         # Keep layers with range greater than 255 (8-bits) in float as well.
-        if remove_large_ranges:
+        if keep_large_ranges:
             return suspected_layers.extend(
                 list(layer_stats[layer_stats['range'] > 255.0]['tensor_name'])
             )
 
-        # Let the first 5 layers remain in float as well.
-        if remove_first_five_layers:
-            return suspected_layers.extend(list(layer_stats[:5]['tensor_name']))
+        # Let the first `n` layers remain in float as well.
+        if keep_first_n_layers != 0:
+            return suspected_layers.extend(list(layer_stats[:keep_first_n_layers]['tensor_name']))
 
         return suspected_layers
 
@@ -258,11 +259,13 @@ class ConvertModel():
 
         return debugger.get_nondebug_quantized_model()
 
-    def fix(self, deny_ops:list=None):
-        """Quantize model but keep troublesome layers and ops in float.
+    def fix(self, keep_large_ranges=False, keep_first_n_layers:int=0, deny_ops:list=None):
+        """Quantize model but keep troublesome layers and ops in float32.
 
         Args:
-            deny_ops: List of operators to keep in float.
+            keep_large_ranges: Keep layers with ranges greater than 255 (8-bits) in float32.
+            keep_first_n_layers: Keep first `n` layers remain in float32.
+            deny_ops: List of operators to keep in float32.
 
         Returns:
             Quantized model in tflite format. Input and output types are set to Float32.
@@ -287,7 +290,11 @@ class ConvertModel():
         layer_stats['range'] = 255.0 * layer_stats['scale']
         layer_stats['rmse/scale'] = layer_stats.apply(
             lambda row: np.sqrt(row['mean_squared_error']) / row['scale'], axis=1)
-        suspected_layers = self._get_suspected_layers(layer_stats)
+        suspected_layers = self._get_suspected_layers(
+            layer_stats,
+            keep_large_ranges=keep_large_ranges,
+            keep_first_n_layers=keep_first_n_layers
+        )
 
         debug_options = tf.lite.experimental.QuantizationDebugOptions(
             denylisted_nodes=suspected_layers,
@@ -300,6 +307,8 @@ class ConvertModel():
         )
 
         self.logger.log(f'Layers kept in float: {suspected_layers}')
+        self.logger.log(f'Keep large ranges: {keep_large_ranges}')
+        self.logger.log(f'Keep first n layers: {keep_first_n_layers}')
         self.logger.log(f'Ops kept in float: {deny_ops}')
 
         return debugger.get_nondebug_quantized_model()

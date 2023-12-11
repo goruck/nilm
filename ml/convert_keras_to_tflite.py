@@ -304,7 +304,8 @@ if __name__ == '__main__':
         # Convert model and check to see how well it was quantized.
         tflite_model_quant = convert_model.debug()
     elif args.fix_model:
-        # Convert model and attempt to fix troublesome converted layers.
+        # Convert model and attempt to "fix" troublesome converted layers by
+        # keeping them in float32.
         tflite_model_quant = convert_model.fix()
     else:
         # Just convert model.
