@@ -94,6 +94,12 @@ def get_arguments():
             'w8_a16 - quantize weights to int8 and activations to int16'
         )
     )
+    parser.add_argument(
+        '--use_fixed_model',
+        action='store_true',
+        help='If set, use model fixed with selective qunatization.'
+    )
+    parser.set_defaults(use_fixed_model=False)
     return parser.parse_args()
 
 if __name__ == '__main__':
@@ -116,7 +122,8 @@ if __name__ == '__main__':
     model_filepath = os.path.join(
         args.model_path,
         appliance_name,
-        f'{appliance_name}_{args.model_arch}_{args.quant_mode}.tflite'
+        f'{appliance_name}_{args.model_arch}_{args.quant_mode}_fixed.tflite' if args.use_fixed_model
+        else f'{appliance_name}_{args.model_arch}_{args.quant_mode}.tflite'
     )
     logger.log(f'tflite model: {model_filepath}')
 
