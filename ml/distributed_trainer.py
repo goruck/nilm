@@ -114,7 +114,7 @@ class DistributedTrainer():
             p=None)# if MODEL_ARCH!='transformer' else 0.2)
 
         # Create initial training set. This will get reshuffled every epoch.
-        self._build_train_dataset(self._window_length)
+        self._build_train_dataset()
 
         self._validation_provider = WindowGenerator(
             dataset=val_dataset,
@@ -124,7 +124,7 @@ class DistributedTrainer():
         )
 
         # Create validation dataset.
-        self._build_val_dataset(self._window_length)
+        self._build_val_dataset()
 
         # Determine learning rate based on global batch size.
         try:
@@ -191,16 +191,18 @@ class DistributedTrainer():
 
         self._train_from_scratch_or_resume(resume_training)
 
-    def _build_train_dataset(self, window_length):
+    def _build_train_dataset(self):
         """Build replica dataset for training."""
         def gen():
-            for _, batch in enumerate(self._training_provider):
+            for idx, batch in enumerate(self._training_provider):
+                if idx > len(self._training_provider):
+                    break
                 yield batch
 
         train_tf_dataset = tf.data.Dataset.from_generator(
             gen,
             output_signature=(
-                tf.TensorSpec(shape=(None, window_length, 1), dtype=tf.float32), # samples
+                tf.TensorSpec(shape=(None, self._window_length, 1), dtype=tf.float32), # samples
                 tf.TensorSpec(shape=(None,), dtype=tf.float32), # targets
                 tf.TensorSpec(shape=(None,), dtype=tf.float32) # status
             )
@@ -209,16 +211,18 @@ class DistributedTrainer():
         # Distribute datasets to replicas.
         self._train_dist_dataset = self._strategy.experimental_distribute_dataset(train_tf_dataset)
 
-    def _build_val_dataset(self, window_length):
+    def _build_val_dataset(self):
         """Build replica dataset for testing (validation)."""
         def gen():
-            for _, batch in enumerate(self._validation_provider):
+            for idx, batch in enumerate(self._validation_provider):
+                if idx > len(self._training_provider):
+                    break
                 yield batch
 
         val_tf_dataset = tf.data.Dataset.from_generator(
             gen,
             output_signature=(
-                tf.TensorSpec(shape=(None, window_length, 1), dtype=tf.float32), # samples
+                tf.TensorSpec(shape=(None, self._window_length, 1), dtype=tf.float32), # samples
                 tf.TensorSpec(shape=(None,), dtype=tf.float32), # targets
                 tf.TensorSpec(shape=(None,), dtype=tf.float32) # status
             )
@@ -534,7 +538,7 @@ class DistributedTrainer():
             # Reshuffle training dataset.
             self._logger.log('Reshuffling training dataset.')
             self._training_provider.on_epoch_end()
-            self._build_train_dataset(self._window_length)
+            self._build_train_dataset()
 
         self._model.summary()
 
