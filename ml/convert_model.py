@@ -151,7 +151,8 @@ class ConvertModel():
                 break
 
     def _get_suspected_layers(
-            self, layer_stats:pd.DataFrame,
+            self,
+            layer_stats:pd.DataFrame,
             high_quant_error:float=0.7,
             keep_large_ranges:bool=False,
             keep_first_n_layers:int=0
@@ -176,8 +177,8 @@ class ConvertModel():
                 list(layer_stats[layer_stats['range'] > 255.0]['tensor_name'])
             )
 
-        # Let the first `n` layers remain in float as well.
-        if keep_first_n_layers != 0:
+        # Keep the first `n` layers remain in float as well.
+        if keep_first_n_layers > 0:
             return suspected_layers.extend(list(layer_stats[:keep_first_n_layers]['tensor_name']))
 
         return suspected_layers
