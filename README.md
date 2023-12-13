@@ -115,8 +115,8 @@ You can find the training results for each appliance in the [models](./ml/models
 
 |Appliance|$F1\uparrow$|$MCC\uparrow$|$ACC\uparrow$|$MAE$ $(W)$ $\downarrow$|$SAE\downarrow$|$NDE\downarrow$|$EpD_e\thinspace(\%)\downarrow$|
 | --- | --- | --- | --- | --- | --- | --- | --- |
-|kettle|0.7199|0.7298|0.9960|8.723|0.3091|0.4705|-30.91|
-|microwave|0.6328|0.6303|0.9950|6.070|0.2102|0.6876|-21.02|
+|kettle|0.7309|0.7346|0.9960|8.7875|0.2284|0.4696|-22.85|
+|microwave|0.5671|0.5667|0.9933|7.5643|0.046|0.8845|-4.661|
 |fridge|0.7978|0.7002|0.8620|14.71|0.1471|0.4137|14.71|
 |dishwasher|0.5825|0.6281|0.9790|5.007|0.0193|0.3450|1.926|
 |washingmachine|0.8478|0.8441|0.9893|14.75|0.2929|0.3470|-29.29|
@@ -150,19 +150,38 @@ The table<sup>12</sup> below shows the results from two transformer-based models
 
 ### Model Quantization
 
-I quantized the ```cnn``` model’s weights and activation functions from Float32 to INT8 using TensorFlow Lite to improve inference performance on edge hardware, including the Raspberry Pi and the Google Edge TPU. Only the weights for the ```transformer``` model were quantized to INT8, the activations needed to be kept in Float32 to maintain accptable accuracy. See [convert_keras_to_tflite.py](./ml/convert_keras_to_tflite.py) for the code that does this quantization which also uses [TFLite's quantization debugger](https://www.tensorflow.org/lite/performance/quantization_debugger) to check how well each layer in the model was quantized. The quantized inference results are shown in the tables below, where $R_{x86}$ is the inference rate on a 3.8 GHz x86 machine using eight tflite interpreter threads with XNNPACK and $R_{\pi}$ is the inference rate on a Raspberry Pi 4 using four threads. You will observed a slight degradation in performance after quantization but this is acceptable for most use cases.
+I quantized the ```cnn``` and ```transformer``` models using TensorFlow Lite with various quantization modes to improve inference speed on edge hardware, including the Raspberry Pi and the Google Edge TPU, while mitigating the impact on accuracy. You can see the quantization modes I used in the table below.
 
-The quantized results for the ```cnn``` model are shown in the table below.
+|Mode|Description|
+| --- | --- |
+|convert_only|Convert to tflite but keep all parameters in Float32 (no quantization).|
+|w8|Quantize weights from float32 to int8 and biases to int64. Leave activations in Float32.|
+|w8_a8_fallback|Same as w8 but quantize activations from float32 to int8. Fallback to float if an operator does not have an integer implementation.|
+|w8_a8|Same as w8 but quantize activations from float32 to int8. Enforce full int8 quantization for all operators.|
+|w8_a16|Same as w8 but quantize activations to int16.|
+
+
+The `cnn` model was quantized using all modes to understand the best tradeoff between latency and accuracy. Only the weights for the ```transformer``` model were quantized to int8 using mode `w8`, the activations needed to be kept in Float32 to maintain acceptable accuracy. See [convert_keras_to_tflite.py](./ml/convert_keras_to_tflite.py) for the code that does this quantization which also uses [TFLite's quantization debugger](https://www.tensorflow.org/lite/performance/quantization_debugger) to check how well each layer in the model was quantized. The quantized inference results are shown in the tables below, where $R_{x86}$ is the inference rate on a 3.8 GHz x86 machine using eight tflite interpreter threads and $R_{\pi}$ is the inference rate on a Raspberry Pi 4 using four threads with both computers using the tflite [XNNPACK](https://github.com/google/XNNPACK) CPU delegate. Model inputs and outputs are keep in float32 to maximize inference speed. You will observed degradation in performance after quantization with most quantization modes but this is acceptable for most use cases.
+
+The quantized results for the ```cnn``` model are shown in the table below for quantization mode ```w8```.
 
 |Appliance|$F1\uparrow$|$MCC\uparrow$|$ACC\uparrow$|$MAE$ $(W)$ $\downarrow$|$SAE\downarrow$|$NDE\downarrow$|$EpD_e$ ($\%$)|$R_{x86}$ ($Hz$)|$R_{\pi}$ ($Hz$)|
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-|kettle|0.7211|0.7319|0.9966|7.462|0.3162|0.4604|-31.62|4637|232.0|
-|microwave|0.6221|0.6283|0.9943|7.652|0.4811|0.6841|-48.11|5128|x|
+|kettle|0.7428|0.7454|0.9966|7.371|0.2013|0.4500|-20.13|1385|210.3|
+|microwave|0.6400|0.6373|0.9933|7.971|0.1578|0.7194|-15.78|1302|x|
 |fridge|0.5980|0.4354|0.7665|19.17|0.1101|0.7746|-10.88|5108|x|
 |dishwasher|0.6645|0.6775|0.9842|5.874|0.0167|0.3895|-1.668|5050|x|
-|washingmachine|0.8910|0.8872|0.9926|15.08|0.3796|0.3442|-37.96|5094|x|
+|washingmachine|0.8509|0.8457|0.9897|16.15|0.3192|0.4080|-31.92|5077|237.6|
 
-The quantized results for the ```transformer``` model are shown in the table below (**in progress**).
+The quantized results for the ```cnn``` kettle model are shown below for the other quantization modes. You can see the negative impact of activation quantization but weight quantization, because of regularization effects, has a moderate benefit on the model metrics. As expected, the full quantization modes lead to the lowest latencies. Quantizing activations to int16 by the ```w8_a16``` mode results in the highest latencies because only non-optimized reference kernel implementations are presently available in tflite but this scheme leads to the best model metrics given the regularization benefits from weight quantization and better preservation of activation numerics.
+
+|Mode|$F1\uparrow$|$MCC\uparrow$|$ACC\uparrow$|$MAE$ $(W)$ $\downarrow$|$SAE\downarrow$|$NDE\downarrow$|$EpD_e$ ($\%$)|$R_{x86}$ ($Hz$)|$R_{\pi}$ ($Hz$)|
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+|w8_a8_fallback|0.6584|0.6736|0.9959|8.677|0.3700|0.5448|-36.70|5095|233.0|
+|w8_a8|0.6584|0.6736|0.9960|8.768|0.3670|0.5447|-36.70|5113|232.0|
+|w8_a16|0.7474|0.7479|0.9966|7.431|0.1531|0.4516|-15.31|214.1|40.38|
+
+The quantized results for the ```transformer``` model are shown in the table below for quantization mode ```w8``` (**in progress**).
 
 |Appliance|$F1\uparrow$|$MCC\uparrow$|$ACC\uparrow$|$MAE$ $(W)$ $\downarrow$|$SAE\downarrow$|$NDE\downarrow$|$EpD_e$ ($\%$)|$R_{x86}$ ($Hz$)|$R_{\pi}$ ($Hz$)|
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -171,6 +190,8 @@ The quantized results for the ```transformer``` model are shown in the table bel
 |fridge|0.5980|0.4354|0.7665|19.17|0.1101|0.7746|-10.88|5108|x|
 |dishwasher|0.6645|0.6775|0.9842|5.874|0.0167|0.3895|-1.668|5050|x|
 |washingmachine|0.8910|0.8872|0.9926|15.08|0.3796|0.3442|-37.96|5094|x|
+
+In all cases the quantized model sizes are about four times smaller than the float versions.
 
 ## NILM Prototype System Components
 
