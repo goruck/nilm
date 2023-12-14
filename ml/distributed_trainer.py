@@ -194,10 +194,8 @@ class DistributedTrainer():
     def _build_train_dataset(self):
         """Build replica dataset for training."""
         def gen():
-            for idx, batch in enumerate(self._training_provider):
-                if idx > len(self._training_provider):
-                    break
-                yield batch
+            for i in range(len(self._training_provider)): #pylint: disable=consider-using-enumerate
+                yield self._training_provider[i]
 
         train_tf_dataset = tf.data.Dataset.from_generator(
             gen,
@@ -214,10 +212,8 @@ class DistributedTrainer():
     def _build_val_dataset(self):
         """Build replica dataset for testing (validation)."""
         def gen():
-            for idx, batch in enumerate(self._validation_provider):
-                if idx > len(self._training_provider):
-                    break
-                yield batch
+            for i in range(len(self._validation_provider)): #pylint: disable=consider-using-enumerate
+                yield self._validation_provider[i]
 
         val_tf_dataset = tf.data.Dataset.from_generator(
             gen,
