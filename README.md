@@ -23,7 +23,7 @@ The following first two diagrams illustrate the NILM concept and process steps a
 
 ![Alt text](./img/system-blk-dia.png?raw=true "NILM Prototype System Block Diagram")
 
-## NILM Algorithm Selection and Model Training
+## NILM Algorithm Selection and Models
 
 ### Algorithm Selection
 
@@ -53,7 +53,7 @@ The Bert-style transformer encoder is depicted below.
 
 ![Alt text](./img/transformer_block_plot.png?raw=true "bert-style encoder")
 
-### Datasets
+## NILM Datasets
 
 There are a number of large-scale publicly available datasets specifically designed to address the NILM problem which were captured in household buildings from various countries. The table⁷ below shows several of the most widely used.
 
@@ -63,7 +63,7 @@ The datasets generally include many 10’s of millions of active power, reactive
 
 Note that these datasets are typically very imbalanced because the majority of the time an appliance is in the off state. 
 
-### Model Training
+## Model Training and Results
 
 I used TensorFlow to train and test the model. All code associated with this section can be found on the Machine Learning section of the project’s GitHub, NILM⁹. The seq2point learning models for the appliances were trained individually on z-score standardized REFIT data or normalized to $[0, P_m]$, where $P_m$ is the maximum power consumption of an appliance in its active state. Using normalized data tended to give the best model performance so it is used by default.
 
@@ -117,8 +117,8 @@ You can find the training results for each appliance in the [models](./ml/models
 | --- | --- | --- | --- | --- | --- | --- | --- |
 |kettle|0.7309|0.7346|0.9960|8.7875|0.2284|0.4696|-22.85|
 |microwave|0.5671|0.5667|0.9933|7.5643|0.046|0.8845|-4.661|
-|fridge|0.7978|0.7002|0.8620|14.71|0.1471|0.4137|14.71|
-|dishwasher|0.5825|0.6281|0.9790|5.007|0.0193|0.3450|1.926|
+|fridge|0.7929|0.6942|8645|12.33|0.0373|0.4111|3.733|
+|dishwasher|0.6069|0.6483|0.9801|5.367|0.0347|0.3742|-3.473|
 |washingmachine|0.8478|0.8441|0.9893|14.75|0.2929|0.3470|-29.29|
 
 Typical performance metrics for the `transformer` model are shown in the table below.
@@ -148,9 +148,9 @@ The table<sup>12</sup> below shows the results from two transformer-based models
 
 ![Alt text](img/transformer_results_baseline.png?raw=true "ELECTRIcity: An Efficient Transformer for Non-Intrusive Load Monitoring by Stavros Sykiotis, Maria Kaselimi ,Anastasios Doulamis and Nikolaos Doulamis[12].")
 
-### Model Quantization
+## Model Quantization
 
-I quantized the ```cnn``` and ```transformer``` models using TensorFlow Lite with various quantization modes to improve inference speed on edge hardware, including the Raspberry Pi and the Google Edge TPU, while mitigating the impact on accuracy. You can see the quantization modes I used in the table below.
+I performed [Post-training quantization](https://www.tensorflow.org/lite/performance/post_training_quantization) on the ```cnn``` and ```transformer``` models using the [TensorFlow Lite converter API](https://www.tensorflow.org/lite/models/convert/) with various quantization modes to improve inference speed on edge hardware, including the Raspberry Pi and the Google Edge TPU, while mitigating the impact on accuracy. You can see the quantization modes I used in the table below.
 
 |Mode|Description|
 | --- | --- |
@@ -160,26 +160,110 @@ I quantized the ```cnn``` and ```transformer``` models using TensorFlow Lite wit
 |w8_a8|Same as w8 but quantize activations from float32 to int8. Enforce full int8 quantization for all operators.|
 |w8_a16|Same as w8 but quantize activations to int16.|
 
+The `cnn` model was quantized using all modes to understand the best tradeoff between latency and accuracy. Only the weights for the ```transformer``` model were quantized to int8 using mode `w8`, the activations needed to be kept in Float32 to maintain acceptable accuracy. See [convert_keras_to_tflite.py](./ml/convert_keras_to_tflite.py) for the code that does this quantization which also uses [TensorFlow Lite's quantization debugger](https://www.tensorflow.org/lite/performance/quantization_debugger) to check how well each layer in the model was quantized. 
 
-The `cnn` model was quantized using all modes to understand the best tradeoff between latency and accuracy. Only the weights for the ```transformer``` model were quantized to int8 using mode `w8`, the activations needed to be kept in Float32 to maintain acceptable accuracy. See [convert_keras_to_tflite.py](./ml/convert_keras_to_tflite.py) for the code that does this quantization which also uses [TFLite's quantization debugger](https://www.tensorflow.org/lite/performance/quantization_debugger) to check how well each layer in the model was quantized. The quantized inference results are shown in the tables below, where $R_{x86}$ is the inference rate on a 3.8 GHz x86 machine using eight tflite interpreter threads and $R_{\pi}$ is the inference rate on a Raspberry Pi 4 using four threads with both computers using the tflite [XNNPACK](https://github.com/google/XNNPACK) CPU delegate. Model inputs and outputs are keep in float32 to maximize inference speed. You will observed degradation in performance after quantization with most quantization modes but this is acceptable for most use cases.
+The quantized inference results are shown in the tables below, where $R_{x86}$ is the inference rate on a 3.8 GHz x86 machine using eight tflite interpreter threads and $R_{aarch64}$ is the inference rate on the aarch-64-based Raspberry Pi 4 using four threads with both computers using the TensorFlow Lite [XNNPACK](https://github.com/google/XNNPACK) CPU delegate. Model inputs and outputs were keep in float32 to maximize inference speed.
 
-The quantized results for the ```cnn``` model are shown in the table below for quantization mode ```w8```.
+### CNN Model Results and Discussion
 
-|Appliance|$F1\uparrow$|$MCC\uparrow$|$ACC\uparrow$|$MAE$ $(W)$ $\downarrow$|$SAE\downarrow$|$NDE\downarrow$|$EpD_e$ ($\%$)|$R_{x86}$ ($Hz$)|$R_{\pi}$ ($Hz$)|
+The quantized results for the ```cnn``` models are shown in the table below for quantization mode ```w8```.
+
+|Appliance|$F1\uparrow$|$MCC\uparrow$|$ACC\uparrow$|$MAE$ $(W)$ $\downarrow$|$SAE\downarrow$|$NDE\downarrow$|$EpD_e$ ($\%$)|$R_{x86}$ ($Hz$)|$R_{aarch64}$ ($Hz$)|
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 |kettle|0.7428|0.7454|0.9966|7.371|0.2013|0.4500|-20.13|1385|210.3|
-|microwave|0.6400|0.6373|0.9933|7.971|0.1578|0.7194|-15.78|1302|x|
-|fridge|0.5980|0.4354|0.7665|19.17|0.1101|0.7746|-10.88|5108|x|
-|dishwasher|0.6645|0.6775|0.9842|5.874|0.0167|0.3895|-1.668|5050|x|
-|washingmachine|0.8509|0.8457|0.9897|16.15|0.3192|0.4080|-31.92|5077|237.6|
+|microwave|0.6400|0.6373|0.9933|7.971|0.1578|0.7194|-15.78|1302|207.3|
+|fridge|0.6491|0.5040|0.7935|17.78|0.0907|0.7000|-8.971|1365|209.8|
+|dishwasher|0.5143|0.5787|0.9719|5.3955|0.0569|0.3647|-5.694|1321|209.4|
+|washingmachine|0.8838|0.8791|0.9919|15.33|0.2930|0.3811|-29.30|1317|237.6|
 
-The quantized results for the ```cnn``` kettle model are shown below for the other quantization modes. You can see the negative impact of activation quantization but weight quantization, because of regularization effects, has a moderate benefit on the model metrics. As expected, the full quantization modes lead to the lowest latencies. Quantizing activations to int16 by the ```w8_a16``` mode results in the highest latencies because only non-optimized reference kernel implementations are presently available in tflite but this scheme leads to the best model metrics given the regularization benefits from weight quantization and better preservation of activation numerics.
+The quantized results for the ```cnn kettle``` model are shown below for the other quantization modes.
 
-|Mode|$F1\uparrow$|$MCC\uparrow$|$ACC\uparrow$|$MAE$ $(W)$ $\downarrow$|$SAE\downarrow$|$NDE\downarrow$|$EpD_e$ ($\%$)|$R_{x86}$ ($Hz$)|$R_{\pi}$ ($Hz$)|
+|Mode|$F1\uparrow$|$MCC\uparrow$|$ACC\uparrow$|$MAE$ $(W)$ $\downarrow$|$SAE\downarrow$|$NDE\downarrow$|$EpD_e$ ($\%$)|$R_{x86}$ ($Hz$)|$R_{aarch64}$ ($Hz$)|
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+|convert_only|0.7119|0.7199|0.9964|7.812|0.2862|0.4780|-28.65|3188|79.49|
 |w8_a8_fallback|0.6584|0.6736|0.9959|8.677|0.3700|0.5448|-36.70|5095|233.0|
 |w8_a8|0.6584|0.6736|0.9960|8.768|0.3670|0.5447|-36.70|5113|232.0|
 |w8_a16|0.7474|0.7479|0.9966|7.431|0.1531|0.4516|-15.31|214.1|40.38|
+
+The quantized results for the ```cnn microwave``` model are shown below for the other quantization modes.
+
+|Mode|$F1\uparrow$|$MCC\uparrow$|$ACC\uparrow$|$MAE$ $(W)$ $\downarrow$|$SAE\downarrow$|$NDE\downarrow$|$EpD_e$ ($\%$)|$R_{x86}$ ($Hz$)|$R_{aarch64}$ ($Hz$)|
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+|convert_only|0.6410|0.6384|0.9933|7.976|0.1630|0.7195|-18.30|3196|79.92|
+|w8_a8_fallback|0.6268|0.6238|0.9931|8.006|0.1796|0.7206|-17.96|5096|233.0|
+|w8_a8|0.6268|0.6238|0.9931|8.005|0.1796|0.7206|-17.96|5088|236.7|
+|w8_a16|0.6391|0.6365|0.9933|7.968|0.1590|0.7172|-15.89|214.1|40.38|
+
+Results for the other appliance models are omitted for brevity but show similar characteristics as a function of quantization mode.
+
+You can see the negative impact of activation quantization but weight quantization, because of regularization effects, has a moderate benefit on the model performance metrics. As expected, the full quantization modes lead to the lowest latencies. Quantizing activations to int16 by the ```w8_a16``` mode results in the highest latencies because only non-optimized reference kernel implementations are presently available in TensorFlow Lite but this scheme leads to the best model metrics given the regularization benefits from weight quantization and better preservation of activation numerics.
+
+You can also see that inference latency of the modes follows ```w8``` ${>}$ ```convert_only``` ${>}$ ```w8_a8``` for the x86 machine but ```convert_only``` ${>}$ ```w8``` ${>}$ ```w8_a8``` for the aarch64 machine, although the variation is larger for x86. To better understand this, I profiled the converted models using the [TFLite Model Benchmark Tool](https://github.com/tensorflow/tensorflow/tree/master/tensorflow/lite/tools/benchmark). A summary of the profiling results for the ```cnn microwave``` model are shown below which are representative of the other models.
+
+#### Model Profiling on x86 (slowest to fastest)
+You can see that the Fully Connected and Convolution operations are taking the longest to execute in all cases but are much faster in the fully quantized mode of ```w8_a8```.
+
+| w8 node type                     | count | avg_ms | avg %    | cdf %    | mem KB | times called |
+| ----------------------------- | ----- | ------ | -------- | -------- | ------ | ------------ |
+| FULLY_CONNECTED               | 2     | 0.397  | 56.5527% | 56.5527% | 0      | 2            |
+| CONV_2D                       | 4     | 0.204  | 29.0598% | 85.6125% | 0      | 4            |
+| Copy (NC X32)                 | 2     | 0.051  | 7.26496% | 92.8775% | 0      | 9            |
+| Max Pooling (NHWC F32)        | 1     | 0.038  | 5.41311% | 98.2906% | 0      | 4            |
+| Convolution (NHWC F32) IGEMM  | 1     | 0.012  | 1.7094%  | 100%     | 0      | 1            |
+| Fully Connected (NC F32) GEMM | 1     | 0      | 0%       | 100%     | 0      | 1            |
+| EXPAND_DIMS                   | 9     | 0      | 0%       | 100%     | 0      | 9            |
+
+| convert_only node type        | count | avg_ms | avg %    | cdf %    | mem KB | times called |
+| ----------------------------- | ----- | ------ | -------- | -------- | ------ | ------------ |
+| Fully Connected (NC F32) GEMM | 3     | 0.151  | 53.3569% | 53.3569% | 0      | 3            |
+| Convolution (NHWC F32) IGEMM  | 1     | 0.062  | 21.9081% | 75.265%  | 0      | 5            |
+| Max Pooling (NHWC F32)        | 1     | 0.037  | 13.0742% | 88.3392% | 0      | 4            |
+| Copy (NC X32)                 | 1     | 0.033  | 11.6608% | 100%     | 0      | 9            |
+| EXPAND_DIMS                   | 9     | 0      | 0%       | 100%     | 0      | 9            |
+
+| w8_a8 node type                     | count | avg_ms | avg %    | cdf %    | mem KB | times called |
+| ----------------------------- | ----- | ------ | -------- | -------- | ------ | ------------ |
+| Convolution (NHWC QC8) IGEMM  | 1     | 0.061  | 37.1951% | 37.1951% | 0      | 5            |
+| Fully Connected (NC QS8) GEMM | 3     | 0.037  | 22.561%  | 59.7561% | 0      | 3            |
+| Max Pooling (NHWC S8)         | 1     | 0.034  | 20.7317% | 80.4878% | 0      | 4            |
+| Copy (NC X8)                  | 1     | 0.032  | 19.5122% | 100%     | 0      | 9            |
+| EXPAND_DIMS                   | 9     | 0      | 0%       | 100%     | 0      | 9            |
+| Convert (NC QS8 F32)          | 1     | 0      | 0%       | 100%     | 0      | 1            |
+| Convert (NC F32 QS8)          | 1     | 0      | 0%       | 100%     | 0      | 1            |
+
+#### Model Profiling on aarch64 (slowest to fastest)
+You can see the copy and Max Pooling operations in particular are relatively slower on x86 than on aarch64 which is probably due to memory bandwidth and micro-architecture differences.
+
+| convert_only node type | count | avg_ms | avg %       | cdf %    | mem KB | times called |
+| ------------------------------ | ----- | ------ | ----------- | -------- | ------ | ------------ |
+| Copy (NC X32)                  | 1     | 34.835 | 30.9136%    | 30.9136% | 0      | 9            |
+| Convolution (NHWC F32) IGEMM   | 1     | 32.414 | 28.7651%    | 59.6787% | 0      | 5            |
+| Max Pooling (NHWC F32)         | 1     | 23.008 | 20.418%     | 80.0967% | 0      | 4            |
+| Fully Connected (NC F32) GEMM  | 3     | 22.425 | 19.9006%    | 99.9973% | 0      | 3            |
+| EXPAND_DIMS                    | 9     | 0.003  | 0.00266229% | 100%     | 0      | 9            |
+
+| w8 node type                     | count | avg_ms | avg %       | cdf %    | mem KB | times called |
+| ----------------------------- | ----- | ------ | ----------- | -------- | ------ | ------------ |
+| Max Pooling (NHWC F32)        | 1     | 42.281 | 46.9085%    | 46.9085% | 0      | 4            |
+| CONV_2D                       | 4     | 17.461 | 19.3721%    | 66.2806% | 0      | 4            |
+| Copy (NC X32)                 | 2     | 16.877 | 18.7241%    | 85.0047% | 0      | 9            |
+| Convolution (NHWC F32) IGEMM  | 1     | 10.658 | 11.8245%    | 96.8292% | 0      | 1            |
+| FULLY_CONNECTED               | 2     | 2.847  | 3.1586%     | 99.9878% | 0      | 2            |
+| Fully Connected (NC F32) GEMM | 1     | 0.007  | 0.00776613% | 99.9956% | 0      | 1            |
+| EXPAND_DIMS                   | 9     | 0.004  | 0.00443779% | 100%     | 0      | 9            |
+
+| w8_a8 node type                     | count | avg_ms | avg %        | cdf %    | mem KB | times called |
+| ----------------------------- | ----- | ------ | ------------ | -------- | ------ | ------------ |
+| Copy (NC X8)                  | 1     | 34.686 | 30.9647%     | 30.9647% | 0      | 9            |
+| Convolution (NHWC QC8) IGEMM  | 1     | 33.259 | 29.6908%     | 60.6554% | 0      | 5            |
+| Max Pooling (NHWC S8)         | 1     | 23.922 | 21.3555%     | 82.0109% | 0      | 4            |
+| Fully Connected (NC QS8) GEMM | 3     | 20.146 | 17.9846%     | 99.9955% | 0      | 3            |
+| EXPAND_DIMS                   | 9     | 0.002  | 0.00178543%  | 99.9973% | 0      | 9            |
+| Convert (NC F32 QS8)          | 1     | 0.002  | 0.00178543%  | 99.9991% | 0      | 1            |
+| Convert (NC QS8 F32)          | 1     | 0.001  | 0.000892714% | 100%     | 0      | 1            |
+
+
+### Transformer Model Results and Discussion
 
 The quantized results for the ```transformer``` model are shown in the table below for quantization mode ```w8``` (**in progress**).
 
