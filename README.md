@@ -162,13 +162,13 @@ I performed [Post-training quantization](https://www.tensorflow.org/lite/perform
 
 The `cnn` model was quantized using all modes to understand the best tradeoff between latency and accuracy. Only the weights for the ```transformer``` model were quantized to int8 using mode `w8`, the activations needed to be kept in Float32 to maintain acceptable accuracy. See [convert_keras_to_tflite.py](./ml/convert_keras_to_tflite.py) for the code that does this quantization which also uses [TensorFlow Lite's quantization debugger](https://www.tensorflow.org/lite/performance/quantization_debugger) to check how well each layer in the model was quantized. 
 
-The quantized inference results are shown in the tables below, where $R_{x86}$ is the inference rate on a 3.8 GHz x86 machine using eight tflite interpreter threads and $R_{aarch64}$ is the inference rate on the aarch-64-based Raspberry Pi 4 using four threads with both computers using the TensorFlow Lite [XNNPACK](https://github.com/google/XNNPACK) CPU delegate. Model inputs and outputs were keep in float32 to maximize inference speed.
+The quantized inference results are shown in the tables below, where $R_{x86}$ is the inference rate on a 3.8 GHz x86 machine using eight tflite interpreter threads and $R_{arm}$ is the inference rate on the aarch-64-based Raspberry Pi 4 using four threads with both computers using the TensorFlow Lite [XNNPACK](https://github.com/google/XNNPACK) CPU delegate. $R_{tpu}$ is the infernce rate on the Google Coral Edge TPU. Model inputs and outputs were keep in float32 to maximize inference speed for the x86 and ARM-based machines but were set to int8 for the edge tpu.
 
 ### CNN Model Results and Discussion
 
 The quantized results for the ```cnn``` models are shown in the table below for quantization mode ```w8```.
 
-|Appliance|$F1\uparrow$|$MCC\uparrow$|$ACC\uparrow$|$MAE$ $(W)$ $\downarrow$|$SAE\downarrow$|$NDE\downarrow$|$EpD_e$ ($\%$)|$R_{x86}$ ($Hz$)|$R_{aarch64}$ ($Hz$)|
+|Appliance|$F1\uparrow$|$MCC\uparrow$|$ACC\uparrow$|$MAE$ $(W)$ $\downarrow$|$SAE\downarrow$|$NDE\downarrow$|$EpD_e$ ($\%$)|$R_{x86}$ ($Hz$)|$R_{arm}$ ($Hz$)|
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 |kettle|0.7428|0.7454|0.9966|7.371|0.2013|0.4500|-20.13|1385|210.3|
 |microwave|0.6400|0.6373|0.9933|7.971|0.1578|0.7194|-15.78|1302|207.3|
@@ -178,21 +178,21 @@ The quantized results for the ```cnn``` models are shown in the table below for 
 
 The quantized results for the ```cnn kettle``` model are shown below for the other quantization modes.
 
-|Mode|$F1\uparrow$|$MCC\uparrow$|$ACC\uparrow$|$MAE$ $(W)$ $\downarrow$|$SAE\downarrow$|$NDE\downarrow$|$EpD_e$ ($\%$)|$R_{x86}$ ($Hz$)|$R_{aarch64}$ ($Hz$)|
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-|convert_only|0.7119|0.7199|0.9964|7.812|0.2862|0.4780|-28.65|3188|79.49|
-|w8_a8_fallback|0.6584|0.6736|0.9959|8.677|0.3700|0.5448|-36.70|5095|233.0|
-|w8_a8|0.6584|0.6736|0.9960|8.768|0.3670|0.5447|-36.70|5113|232.0|
-|w8_a16|0.7474|0.7479|0.9966|7.431|0.1531|0.4516|-15.31|214.1|40.38|
+|Mode|$F1\uparrow$|$MCC\uparrow$|$ACC\uparrow$|$MAE$ $(W)$ $\downarrow$|$SAE\downarrow$|$NDE\downarrow$|$EpD_e$ ($\%$)|$R_{x86}$ ($Hz$)|$R_{arm}$ ($Hz$)|$R_{tpu}$ ($Hz$)|
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+|convert_only|0.7119|0.7199|0.9964|7.812|0.2862|0.4780|-28.65|3188|79.49|NA|
+|w8_a8_fallback|0.6584|0.6736|0.9959|8.677|0.3700|0.5448|-36.70|5095|233.0|NA|
+|w8_a8|0.6584|0.6736|0.9960|8.768|0.3670|0.5447|-36.70|5113|232.0|TBD|
+|w8_a16|0.7474|0.7479|0.9966|7.431|0.1531|0.4516|-15.31|214.1|40.38|NA|
 
 The quantized results for the ```cnn microwave``` model are shown below for the other quantization modes.
 
-|Mode|$F1\uparrow$|$MCC\uparrow$|$ACC\uparrow$|$MAE$ $(W)$ $\downarrow$|$SAE\downarrow$|$NDE\downarrow$|$EpD_e$ ($\%$)|$R_{x86}$ ($Hz$)|$R_{aarch64}$ ($Hz$)|
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-|convert_only|0.6410|0.6384|0.9933|7.976|0.1630|0.7195|-18.30|3196|79.92|
-|w8_a8_fallback|0.6268|0.6238|0.9931|8.006|0.1796|0.7206|-17.96|5096|233.0|
-|w8_a8|0.6268|0.6238|0.9931|8.005|0.1796|0.7206|-17.96|5088|236.7|
-|w8_a16|0.6391|0.6365|0.9933|7.968|0.1590|0.7172|-15.89|214.1|40.38|
+|Mode|$F1\uparrow$|$MCC\uparrow$|$ACC\uparrow$|$MAE$ $(W)$ $\downarrow$|$SAE\downarrow$|$NDE\downarrow$|$EpD_e$ ($\%$)|$R_{x86}$ ($Hz$)|$R_{arm}$ ($Hz$)|$R_{tpu}$ ($Hz$)|
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+|convert_only|0.6410|0.6384|0.9933|7.976|0.1630|0.7195|-18.30|3196|79.92|NA|
+|w8_a8_fallback|0.6268|0.6238|0.9931|8.006|0.1796|0.7206|-17.96|5096|233.0|NA|
+|w8_a8|0.6268|0.6238|0.9931|8.005|0.1796|0.7206|-17.96|5088|236.7|TBD|
+|w8_a16|0.6391|0.6365|0.9933|7.968|0.1590|0.7172|-15.89|214.1|40.38|NA|
 
 Results for the other appliance models are omitted for brevity but show similar characteristics as a function of quantization mode.
 
