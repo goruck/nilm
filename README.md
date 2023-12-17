@@ -262,6 +262,77 @@ You can see the copy and Max Pooling operations in particular are relatively slo
 | Convert (NC F32 QS8)          | 1     | 0.002  | 0.00178543%  | 99.9991% | 0      | 1            |
 | Convert (NC QS8 F32)          | 1     | 0.001  | 0.000892714% | 100%     | 0      | 1            |
 
+#### Quantization Efficacy
+
+The RMSE / scale is close to $1 / sqrt(12)$ (~ 0.289) when quantized distribution is similar to the original float distribution, indicating a well-quantized model. The larger the value is, it's more likely for the layer not being quantized well. The tables below show the RMSE / Scale metric for the ```cnn kettle``` and ```cnn washingmachine``` models and the `Suspected?` column indicates a layer that significantly exceeds 0.289. These layers can remain in float to generate a selectively quantized model that increases accuracy at the expense of inference performance but doing so for the ```cnn``` models did not materially improve accuracy. See [Inspecting Quantization Errors with Quantization Debugger](https://www.tensorflow.org/lite/performance/quantization_debugger).
+
+Layer quantization efficacy metrics for the ```cnn kettle``` model are shown below.
+| layer | op_name | range | rmse/scale | Suspected? |
+| ------ | --------------- | --------- | ---------- | --- |
+| 0      | EXPAND_DIMS     | 23.929975 | 2.75E-01   |
+| 1      | CONV_2D         | 5.518012  | 2.22E-01   |
+| 2      | RESHAPE         | 5.518012  | 2.38E-06   |
+| 3      | EXPAND_DIMS     | 5.518012  | 2.38E-06   |
+| 4      | MAX_POOL_2D     | 5.518012  | 2.42E-06   |
+| 5      | RESHAPE         | 5.518012  | 2.42E-06   |
+| 6      | EXPAND_DIMS     | 5.518012  | 2.42E-06   |
+| 7      | CONV_2D         | 3.494575  | 1.79E-01   |
+| 8      | RESHAPE         | 3.494575  | 1.44E-06   |
+| 9      | EXPAND_DIMS     | 3.494575  | 1.44E-06   |
+| 10     | MAX_POOL_2D     | 3.494575  | 1.49E-06   |
+| 11     | RESHAPE         | 3.494575  | 1.49E-06   |
+| 12     | EXPAND_DIMS     | 3.494575  | 1.49E-06   |
+| 13     | CONV_2D         | 5.910911  | 1.22E-01   |
+| 14     | RESHAPE         | 5.910911  | 1.09E-06   |
+| 15     | EXPAND_DIMS     | 5.910911  | 1.09E-06   |
+| 16     | MAX_POOL_2D     | 5.910911  | 1.18E-06   |
+| 17     | RESHAPE         | 5.910911  | 1.18E-06   |
+| 18     | EXPAND_DIMS     | 5.910911  | 1.18E-06   |
+| 19     | CONV_2D         | 10.82671  | 1.00E-01   |
+| 20     | RESHAPE         | 10.82671  | 1.00E-06   |
+| 21     | EXPAND_DIMS     | 10.82671  | 1.00E-06   |
+| 22     | MAX_POOL_2D     | 10.82671  | 1.08E-06   |
+| 23     | RESHAPE         | 10.82671  | 1.08E-06   |
+| 24     | EXPAND_DIMS     | 10.82671  | 1.08E-06   |
+| 25     | CONV_2D         | 2.987664  | 5.77E-02   |
+| 26     | RESHAPE         | 2.987664  | 3.82E-07   |
+| 27     | FULLY_CONNECTED | 1.725032  | 1.20E+00   | Yes |
+| 28     | FULLY_CONNECTED | 1.512342  | 6.19E-01   |
+| 29     | FULLY_CONNECTED | 0.990833  | 2.03E+00   | Yes |
+
+Layer quantization efficacy metrics for the ```cnn washingmachine``` model are shown below.
+| layer | op_name | range | rmse/scale | Suspected? |
+| ------- | --------------- | ---------- | -------- | --- |
+| 0       | EXPAND_DIMS     | 30.954547  | 3.00E-01 |
+| 1       | CONV_2D         | 12.620701  | 1.81E-01 |
+| 2       | RESHAPE         | 12.620701  | 1.56E-06 |
+| 3       | EXPAND_DIMS     | 12.620701  | 1.56E-06 |
+| 4       | MAX_POOL_2D     | 12.620701  | 1.67E-06 |
+| 5       | RESHAPE         | 12.620701  | 1.67E-06 |
+| 6       | EXPAND_DIMS     | 12.620701  | 1.67E-06 |
+| 7       | CONV_2D         | 15.030776  | 1.94E-01 |
+| 8       | RESHAPE         | 15.030776  | 1.94E-07 |
+| 9       | EXPAND_DIMS     | 15.030776  | 1.94E-07 |
+| 10      | MAX_POOL_2D     | 15.030776  | 2.36E-07 |
+| 11      | RESHAPE         | 15.030776  | 2.36E-07 |
+| 12      | EXPAND_DIMS     | 15.030776  | 2.36E-07 |
+| 13      | CONV_2D         | 10.132236  | 1.68E-01 |
+| 14      | RESHAPE         | 10.132236  | 1.83E-06 |
+| 15      | EXPAND_DIMS     | 10.132236  | 1.83E-06 |
+| 16      | MAX_POOL_2D     | 10.132236  | 2.06E-06 |
+| 17      | RESHAPE         | 10.132236  | 2.06E-06 |
+| 18      | EXPAND_DIMS     | 10.132236  | 2.06E-06 |
+| 19      | CONV_2D         | 9.038437   | 1.45E-01 |
+| 20      | RESHAPE         | 9.038437   | 1.90E-06 |
+| 21      | EXPAND_DIMS     | 9.038437   | 1.90E-06 |
+| 22      | MAX_POOL_2D     | 9.038437   | 2.20E-06 |
+| 23      | RESHAPE         | 9.038437   | 2.20E-06 |
+| 24      | EXPAND_DIMS     | 9.038437   | 2.20E-06 |
+| 25      | CONV_2D         | 5.151932   | 9.58E-02 |
+| 26      | RESHAPE         | 5.151932   | 1.08E-06 |
+| 27      | FULLY_CONNECTED | 7.269378   | 1.13E-01 |
+| 28      | FULLY_CONNECTED | 3.79172    | 1.75E-01 |
+| 29      | FULLY_CONNECTED | 1.102378   | 9.51E-01 | Yes |
 
 ### Transformer Model Results and Discussion
 
