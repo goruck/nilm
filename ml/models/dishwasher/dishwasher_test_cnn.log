@@ -1,0 +1,37 @@
+2023-12-14 18:50:40,078 [INFO ]  Machine name: titan
+2023-12-14 18:50:40,078 [INFO ]  Arguments: 
+2023-12-14 18:50:40,078 [INFO ]  Namespace(appliance_name='dishwasher', datadir='./dataset_management/refit', trained_model_dir='./models', model_arch='cnn', save_dir='/home/lindo/Develop/nilm/ml/models', plot=True, crop=None, batch_size=1024)
+2023-12-14 18:50:40,078 [INFO ]  File for test: dishwasher_test_H20.csv
+2023-12-14 18:50:40,078 [INFO ]  Loading from: ./dataset_management/refit/dishwasher/dishwasher_test_H20.csv
+2023-12-14 18:50:40,864 [INFO ]  There are 5.169M test samples.
+2023-12-14 18:50:40,864 [INFO ]  Window length: 599 (samples)
+2023-12-14 18:50:40,864 [INFO ]  Sample period: 8 (s)
+2023-12-14 18:50:40,864 [INFO ]  Appliance max power: 2500.0 (W)
+2023-12-14 18:50:40,864 [INFO ]  Appliance on threshold: 10.0 (W)
+2023-12-14 18:50:40,864 [INFO ]  Train aggregate mean: 606.3228537145152 (W)
+2023-12-14 18:50:40,864 [INFO ]  Train aggregate std: 833.611776395652 (W)
+2023-12-14 18:50:40,864 [INFO ]  Train appliance mean: 46.040618889481905 (W)
+2023-12-14 18:50:40,864 [INFO ]  Train appliance std: 305.87980576285474 (W)
+2023-12-14 18:50:40,864 [INFO ]  Test appliance mean: 11.299554135013219 (W)
+2023-12-14 18:50:40,864 [INFO ]  Test aggregate mean: 377.9968064884045 (W)
+2023-12-14 18:50:40,864 [INFO ]  Alternative appliance mean: 700.0 (W)
+2023-12-14 18:50:40,864 [INFO ]  Alternative appliance std: 1000.0 (W)
+2023-12-14 18:50:40,864 [INFO ]  Alternative aggregate mean: 522.0 (W)
+2023-12-14 18:50:40,864 [INFO ]  Alternative aggregate std: 814.0 (W)
+2023-12-14 18:50:40,865 [INFO ]  Using alt standardization.
+2023-12-14 18:50:41,883 [INFO ]  Loading saved model from ./models/dishwasher/savemodel_cnn.
+2023-12-14 18:50:53,649 [INFO ]  De-normalizing predictions with mean = 0 and std = 2500.0.
+2023-12-14 18:50:53,880 [INFO ]  True positives: 76085
+2023-12-14 18:50:53,900 [INFO ]  True negatives: 4992463
+2023-12-14 18:50:53,913 [INFO ]  False positives: 96441
+2023-12-14 18:50:53,929 [INFO ]  False negatives: 2115
+2023-12-14 18:50:53,959 [INFO ]  Accuracy: 0.9809262596611177
+2023-12-14 18:50:54,017 [INFO ]  MCC: 0.648318549262208
+2023-12-14 18:50:54,068 [INFO ]  F1: 0.606917511546469
+2023-12-14 18:50:54,382 [INFO ]  MAE: 5.367265586419604 (W)
+2023-12-14 18:50:54,408 [INFO ]  NDE: 0.37420398245719205
+2023-12-14 18:50:54,429 [INFO ]  SAE: 0.03473011223204781
+2023-12-14 18:50:54,486 [INFO ]  Ground truth EPD: 270.28393467598096 (Wh)
+2023-12-14 18:50:54,530 [INFO ]  Predicted EPD: 260.89694504151396 (Wh)
+2023-12-14 18:50:54,531 [INFO ]  EPD Relative Error: -3.473010575238301 (%)
+2023-12-14 18:50:54,531 [INFO ]  Saving mains, ground truth and predictions to /home/lindo/Develop/nilm/ml/models/dishwasher.

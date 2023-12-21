@@ -1,0 +1,53 @@
+2023-11-19 08:01:43,618 [INFO ]  *** Training model from scratch ***
+2023-11-19 08:01:43,618 [INFO ]  Machine name: titan
+2023-11-19 08:01:43,618 [INFO ]  Arguments: 
+2023-11-19 08:01:43,618 [INFO ]  Namespace(appliance_name='microwave', model_arch='transformer', datadir='./dataset_management/refit', save_dir='/home/lindo/Develop/nilm/ml/models', batchsize=512, n_epoch=50, crop_train_dataset=None, crop_val_dataset=None, do_not_use_distributed_training=False, resume_training=False)
+2023-11-19 08:01:43,618 [INFO ]  Appliance name: microwave
+2023-11-19 08:01:43,618 [INFO ]  Using model architecture: transformer.
+2023-11-19 08:01:43,618 [INFO ]  Window length: 599
+2023-11-19 08:01:43,618 [INFO ]  Training dataset: ./dataset_management/refit/microwave/microwave_training_.csv
+2023-11-19 08:01:43,618 [INFO ]  Validation dataset: ./dataset_management/refit/microwave/microwave_validation_H17.csv
+2023-11-19 08:01:43,618 [INFO ]  Checkpoint file path: /home/lindo/Develop/nilm/ml/models/microwave/checkpoints_transformer
+2023-11-19 08:01:43,618 [INFO ]  SaveModel file path: /home/lindo/Develop/nilm/ml/models/microwave/savemodel_transformer
+2023-11-19 08:01:47,451 [INFO ]  There are 18.221M training samples.
+2023-11-19 08:01:47,451 [INFO ]  There are 5.432M validation samples.
+2023-11-19 08:01:47,451 [INFO ]  Batch size: 512
+2023-11-19 08:01:47,451 [INFO ]  Using MirroredStrategy with devices ('/job:localhost/replica:0/task:0/device:GPU:0', '/job:localhost/replica:0/task:0/device:GPU:1')
+2023-11-19 08:01:47,621 [INFO ]  Number of replicas: 2.
+2023-11-19 08:01:47,621 [INFO ]  Global batch size: 1024.
+2023-11-19 08:01:48,328 [INFO ]  Learning rate: 0.0001
+2023-11-19 08:01:48,328 [INFO ]  Normalized on power threshold: 0.06666666666666667
+2023-11-19 08:01:48,329 [INFO ]  L1 loss multiplier: 1.0
+2023-11-19 08:01:50,023 [INFO ]  Collective all_reduce tensors: 44 all_reduces, num_devices = 2, group_size = 2, implementation = CommunicationImplementation.NCCL, num_packs = 1
+2023-11-19 08:01:51,524 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+2023-11-19 08:01:52,466 [INFO ]  Collective all_reduce tensors: 44 all_reduces, num_devices = 2, group_size = 2, implementation = CommunicationImplementation.NCCL, num_packs = 1
+2023-11-19 08:01:52,760 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+2023-11-19 08:01:59,310 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+2023-11-19 08:01:59,315 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+2023-11-19 08:01:59,317 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+2023-11-19 08:01:59,317 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+2023-11-19 08:01:59,542 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+2023-11-19 08:01:59,543 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+2023-11-19 08:01:59,545 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+2023-11-19 08:01:59,545 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+2023-11-19 09:07:56,515 [INFO ]  Collective all_reduce tensors: 44 all_reduces, num_devices = 2, group_size = 2, implementation = CommunicationImplementation.NCCL, num_packs = 1
+2023-11-19 09:16:36,644 [INFO ]  epoch: 1 loss: 0.3753 mse: 0.00136 mae: 0.02393 val loss: 0.1201 val mse: 0.001004 val mae: 0.02253
+2023-11-19 09:16:36,645 [INFO ]  Current val loss of 0.1201 < than val loss of inf, saving model to /home/lindo/Develop/nilm/ml/models/microwave/savemodel_transformer.
+2023-11-19 09:16:38,901 [INFO ]  Assets written to: /home/lindo/Develop/nilm/ml/models/microwave/savemodel_transformer/assets
+2023-11-19 10:31:16,992 [INFO ]  epoch: 2 loss: 0.249 mse: 0.0007662 mae: 0.0176 val loss: 0.06541 val mse: 0.000591 val mae: 0.00895
+2023-11-19 10:31:16,992 [INFO ]  Current val loss of 0.06541 < than val loss of 0.1201, saving model to /home/lindo/Develop/nilm/ml/models/microwave/savemodel_transformer.
+2023-11-19 10:31:19,219 [INFO ]  Assets written to: /home/lindo/Develop/nilm/ml/models/microwave/savemodel_transformer/assets
+2023-11-19 11:45:58,962 [INFO ]  epoch: 3 loss: 0.2439 mse: 0.0006967 mae: 0.01534 val loss: 0.1286 val mse: 0.0007396 val mae: 0.009957
+2023-11-19 13:00:40,700 [INFO ]  epoch: 4 loss: 0.2338 mse: 0.0006437 mae: 0.01383 val loss: 0.06343 val mse: 0.000601 val mae: 0.01022
+2023-11-19 13:00:40,701 [INFO ]  Current val loss of 0.06343 < than val loss of 0.06541, saving model to /home/lindo/Develop/nilm/ml/models/microwave/savemodel_transformer.
+2023-11-19 13:00:42,975 [INFO ]  Assets written to: /home/lindo/Develop/nilm/ml/models/microwave/savemodel_transformer/assets
+2023-11-19 14:15:35,687 [INFO ]  epoch: 5 loss: 0.2325 mse: 0.0006324 mae: 0.01301 val loss: 0.1552 val mse: 0.0007124 val mae: 0.008636
+2023-11-19 15:30:28,972 [INFO ]  epoch: 6 loss: 0.2282 mse: 0.0006184 mae: 0.01253 val loss: 0.197 val mse: 0.0007695 val mae: 0.01498
+2023-11-19 16:45:19,054 [INFO ]  epoch: 7 loss: 0.2271 mse: 0.0006194 mae: 0.01247 val loss: 0.1208 val mse: 0.0007031 val mae: 0.01005
+2023-11-19 18:00:09,870 [INFO ]  epoch: 8 loss: 0.2245 mse: 0.0006095 mae: 0.01185 val loss: 0.1198 val mse: 0.0006482 val mae: 0.01053
+2023-11-19 19:15:02,397 [INFO ]  epoch: 9 loss: 0.224 mse: 0.0006108 mae: 0.01169 val loss: 0.08247 val mse: 0.0006332 val mae: 0.007021
+2023-11-19 20:29:54,109 [INFO ]  epoch: 10 loss: 0.2254 mse: 0.0006063 mae: 0.01156 val loss: 0.1427 val mse: 0.0006876 val mae: 0.01185
+2023-11-19 21:44:46,143 [INFO ]  epoch: 11 loss: 0.2213 mse: 0.0005914 mae: 0.01095 val loss: 0.06934 val mse: 0.0006592 val mae: 0.007819
+2023-11-19 21:44:46,241 [INFO ]  Early termination of training.
+2023-11-19 21:44:46,544 [INFO ]  Plot directory: /home/lindo/Develop/nilm/ml/models/microwave/train_transformer_loss
+2023-11-20 04:29:21,702 [INFO ]  Plot directory: /home/lindo/Develop/nilm/ml/models/microwave/train_transformer_mae

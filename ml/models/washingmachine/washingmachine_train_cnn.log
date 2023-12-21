@@ -1,0 +1,117 @@
+2023-12-11 19:06:39,120 [INFO ]  *** Training model from scratch ***
+2023-12-11 19:06:39,120 [INFO ]  Machine name: titan
+2023-12-11 19:06:39,120 [INFO ]  Arguments: 
+2023-12-11 19:06:39,120 [INFO ]  Namespace(appliance_name='washingmachine', model_arch='cnn', datadir='./dataset_management/refit', save_dir='/home/lindo/Develop/nilm/ml/models', batchsize=512, n_epoch=50, crop_train_dataset=None, crop_val_dataset=None, do_not_use_distributed_training=False, resume_training=False, plot_display=True)
+2023-12-11 19:06:39,120 [INFO ]  Window length: 599
+2023-12-11 19:06:39,121 [INFO ]  Training dataset: ./dataset_management/refit/washingmachine/washingmachine_training_.csv
+2023-12-11 19:06:39,121 [INFO ]  Validation dataset: ./dataset_management/refit/washingmachine/washingmachine_validation_H18.csv
+2023-12-11 19:06:39,121 [INFO ]  Checkpoint file path: /home/lindo/Develop/nilm/ml/models/washingmachine/checkpoints_cnn
+2023-12-11 19:06:39,121 [INFO ]  SaveModel file path: /home/lindo/Develop/nilm/ml/models/washingmachine/savemodel_cnn
+2023-12-11 19:06:39,121 [INFO ]  Training history file path: /home/lindo/Develop/nilm/ml/models/washingmachine/history_cnn
+2023-12-11 19:06:46,148 [INFO ]  There are 43.470M training samples.
+2023-12-11 19:06:46,149 [INFO ]  There are 5.008M validation samples.
+2023-12-11 19:06:46,149 [INFO ]  Normalized on power threshold: 0.008
+2023-12-11 19:06:46,149 [INFO ]  L1 loss multiplier: 0.01
+2023-12-11 19:06:46,149 [INFO ]  Using MirroredStrategy with devices ('/job:localhost/replica:0/task:0/device:GPU:0', '/job:localhost/replica:0/task:0/device:GPU:1')
+2023-12-11 19:06:46,321 [INFO ]  Number of replicas: 2.
+2023-12-11 19:06:46,321 [INFO ]  Global batch size: 1024.
+2023-12-11 19:06:48,211 [INFO ]  Learning rate: 0.0001
+2023-12-11 19:06:48,943 [INFO ]  Collective all_reduce tensors: 16 all_reduces, num_devices = 2, group_size = 2, implementation = CommunicationImplementation.NCCL, num_packs = 1
+2023-12-11 19:06:49,478 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+2023-12-11 19:06:49,841 [INFO ]  Collective all_reduce tensors: 16 all_reduces, num_devices = 2, group_size = 2, implementation = CommunicationImplementation.NCCL, num_packs = 1
+2023-12-11 19:06:49,968 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+2023-12-11 19:06:54,419 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+2023-12-11 19:06:54,423 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+2023-12-11 19:06:54,427 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+2023-12-11 19:06:54,427 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+2023-12-11 19:06:54,452 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+2023-12-11 19:06:54,453 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+2023-12-11 19:06:54,455 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+2023-12-11 19:06:54,456 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+2023-12-11 19:25:38,752 [INFO ]  Collective all_reduce tensors: 16 all_reduces, num_devices = 2, group_size = 2, implementation = CommunicationImplementation.NCCL, num_packs = 1
+2023-12-11 19:25:39,722 [INFO ]  Running test loop after epoch: 1.
+2023-12-11 19:28:22,514 [INFO ]  Current val loss of 0.006281 < than val loss of inf, saving model to /home/lindo/Develop/nilm/ml/models/washingmachine/savemodel_cnn.
+2023-12-11 19:28:22,514 [WARNI]  Compiled the loaded model, but the compiled metrics have yet to be built. `model.compile_metrics` will be empty until you train or evaluate the model.
+2023-12-11 19:28:23,098 [INFO ]  Assets written to: /home/lindo/Develop/nilm/ml/models/washingmachine/savemodel_cnn/assets
+2023-12-11 19:28:23,119 [INFO ]  epoch: 1 loss: 0.4241 mse: 0.001124 mae: 0.005209 val_loss: 0.006281 val_mse: 0.0002627 val_mae: 0.002253
+2023-12-11 19:28:23,567 [INFO ]  Reshuffling training dataset.
+2023-12-11 19:47:19,937 [INFO ]  Running test loop after epoch: 2.
+2023-12-11 19:50:02,614 [INFO ]  epoch: 2 loss: 0.29 mse: 0.0005341 mae: 0.003489 val_loss: 0.006469 val_mse: 0.000281 val_mae: 0.001973
+2023-12-11 19:50:03,326 [INFO ]  Reshuffling training dataset.
+2023-12-11 20:08:58,902 [INFO ]  Running test loop after epoch: 3.
+2023-12-11 20:11:41,847 [INFO ]  epoch: 3 loss: 0.2431 mse: 0.0004367 mae: 0.003064 val_loss: 0.006594 val_mse: 0.0002706 val_mae: 0.001531
+2023-12-11 20:11:42,812 [INFO ]  Reshuffling training dataset.
+2023-12-11 20:30:38,335 [INFO ]  Running test loop after epoch: 4.
+2023-12-11 20:33:21,325 [INFO ]  Current val loss of 0.006211 < than val loss of 0.006281, saving model to /home/lindo/Develop/nilm/ml/models/washingmachine/savemodel_cnn.
+2023-12-11 20:33:21,326 [WARNI]  Compiled the loaded model, but the compiled metrics have yet to be built. `model.compile_metrics` will be empty until you train or evaluate the model.
+2023-12-11 20:33:21,847 [INFO ]  Assets written to: /home/lindo/Develop/nilm/ml/models/washingmachine/savemodel_cnn/assets
+2023-12-11 20:33:21,879 [INFO ]  epoch: 4 loss: 0.2214 mse: 0.0003953 mae: 0.002819 val_loss: 0.006211 val_mse: 0.0002526 val_mae: 0.0014
+2023-12-11 20:33:23,093 [INFO ]  Reshuffling training dataset.
+2023-12-11 20:52:16,050 [INFO ]  Running test loop after epoch: 5.
+2023-12-11 20:54:59,400 [INFO ]  epoch: 5 loss: 0.2103 mse: 0.0003649 mae: 0.002657 val_loss: 0.006498 val_mse: 0.0002641 val_mae: 0.002593
+2023-12-11 20:55:00,858 [INFO ]  Reshuffling training dataset.
+2023-12-11 21:13:57,371 [INFO ]  Running test loop after epoch: 6.
+2023-12-11 21:16:40,971 [INFO ]  epoch: 6 loss: 0.199 mse: 0.0003296 mae: 0.002537 val_loss: 0.006605 val_mse: 0.0002533 val_mae: 0.001369
+2023-12-11 21:16:42,864 [INFO ]  Reshuffling training dataset.
+2023-12-11 21:35:38,693 [INFO ]  Running test loop after epoch: 7.
+2023-12-11 21:38:22,225 [INFO ]  epoch: 7 loss: 0.1879 mse: 0.0003001 mae: 0.002422 val_loss: 0.006283 val_mse: 0.000246 val_mae: 0.001505
+2023-12-11 21:38:24,376 [INFO ]  Reshuffling training dataset.
+2023-12-11 21:57:26,322 [INFO ]  Running test loop after epoch: 8.
+2023-12-11 22:00:10,067 [INFO ]  epoch: 8 loss: 0.1816 mse: 0.0002834 mae: 0.002341 val_loss: 0.007964 val_mse: 0.0002689 val_mae: 0.001518
+2023-12-11 22:00:12,460 [INFO ]  Reshuffling training dataset.
+2023-12-11 22:19:09,233 [INFO ]  Running test loop after epoch: 9.
+2023-12-11 22:21:52,904 [INFO ]  epoch: 9 loss: 0.1765 mse: 0.0002685 mae: 0.002276 val_loss: 0.008598 val_mse: 0.0002807 val_mae: 0.001701
+2023-12-11 22:21:55,591 [INFO ]  Reshuffling training dataset.
+2023-12-11 22:40:48,985 [INFO ]  Running test loop after epoch: 10.
+2023-12-11 22:43:31,896 [INFO ]  Current val loss of 0.005954 < than val loss of 0.006211, saving model to /home/lindo/Develop/nilm/ml/models/washingmachine/savemodel_cnn.
+2023-12-11 22:43:31,897 [WARNI]  Compiled the loaded model, but the compiled metrics have yet to be built. `model.compile_metrics` will be empty until you train or evaluate the model.
+2023-12-11 22:43:32,607 [INFO ]  Assets written to: /home/lindo/Develop/nilm/ml/models/washingmachine/savemodel_cnn/assets
+2023-12-11 22:43:32,640 [INFO ]  epoch: 10 loss: 0.172 mse: 0.0002562 mae: 0.002224 val_loss: 0.005954 val_mse: 0.0002666 val_mae: 0.001504
+2023-12-11 22:43:35,563 [INFO ]  Reshuffling training dataset.
+2023-12-11 23:02:30,089 [INFO ]  Running test loop after epoch: 11.
+2023-12-11 23:05:14,542 [INFO ]  epoch: 11 loss: 0.1727 mse: 0.0002453 mae: 0.002186 val_loss: 0.007095 val_mse: 0.0002735 val_mae: 0.0014
+2023-12-11 23:05:17,904 [INFO ]  Reshuffling training dataset.
+2023-12-11 23:24:17,945 [INFO ]  Running test loop after epoch: 12.
+2023-12-11 23:27:02,228 [INFO ]  epoch: 12 loss: 0.1775 mse: 0.0002378 mae: 0.002084 val_loss: 0.0066 val_mse: 0.0002557 val_mae: 0.001455
+2023-12-11 23:27:05,985 [INFO ]  Reshuffling training dataset.
+2023-12-11 23:46:07,352 [INFO ]  Running test loop after epoch: 13.
+2023-12-11 23:48:51,145 [INFO ]  epoch: 13 loss: 0.1795 mse: 0.0002282 mae: 0.002013 val_loss: 0.00745 val_mse: 0.000255 val_mae: 0.001248
+2023-12-11 23:48:55,091 [INFO ]  Reshuffling training dataset.
+2023-12-12 00:07:54,038 [INFO ]  Running test loop after epoch: 14.
+2023-12-12 00:10:38,508 [INFO ]  epoch: 14 loss: 0.1798 mse: 0.0002176 mae: 0.00196 val_loss: 0.006008 val_mse: 0.0002572 val_mae: 0.001263
+2023-12-12 00:10:42,687 [INFO ]  Reshuffling training dataset.
+2023-12-12 00:29:38,153 [INFO ]  Running test loop after epoch: 15.
+2023-12-12 00:32:22,192 [INFO ]  Current val loss of 0.005841 < than val loss of 0.005954, saving model to /home/lindo/Develop/nilm/ml/models/washingmachine/savemodel_cnn.
+2023-12-12 00:32:22,193 [WARNI]  Compiled the loaded model, but the compiled metrics have yet to be built. `model.compile_metrics` will be empty until you train or evaluate the model.
+2023-12-12 00:32:22,718 [INFO ]  Assets written to: /home/lindo/Develop/nilm/ml/models/washingmachine/savemodel_cnn/assets
+2023-12-12 00:32:22,752 [INFO ]  epoch: 15 loss: 0.1798 mse: 0.0002093 mae: 0.001909 val_loss: 0.005841 val_mse: 0.0002478 val_mae: 0.001473
+2023-12-12 00:32:27,146 [INFO ]  Reshuffling training dataset.
+2023-12-12 00:51:29,873 [INFO ]  Running test loop after epoch: 16.
+2023-12-12 00:54:14,177 [INFO ]  epoch: 16 loss: 0.1798 mse: 0.0002029 mae: 0.001887 val_loss: 0.00586 val_mse: 0.0002495 val_mae: 0.001272
+2023-12-12 00:54:18,880 [INFO ]  Reshuffling training dataset.
+2023-12-12 01:13:21,868 [INFO ]  Running test loop after epoch: 17.
+2023-12-12 01:16:05,609 [INFO ]  Current val loss of 0.005819 < than val loss of 0.005841, saving model to /home/lindo/Develop/nilm/ml/models/washingmachine/savemodel_cnn.
+2023-12-12 01:16:05,610 [WARNI]  Compiled the loaded model, but the compiled metrics have yet to be built. `model.compile_metrics` will be empty until you train or evaluate the model.
+2023-12-12 01:16:06,141 [INFO ]  Assets written to: /home/lindo/Develop/nilm/ml/models/washingmachine/savemodel_cnn/assets
+2023-12-12 01:16:06,172 [INFO ]  epoch: 17 loss: 0.1753 mse: 0.0001945 mae: 0.001911 val_loss: 0.005819 val_mse: 0.0002607 val_mae: 0.001181
+2023-12-12 01:16:11,243 [INFO ]  Reshuffling training dataset.
+2023-12-12 01:35:11,106 [INFO ]  Running test loop after epoch: 18.
+2023-12-12 01:37:54,703 [INFO ]  epoch: 18 loss: 0.1726 mse: 0.0001814 mae: 0.00191 val_loss: 0.006385 val_mse: 0.0002578 val_mae: 0.001144
+2023-12-12 01:38:00,103 [INFO ]  Reshuffling training dataset.
+2023-12-12 01:56:59,051 [INFO ]  Running test loop after epoch: 19.
+2023-12-12 01:59:42,689 [INFO ]  epoch: 19 loss: 0.1699 mse: 0.0001655 mae: 0.001892 val_loss: 0.006501 val_mse: 0.0002599 val_mae: 0.001177
+2023-12-12 01:59:48,283 [INFO ]  Reshuffling training dataset.
+2023-12-12 02:18:52,273 [INFO ]  Running test loop after epoch: 20.
+2023-12-12 02:21:35,944 [INFO ]  epoch: 20 loss: 0.1673 mse: 0.000148 mae: 0.00184 val_loss: 0.00658 val_mse: 0.0002647 val_mae: 0.001484
+2023-12-12 02:21:41,642 [INFO ]  Reshuffling training dataset.
+2023-12-12 02:40:38,140 [INFO ]  Running test loop after epoch: 21.
+2023-12-12 02:43:22,700 [INFO ]  epoch: 21 loss: 0.1645 mse: 0.0001277 mae: 0.001778 val_loss: 0.0066 val_mse: 0.0002482 val_mae: 0.001259
+2023-12-12 02:43:28,901 [INFO ]  Reshuffling training dataset.
+2023-12-12 03:02:31,344 [INFO ]  Running test loop after epoch: 22.
+2023-12-12 03:05:14,657 [INFO ]  epoch: 22 loss: 0.1622 mse: 0.0001072 mae: 0.001707 val_loss: 0.00655 val_mse: 0.0002637 val_mae: 0.001373
+2023-12-12 03:05:21,581 [INFO ]  Reshuffling training dataset.
+2023-12-12 03:24:19,506 [INFO ]  Running test loop after epoch: 23.
+2023-12-12 03:27:03,406 [INFO ]  epoch: 23 loss: 0.1607 mse: 9.463e-05 mae: 0.001651 val_loss: 0.006344 val_mse: 0.0002582 val_mae: 0.001756
+2023-12-12 03:27:10,562 [INFO ]  Early termination of training.
+2023-12-12 03:27:12,970 [INFO ]  Plot directory: /home/lindo/Develop/nilm/ml/models/washingmachine/train_cnn_loss
+2023-12-12 04:16:52,618 [INFO ]  Plot directory: /home/lindo/Develop/nilm/ml/models/washingmachine/train_cnn_mae

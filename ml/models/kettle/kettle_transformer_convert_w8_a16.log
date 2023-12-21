@@ -1,0 +1,15 @@
+2023-12-07 19:21:59,886 [INFO ]  Machine name: titan
+2023-12-07 19:21:59,887 [INFO ]  Arguments: 
+2023-12-07 19:21:59,887 [INFO ]  Namespace(appliance_name='kettle', model_arch='transformer', datadir='/home/lindo/Develop/nilm/ml/dataset_management/refit', save_dir='/home/lindo/Develop/nilm/ml/models', crop=None, evaluate=True, num_eval=432000, test_type='test', prune=False, quant_mode='w8_a16', debug_model=False, fix_model=False)
+2023-12-07 19:21:59,887 [INFO ]  Savemodel file path: /home/lindo/Develop/nilm/ml/models/kettle/savemodel_transformer
+2023-12-07 19:22:01,643 [WARNI]  No training configuration found in save file, so the model was *not* compiled. Compile it manually.
+2023-12-07 19:22:01,650 [INFO ]  dataset: /home/lindo/Develop/nilm/ml/dataset_management/refit/kettle/kettle_test_H2.csv
+2023-12-07 19:22:02,493 [INFO ]  Loaded 5.734M samples from dataset.
+2023-12-07 19:22:02,498 [INFO ]  Converting model to tflite using w8_a16 quantization.
+2023-12-07 19:22:03,393 [INFO ]  Assets written to: /tmp/tmpdjng0lji/assets
+2023-12-07 21:25:37,099 [INFO ]  Quantized tflite model saved to /home/lindo/Develop/nilm/ml/models/kettle/kettle_transformer_w8_a16.tflite.
+2023-12-07 21:25:37,120 [INFO ]  interpreter input details: [{'name': 'serving_default_args_0:0', 'index': 408, 'shape': array([  1, 599,   1], dtype=int32), 'shape_signature': array([ -1, 599,   1], dtype=int32), 'dtype': <class 'numpy.float32'>, 'quantization': (0.0, 0), 'quantization_parameters': {'scales': array([], dtype=float32), 'zero_points': array([], dtype=int32), 'quantized_dimension': 0}, 'sparsity_parameters': {}}]
+2023-12-07 21:25:37,121 [INFO ]  interpreter output details: [{'name': 'StatefulPartitionedCall:0', 'index': 409, 'shape': array([1, 1], dtype=int32), 'shape_signature': array([-1,  1], dtype=int32), 'dtype': <class 'numpy.float32'>, 'quantization': (0.0, 0), 'quantization_parameters': {'scales': array([], dtype=float32), 'zero_points': array([], dtype=int32), 'quantized_dimension': 0}, 'sparsity_parameters': {}}]
+2023-12-07 21:25:37,121 [INFO ]  tflite model floating input: True
+2023-12-07 21:25:37,121 [INFO ]  tflite model floating output: True
+2023-12-07 21:25:37,246 [INFO ]  Running inference on 432000 samples...

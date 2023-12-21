@@ -1,0 +1,41 @@
+2023-11-16 19:15:55,565 [INFO ]  *** Training model from scratch ***
+2023-11-16 19:15:55,565 [INFO ]  Machine name: titan
+2023-11-16 19:15:55,565 [INFO ]  Arguments: 
+2023-11-16 19:15:55,565 [INFO ]  Namespace(appliance_name='dishwasher', model_arch='transformer', datadir='./dataset_management/refit', save_dir='/home/lindo/Develop/nilm/ml/models', batchsize=512, n_epoch=50, crop_train_dataset=None, crop_val_dataset=None, do_not_use_distributed_training=False, resume_training=False)
+2023-11-16 19:15:55,565 [INFO ]  Appliance name: dishwasher
+2023-11-16 19:15:55,565 [INFO ]  Using model architecture: transformer.
+2023-11-16 19:15:55,566 [INFO ]  Window length: 599
+2023-11-16 19:15:55,566 [INFO ]  Training dataset: ./dataset_management/refit/dishwasher/dishwasher_training_.csv
+2023-11-16 19:15:55,566 [INFO ]  Validation dataset: ./dataset_management/refit/dishwasher/dishwasher_validation_H18.csv
+2023-11-16 19:15:55,566 [INFO ]  Checkpoint file path: /home/lindo/Develop/nilm/ml/models/dishwasher/checkpoints_transformer
+2023-11-16 19:15:55,566 [INFO ]  SaveModel file path: /home/lindo/Develop/nilm/ml/models/dishwasher/savemodel_transformer
+2023-11-16 19:16:00,721 [INFO ]  There are 30.816M training samples.
+2023-11-16 19:16:00,721 [INFO ]  There are 5.008M validation samples.
+2023-11-16 19:16:00,728 [INFO ]  Batch size: 512
+2023-11-16 19:16:00,728 [INFO ]  Using MirroredStrategy with devices ('/job:localhost/replica:0/task:0/device:GPU:0', '/job:localhost/replica:0/task:0/device:GPU:1')
+2023-11-16 19:16:00,899 [INFO ]  Number of replicas: 2.
+2023-11-16 19:16:00,899 [INFO ]  Global batch size: 1024.
+2023-11-16 19:16:02,126 [INFO ]  Learning rate: 0.0001
+2023-11-16 19:16:02,126 [INFO ]  Normalized on power threshold: 0.004
+2023-11-16 19:16:02,126 [INFO ]  L1 loss multiplier: 1.0
+2023-11-16 19:16:03,796 [INFO ]  Collective all_reduce tensors: 44 all_reduces, num_devices = 2, group_size = 2, implementation = CommunicationImplementation.NCCL, num_packs = 1
+2023-11-16 19:16:05,288 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+2023-11-16 19:16:06,189 [INFO ]  Collective all_reduce tensors: 44 all_reduces, num_devices = 2, group_size = 2, implementation = CommunicationImplementation.NCCL, num_packs = 1
+2023-11-16 19:16:06,474 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+2023-11-16 19:16:12,971 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+2023-11-16 19:16:12,976 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+2023-11-16 19:16:12,979 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+2023-11-16 19:16:12,980 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+2023-11-16 19:16:13,151 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+2023-11-16 19:16:13,152 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+2023-11-16 19:16:13,154 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+2023-11-16 19:16:13,155 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+2023-11-16 20:40:41,692 [INFO ]  Collective all_reduce tensors: 44 all_reduces, num_devices = 2, group_size = 2, implementation = CommunicationImplementation.NCCL, num_packs = 1
+2023-11-16 20:46:43,104 [INFO ]  epoch: 1 loss: 1.352 mse: 0.005643 mae: 0.01878 val loss: 0.248 val mse: 0.004793 val mae: 0.01683
+2023-11-16 20:46:43,105 [INFO ]  Current val loss of 0.248 < than val loss of inf, saving model to /home/lindo/Develop/nilm/ml/models/dishwasher/savemodel_transformer.
+2023-11-16 20:46:45,257 [INFO ]  Assets written to: /home/lindo/Develop/nilm/ml/models/dishwasher/savemodel_transformer/assets
+2023-11-16 22:17:11,218 [INFO ]  epoch: 2 loss: 1.102 mse: 0.003632 mae: 0.009556 val loss: 0.295 val mse: 0.007718 val mae: 0.01407
+2023-11-16 23:47:43,781 [INFO ]  epoch: 3 loss: 0.9835 mse: 0.003067 mae: 0.007975 val loss: 0.2508 val mse: 0.006244 val mae: 0.01267
+2023-11-17 01:18:01,623 [INFO ]  epoch: 4 loss: 0.8999 mse: 0.002643 mae: 0.006869 val loss: 0.3258 val mse: 0.008459 val mae: 0.01085
+2023-11-17 02:48:27,721 [INFO ]  epoch: 5 loss: 0.8367 mse: 0.002301 mae: 0.006037 val loss: 0.3674 val mse: 0.009204 val mae: 0.01573
+2023-11-17 04:18:41,041 [INFO ]  epoch: 6 loss: 0.7796 mse: 0.002019 mae: 0.005394 val loss: 0.305 val mse: 0.008734 val mae: 0.01206

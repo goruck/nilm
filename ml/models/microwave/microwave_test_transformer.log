@@ -1,0 +1,37 @@
+2023-12-02 05:06:09,891 [INFO ]  Machine name: titan
+2023-12-02 05:06:09,891 [INFO ]  Arguments: 
+2023-12-02 05:06:09,891 [INFO ]  Namespace(appliance_name='microwave', datadir='./dataset_management/refit', trained_model_dir='./models', model_arch='transformer', save_dir='/home/lindo/Develop/nilm/ml/models', plot=True, crop=None, batch_size=1024)
+2023-12-02 05:06:09,891 [INFO ]  File for test: microwave_test_H4.csv
+2023-12-02 05:06:09,891 [INFO ]  Loading from: ./dataset_management/refit/microwave/microwave_test_H4.csv
+2023-12-02 05:06:11,206 [INFO ]  There are 6.761M test samples.
+2023-12-02 05:06:11,206 [INFO ]  Window length: 599 (samples)
+2023-12-02 05:06:11,206 [INFO ]  Sample period: 8 (s)
+2023-12-02 05:06:11,206 [INFO ]  Appliance max power: 3000.0 (W)
+2023-12-02 05:06:11,206 [INFO ]  Appliance on threshold: 200.0 (W)
+2023-12-02 05:06:11,206 [INFO ]  Train aggregate mean: 495.0447502551665 (W)
+2023-12-02 05:06:11,206 [INFO ]  Train aggregate std: 704.1066664964247 (W)
+2023-12-02 05:06:11,206 [INFO ]  Train appliance mean: 3.4617193220425304 (W)
+2023-12-02 05:06:11,206 [INFO ]  Train appliance std: 64.22826568216946 (W)
+2023-12-02 05:06:11,207 [INFO ]  Test appliance mean: 9.577146165430394 (W)
+2023-12-02 05:06:11,207 [INFO ]  Test aggregate mean: 381.2162070293207 (W)
+2023-12-02 05:06:11,207 [INFO ]  Alternative appliance mean: 500.0 (W)
+2023-12-02 05:06:11,207 [INFO ]  Alternative appliance std: 800.0 (W)
+2023-12-02 05:06:11,207 [INFO ]  Alternative aggregate mean: 522.0 (W)
+2023-12-02 05:06:11,207 [INFO ]  Alternative aggregate std: 814.0 (W)
+2023-12-02 05:06:11,207 [INFO ]  Using alt standardization.
+2023-12-02 05:06:11,213 [INFO ]  Loading saved model from ./models/microwave/savemodel_transformer.
+2023-12-02 05:22:12,434 [INFO ]  De-normalizing predictions with mean = 0 and std = 3000.0.
+2023-12-02 05:22:12,739 [INFO ]  True positives: 31711
+2023-12-02 05:22:12,765 [INFO ]  True negatives: 6695691
+2023-12-02 05:22:12,782 [INFO ]  False positives: 16883
+2023-12-02 05:22:12,803 [INFO ]  False negatives: 15139
+2023-12-02 05:22:12,842 [INFO ]  Accuracy: 0.9952626140925618
+2023-12-02 05:22:12,918 [INFO ]  MCC: 0.6622217696635917
+2023-12-02 05:22:12,985 [INFO ]  F1: 0.6644943631867902
+2023-12-02 05:22:13,385 [INFO ]  MAE: 6.112472687124694 (W)
+2023-12-02 05:22:13,419 [INFO ]  NDE: 0.7185323341410951
+2023-12-02 05:22:13,446 [INFO ]  SAE: 0.17460842732981524
+2023-12-02 05:22:13,522 [INFO ]  Ground truth EPD: 184.57099421532513 (Wh)
+2023-12-02 05:22:13,581 [INFO ]  Predicted EPD: 152.32722600767187 (Wh)
+2023-12-02 05:22:13,581 [INFO ]  EPD Relative Error: -17.469574970180243 (%)
+2023-12-02 05:22:13,581 [INFO ]  Saving mains, ground truth and predictions to /home/lindo/Develop/nilm/ml/models/microwave.

@@ -1,0 +1,458 @@
+2023-12-10 07:14:59,967 [INFO ]  Machine name: titan
+2023-12-10 07:14:59,968 [INFO ]  Arguments: 
+2023-12-10 07:14:59,968 [INFO ]  Namespace(appliance_name='kettle', model_arch='transformer', datadir='/home/lindo/Develop/nilm/ml/dataset_management/refit', save_dir='/home/lindo/Develop/nilm/ml/models', crop=None, evaluate=True, num_eval=432000, test_type='test', prune=False, quant_mode='w8_a8_fallback', debug_model=True, fix_model=False, use_tpu=False)
+2023-12-10 07:14:59,968 [INFO ]  Savemodel file path: /home/lindo/Develop/nilm/ml/models/kettle/savemodel_transformer
+2023-12-10 07:15:01,755 [WARNI]  No training configuration found in save file, so the model was *not* compiled. Compile it manually.
+2023-12-10 07:15:01,762 [INFO ]  dataset: /home/lindo/Develop/nilm/ml/dataset_management/refit/kettle/kettle_test_H2.csv
+2023-12-10 07:15:02,609 [INFO ]  Loaded 5.734M samples from dataset.
+2023-12-10 07:15:02,615 [INFO ]  Converting model to tflite using w8_a8_fallback quantization.
+2023-12-10 07:15:02,615 [INFO ]  Debugging model...
+2023-12-10 07:15:03,508 [INFO ]  Assets written to: /tmp/tmp_q5hej0o/assets
+2023-12-10 09:58:17,152 [INFO ]  Saving debug results to /home/lindo/Develop/nilm/ml/models/kettle/kettle_transformer_debug_w8_a8_fallback.csv.
+2023-12-10 09:58:17,157 [INFO ]                  op_name  tensor_idx  num_elements        stddev    mean_error  max_abs_error  mean_squared_error         scale  zero_point                                        tensor_name
+0           EXPAND_DIMS         141         599.0  1.996296e-02 -6.693771e-03   4.351144e-02        6.669383e-04  9.384304e-02        -121                                  Conv1D/ExpandDims
+1               CONV_2D         145      153344.0  7.855464e-03  2.112269e-05   1.712589e-02        6.187570e-05  2.664087e-02          -3  BiasAdd;Conv1D/Squeeze;BiasAdd/ReadVariableOp;...
+2               RESHAPE         151      153344.0  6.998613e-03 -2.610388e-03   2.323868e-02        5.810002e-05  4.737469e-02        -128  Square;BiasAdd;Conv1D/Squeeze;BiasAdd/ReadVari...
+3           EXPAND_DIMS         155      153344.0  0.000000e+00  0.000000e+00   0.000000e+00        0.000000e+00  4.737469e-02        -128                       average_pooling1d/ExpandDims
+4       AVERAGE_POOL_2D         159       76544.0  0.000000e+00  0.000000e+00   0.000000e+00        0.000000e+00  4.737469e-02        -128                          average_pooling1d/AvgPool
+5                   ADD         163       76544.0  1.160241e-03 -2.793544e-04   1.302530e-02        2.989473e-06  4.548281e-02        -128                add;average_pooling1d/Squeeze;add/y
+6               RESHAPE         169       76544.0  6.086971e-04  1.126470e-04   4.742188e-03        6.005110e-07  1.335530e-02        -128          Sqrt;add;average_pooling1d/Squeeze;add/y1
+7                  FILL         174       76544.0  0.000000e+00  0.000000e+00   0.000000e+00        0.000000e+00  3.921569e-03        -128                                        BroadcastTo
+8                   MUL         178       76544.0  5.549327e-04  9.778224e-07   9.607375e-04        3.079513e-07  1.921486e-03           4                                       BroadcastTo1
+9                   ADD         182       76544.0  4.224149e-03 -1.802411e-06   7.294942e-03        1.784348e-05  1.461604e-02        -111                                                add
+10                 FILL         189         299.0  0.000000e+00  0.000000e+00   0.000000e+00        0.000000e+00  3.921569e-03        -128                           layer_normalization/ones
+11                 FILL         193         299.0  0.000000e+00  0.000000e+00   0.000000e+00        0.000000e+00  7.843137e-09           0                          layer_normalization/zeros
+12              RESHAPE         199       76544.0  0.000000e+00  0.000000e+00   0.000000e+00        0.000000e+00  1.461604e-02        -111                        layer_normalization/Reshape
+13            TRANSPOSE         203       76544.0  0.000000e+00  0.000000e+00   0.000000e+00        0.000000e+00  1.461604e-02        -111              layer_normalization/FusedBatchNormV32
+14                 MEAN         207         299.0  1.676081e-03  2.520741e-04   5.210842e-03        2.922931e-06  5.378168e-03        -128              layer_normalization/FusedBatchNormV33
+15   SQUARED_DIFFERENCE         211       76544.0  3.763378e-03 -1.367293e-03   8.720832e-03        1.607938e-05  1.746243e-02        -128              layer_normalization/FusedBatchNormV34
+16                 MEAN         215         299.0  6.263534e-04  9.570155e-05   1.115621e-03        4.039968e-07  2.145309e-03        -128              layer_normalization/FusedBatchNormV35
+17                  ADD         219         299.0  1.750251e-05 -9.856218e-04   9.960888e-04        9.727723e-07  2.149230e-03        -128              layer_normalization/FusedBatchNormV36
+18                RSQRT         223         299.0  2.093696e+00 -1.130022e+00   5.817760e+00        6.589929e+00  6.174842e-02        -128              layer_normalization/FusedBatchNormV37
+19                  MUL         227         299.0  0.000000e+00  0.000000e+00   0.000000e+00        0.000000e+00  6.174842e-02        -128              layer_normalization/FusedBatchNormV38
+20                  MUL         231       76544.0  1.143913e-02  9.682664e-05   5.708874e-01        1.309140e-04  3.767274e-02         -43              layer_normalization/FusedBatchNormV39
+21                  MUL         235         299.0  2.032625e-03  8.559150e-04   4.614027e-03        5.323202e-06  9.349478e-03        -128             layer_normalization/FusedBatchNormV310
+22                  SUB         239         299.0  9.463798e-09 -2.187571e-09   7.215749e-08        1.783563e-16  9.349478e-03         127             layer_normalization/FusedBatchNormV311
+23                  ADD         243       76544.0  1.144504e-02 -3.094673e-04   9.337471e-01        1.315872e-04  3.448100e-02         -15             layer_normalization/FusedBatchNormV312
+24            TRANSPOSE         247       76544.0  0.000000e+00  0.000000e+00   0.000000e+00        0.000000e+00  3.448100e-02         -15             layer_normalization/FusedBatchNormV313
+25              RESHAPE         251       76544.0  0.000000e+00  0.000000e+00   0.000000e+00        0.000000e+00  3.448100e-02         -15                      layer_normalization/Reshape_1
+26                  MUL         255       76544.0  9.599166e-03  7.276021e-05   1.162805e-01        9.215272e-05  3.374940e-02         -22                          layer_normalization/mul_3
+27                  ADD         259       76544.0  9.853122e-03  5.560907e-05   1.730987e-02        9.709050e-05  3.404890e-02         -22                            layer_normalization/add
+28              RESHAPE         270       76544.0  0.000000e+00  0.000000e+00   0.000000e+00        0.000000e+00  3.404890e-02         -22     multi_headed_attention/dense/Tensordot/Reshape
+29      FULLY_CONNECTED         274       38272.0  1.795899e-02  6.660283e-04   6.853740e-01        3.231538e-04  5.329175e-02          -4     multi_headed_attention/dense/Tensordot/MatMul2
+30              RESHAPE         278       38272.0  0.000000e+00  0.000000e+00   0.000000e+00        0.000000e+00  5.329175e-02          -4             multi_headed_attention/dense/Tensordot
+31                  ADD         282       38272.0  1.574833e-02 -5.518137e-04   2.718533e-02        2.483360e-04  5.359447e-02          -4               multi_headed_attention/dense/BiasAdd
+32              RESHAPE         289       38272.0  0.000000e+00  0.000000e+00   0.000000e+00        0.000000e+00  5.359447e-02          -4                     multi_headed_attention/Reshape
+33            TRANSPOSE         293       38272.0  0.000000e+00  0.000000e+00   0.000000e+00        0.000000e+00  5.359447e-02          -4                   multi_headed_attention/transpose
+34      FULLY_CONNECTED         297       38272.0  2.010872e-02 -1.253685e-04   6.225601e-02        4.044032e-04  6.298771e-02         -12   multi_headed_attention/dense_1/Tensordot/MatMul1
+35              RESHAPE         301       38272.0  0.000000e+00  0.000000e+00   0.000000e+00        0.000000e+00  6.298771e-02         -12           multi_headed_attention/dense_1/Tensordot
+36                  ADD         305       38272.0  1.798488e-02  8.665450e-04   3.203098e-02        3.242480e-04  6.332643e-02         -12             multi_headed_attention/dense_1/BiasAdd
+37              RESHAPE         312       38272.0  0.000000e+00  0.000000e+00   0.000000e+00        0.000000e+00  6.332643e-02         -12                   multi_headed_attention/Reshape_1
+38            TRANSPOSE         316       38272.0  0.000000e+00  0.000000e+00   0.000000e+00        0.000000e+00  6.332643e-02         -12                 multi_headed_attention/transpose_1
+39         BATCH_MATMUL         320      178802.0  8.958079e-01  2.873670e-03   2.278371e+00        8.024856e-01  3.102200e+00         -19  multi_headed_attention/dot_product_attention/M...
+40                  MUL         324      178802.0  2.341901e-07  2.566908e-07   2.755015e-06        1.220518e-13  2.741983e-01         -19  multi_headed_attention/dot_product_attention/t...
+41              SOFTMAX         328      178802.0  7.173788e-04 -1.870608e-04   3.381008e-03        5.514992e-07  3.906250e-03        -128  multi_headed_attention/dot_product_attention/S...
+42      FULLY_CONNECTED         332       38272.0  1.919637e-02  2.377477e-04   8.662409e-02        3.685930e-04  6.027486e-02          -5   multi_headed_attention/dense_2/Tensordot/MatMul1
+43              RESHAPE         336       38272.0  0.000000e+00  0.000000e+00   0.000000e+00        0.000000e+00  6.027486e-02          -5           multi_headed_attention/dense_2/Tensordot
+44                  ADD         340       38272.0  1.651302e-02 -1.068994e-03   3.037032e-02        2.738812e-04  6.047284e-02          -5             multi_headed_attention/dense_2/BiasAdd
+45              RESHAPE         347       38272.0  0.000000e+00  0.000000e+00   0.000000e+00        0.000000e+00  6.047284e-02          -5                   multi_headed_attention/Reshape_2
+46            TRANSPOSE         351       38272.0  0.000000e+00  0.000000e+00   0.000000e+00        0.000000e+00  6.047284e-02          -5                 multi_headed_attention/transpose_2
+47         BATCH_MATMUL         355       38272.0  1.560720e-02  2.112298e-04   2.754354e-02        2.436599e-04  5.407152e-02         -21  multi_headed_attention/dot_product_attention/M...
+48            TRANSPOSE         359       38272.0  0.000000e+00  0.000000e+00   0.000000e+00        0.000000e+00  5.407152e-02         -21                 multi_headed_attention/transpose_3
+49              RESHAPE         366       38272.0  0.000000e+00  0.000000e+00   0.000000e+00        0.000000e+00  5.407152e-02         -21                   multi_headed_attention/Reshape_3
+50              RESHAPE         376       38272.0  0.000000e+00  0.000000e+00   0.000000e+00        0.000000e+00  5.407152e-02         -21  multi_headed_attention/dense_3/Tensordot/Resha...
+51      FULLY_CONNECTED         380       76544.0  1.555890e-02 -1.509272e-04   4.661230e-02        2.421481e-04  5.138497e-02          -7   multi_headed_attention/dense_3/Tensordot/MatMul1
+52              RESHAPE         384       76544.0  0.000000e+00  0.000000e+00   0.000000e+00        0.000000e+00  5.138497e-02          -7           multi_headed_attention/dense_3/Tensordot
+53                  ADD         388       76544.0  1.496878e-02 -4.050550e-04   2.630521e-02        2.243231e-04  5.187968e-02          -7             multi_headed_attention/dense_3/BiasAdd
+54                  ADD         392       76544.0  1.789542e-02  1.952732e-06   7.699541e-02        3.202525e-04  6.196815e-02          -1                            add_normalization_1/add
+55                 FILL         399         299.0  0.000000e+00  0.000000e+00   0.000000e+00        0.000000e+00  3.921569e-03        -128     add_normalization_1/layer_normalization_1/ones
+56                 FILL         403         299.0  0.000000e+00  0.000000e+00   0.000000e+00        0.000000e+00  7.843137e-09           0    add_normalization_1/layer_normalization_1/zeros
+57              RESHAPE         409       76544.0  0.000000e+00  0.000000e+00   0.000000e+00        0.000000e+00  6.196815e-02          -1  add_normalization_1/layer_normalization_1/Reshape
+58            TRANSPOSE         413       76544.0  0.000000e+00  0.000000e+00   0.000000e+00        0.000000e+00  6.196815e-02          -1  add_normalization_1/layer_normalization_1/Fuse...
+59                 MEAN         417         299.0  5.285673e-04 -8.779482e-05   3.387367e-03        4.450207e-07  1.354899e-03          -4  add_normalization_1/layer_normalization_1/Fuse...
+60   SQUARED_DIFFERENCE         421       76544.0  6.877096e-02 -4.497975e-03   2.084587e-01        4.750057e-03  2.479376e-01        -128  add_normalization_1/layer_normalization_1/Fuse...
+61                 MEAN         425         299.0  5.663132e-03  6.006861e-04   1.235691e-02        3.427794e-05  1.933850e-02        -128  add_normalization_1/layer_normalization_1/Fuse...
+62                  ADD         429         299.0  1.045991e-04 -5.919426e-04   7.832827e-04        3.641619e-07  1.934242e-02        -128  add_normalization_1/layer_normalization_1/Fuse...
+63                RSQRT         433         299.0  1.424918e-03 -2.220102e-05   2.325386e-03        2.040697e-06  4.689562e-03        -128  add_normalization_1/layer_normalization_1/Fuse...
+64                  MUL         437         299.0  0.000000e+00  0.000000e+00   0.000000e+00        0.000000e+00  4.689562e-03        -128  add_normalization_1/layer_normalization_1/Fuse...
+65                  MUL         441       76544.0  1.168710e-02 -7.009274e-06   2.273042e-02        1.365994e-04  4.139414e-02          -3  add_normalization_1/layer_normalization_1/Fuse...
+66                  MUL         445         299.0  2.906586e-04  1.744085e-06   1.417535e-03        1.233919e-07  8.606568e-04          -1  add_normalization_1/layer_normalization_1/Fuse...
+67                  SUB         449         299.0  1.758897e-09  7.111643e-11   7.342789e-09        3.528488e-18  8.606568e-04           0  add_normalization_1/layer_normalization_1/Fuse...
+68                  ADD         453       76544.0  1.192698e-02  1.470085e-04   2.230690e-02        1.427666e-04  4.123104e-02          -2  add_normalization_1/layer_normalization_1/Fuse...
+69            TRANSPOSE         457       76544.0  0.000000e+00  0.000000e+00   0.000000e+00        0.000000e+00  4.123104e-02          -2  add_normalization_1/layer_normalization_1/Fuse...
+70              RESHAPE         461       76544.0  0.000000e+00  0.000000e+00   0.000000e+00        0.000000e+00  4.123104e-02          -2  add_normalization_1/layer_normalization_1/Resh...
+71                  MUL         465       76544.0  1.233257e-02 -3.266654e-05   2.748968e-02        1.520965e-04  4.378324e-02           0    add_normalization_1/layer_normalization_1/mul_3
+72                  ADD         469       76544.0  1.287410e-02  1.551220e-03   2.248151e-02        1.681563e-04  4.388763e-02           2      add_normalization_1/layer_normalization_1/add
+73              RESHAPE         480       76544.0  0.000000e+00  0.000000e+00   0.000000e+00        0.000000e+00  4.388763e-02           2  positionwise_feed_forward/dense_4/Tensordot/Re...
+74      FULLY_CONNECTED         484      306176.0  2.502912e-02  3.354773e-04   7.627407e-02        6.265828e-04  8.100054e-02           8  positionwise_feed_forward/dense_4/Tensordot/Ma...
+75              RESHAPE         488      306176.0  0.000000e+00  0.000000e+00   0.000000e+00        0.000000e+00  8.100054e-02           8        positionwise_feed_forward/dense_4/Tensordot
+76                  ADD         492      306176.0  2.725120e-02 -3.356802e-03   4.072810e-02        7.538974e-04  8.098192e-02           8          positionwise_feed_forward/dense_4/BiasAdd
+77                  MUL         498      306176.0  8.962017e-02  8.609688e-03   1.927967e-01        8.114343e-03  3.916516e-01          26               positionwise_feed_forward/GELU/mul_1
+78                  ADD         502      306176.0  1.393278e-01  2.453066e-03   2.311215e-01        1.941845e-02  4.726335e-01          23                 positionwise_feed_forward/GELU/add
+79                  MUL         506      306176.0  3.652629e-07  4.648439e-08   3.203684e-06        1.356797e-13  3.771070e-01          23               positionwise_feed_forward/GELU/mul_2
+80                 TANH         510      306176.0  1.880565e-03 -3.111648e-04   7.812500e-03        3.634370e-06  7.812500e-03           0                positionwise_feed_forward/GELU/Tanh
+81                  ADD         514      306176.0  1.618125e-03  5.895065e-04   3.921628e-03        2.972703e-06  7.843138e-03        -128               positionwise_feed_forward/GELU/add_1
+82                  MUL         518      306176.0  0.000000e+00  0.000000e+00   0.000000e+00        0.000000e+00  4.049096e-02           8                 positionwise_feed_forward/GELU/mul
+83                  MUL         522      306176.0  1.479102e-02  5.783711e-03   5.496822e-02        2.524383e-04  3.834050e-02        -124               positionwise_feed_forward/GELU/mul_3
+84              RESHAPE         533      306176.0  0.000000e+00  0.000000e+00   0.000000e+00        0.000000e+00  3.834050e-02        -124  positionwise_feed_forward/dense_5/Tensordot/Re...
+85      FULLY_CONNECTED         537       76544.0  9.528629e-02  3.980741e-04   2.139026e-01        9.079843e-03  3.277386e-01         -13  positionwise_feed_forward/dense_5/Tensordot/Ma...
+86              RESHAPE         541       76544.0  0.000000e+00  0.000000e+00   0.000000e+00        0.000000e+00  3.277386e-01         -13        positionwise_feed_forward/dense_5/Tensordot
+87                  ADD         545       76544.0  2.630840e-02  1.279741e-04   7.650787e-02        6.921483e-04  3.278258e-01         -13          positionwise_feed_forward/dense_5/BiasAdd
+88                  ADD         549       76544.0  9.717529e-02 -1.339003e-04   1.696020e-01        9.443213e-03  3.364876e-01         -12                            add_normalization_2/add
+89                 FILL         556         299.0  0.000000e+00  0.000000e+00   0.000000e+00        0.000000e+00  3.921569e-03        -128     add_normalization_2/layer_normalization_2/ones
+90                 FILL         560         299.0  0.000000e+00  0.000000e+00   0.000000e+00        0.000000e+00  7.843137e-09           0    add_normalization_2/layer_normalization_2/zeros
+91              RESHAPE         566       76544.0  0.000000e+00  0.000000e+00   0.000000e+00        0.000000e+00  3.364876e-01         -12  add_normalization_2/layer_normalization_2/Reshape
+92            TRANSPOSE         570       76544.0  0.000000e+00  0.000000e+00   0.000000e+00        0.000000e+00  3.364876e-01         -12  add_normalization_2/layer_normalization_2/Fuse...
+93                 MEAN         574         299.0  9.449360e-04  1.297441e-05   1.588561e-03        9.357697e-07  2.631891e-03          58  add_normalization_2/layer_normalization_2/Fuse...
+94   SQUARED_DIFFERENCE         578       76544.0  2.154998e+00 -4.185530e-01   4.378520e+00        4.821680e+00  8.625846e+00        -128  add_normalization_2/layer_normalization_2/Fuse...
+95                 MEAN         582         299.0  1.981229e-01  2.195501e-02   3.629086e-01        3.989256e-02  6.873014e-01        -128  add_normalization_2/layer_normalization_2/Fuse...
+96                  ADD         586         299.0  8.753469e-05 -9.112901e-04   9.991189e-04        8.387500e-07  6.873053e-01        -128  add_normalization_2/layer_normalization_2/Fuse...
+97                RSQRT         590         299.0  2.051251e-02          -inf            inf                 inf  3.866340e-03        -128  add_normalization_2/layer_normalization_2/Fuse...
+98                  MUL         594         299.0  0.000000e+00  0.000000e+00   0.000000e+00        0.000000e+00  3.866340e-03        -128  add_normalization_2/layer_normalization_2/Fuse...
+99                  MUL         598       76544.0  1.123562e-02  1.679367e-06   1.545451e-01        1.262644e-04  3.932988e-02          -5  add_normalization_2/layer_normalization_2/Fuse...
+100                 MUL         602         299.0  1.634231e-04  2.211738e-06   3.896392e-04        2.791749e-08  5.633547e-04           2  add_normalization_2/layer_normalization_2/Fuse...
+101                 SUB         606         299.0  8.471149e-10 -3.070445e-10   4.119852e-09        8.332029e-19  5.633547e-04          -3  add_normalization_2/layer_normalization_2/Fuse...
+102                 ADD         610       76544.0  1.062750e-02 -4.338816e-04   2.322029e-02        1.151019e-04  3.928190e-02          -5  add_normalization_2/layer_normalization_2/Fuse...
+103           TRANSPOSE         614       76544.0  0.000000e+00  0.000000e+00   0.000000e+00        0.000000e+00  3.928190e-02          -5  add_normalization_2/layer_normalization_2/Fuse...
+104             RESHAPE         618       76544.0  0.000000e+00  0.000000e+00   0.000000e+00        0.000000e+00  3.928190e-02          -5  add_normalization_2/layer_normalization_2/Resh...
+105                 MUL         622       76544.0  1.056832e-02  2.023840e-05   7.652432e-02        1.116944e-04  3.945751e-02          -3    add_normalization_2/layer_normalization_2/mul_3
+106                 ADD         626       76544.0  1.145369e-02 -5.767015e-04   2.011374e-02        1.315224e-04  3.951588e-02          -3      add_normalization_2/layer_normalization_2/add
+107             RESHAPE         637       76544.0  0.000000e+00  0.000000e+00   0.000000e+00        0.000000e+00  3.951588e-02          -3  multi_headed_attention_1/dense_6/Tensordot/Res...
+108     FULLY_CONNECTED         641       38272.0  2.924911e-02 -1.387030e-04   1.205630e-01        8.555868e-04  9.589295e-02          -1  multi_headed_attention_1/dense_6/Tensordot/Mat...
+109             RESHAPE         645       38272.0  0.000000e+00  0.000000e+00   0.000000e+00        0.000000e+00  9.589295e-02          -1         multi_headed_attention_1/dense_6/Tensordot
+110                 ADD         649       38272.0  2.528462e-02  1.193912e-03   5.207938e-02        6.407592e-04  9.596754e-02          -2           multi_headed_attention_1/dense_6/BiasAdd
+111             RESHAPE         656       38272.0  0.000000e+00  0.000000e+00   0.000000e+00        0.000000e+00  9.596754e-02          -2                   multi_headed_attention_1/Reshape
+112           TRANSPOSE         660       38272.0  0.000000e+00  0.000000e+00   0.000000e+00        0.000000e+00  9.596754e-02          -2                 multi_headed_attention_1/transpose
+113     FULLY_CONNECTED         664       38272.0  2.960455e-02 -1.630633e-04   1.141032e-01        8.766029e-04  9.648050e-02          -6  multi_headed_attention_1/dense_7/Tensordot/Mat...
+114             RESHAPE         668       38272.0  0.000000e+00  0.000000e+00   0.000000e+00        0.000000e+00  9.648050e-02          -6         multi_headed_attention_1/dense_7/Tensordot
+115                 ADD         672       38272.0  2.675783e-02  4.922869e-04   4.835964e-02        7.162954e-04  9.617606e-02          -6           multi_headed_attention_1/dense_7/BiasAdd
+116             RESHAPE         679       38272.0  0.000000e+00  0.000000e+00   0.000000e+00        0.000000e+00  9.617606e-02          -6                 multi_headed_attention_1/Reshape_1
+117           TRANSPOSE         683       38272.0  0.000000e+00  0.000000e+00   0.000000e+00        0.000000e+00  9.617606e-02          -6               multi_headed_attention_1/transpose_1
+118        BATCH_MATMUL         687      178802.0  2.698356e+00  9.015149e-03   1.673936e+01        7.284471e+00  9.317308e+00           2  multi_headed_attention_1/dot_product_attention...
+119                 MUL         691      178802.0  1.852838e-06 -2.589959e-07   1.807504e-05        3.565896e-12  8.235414e-01           2  multi_headed_attention_1/dot_product_attention...
+120             SOFTMAX         695      178802.0  2.181790e-04 -1.355627e-05   3.906112e-03        4.848663e-08  3.906250e-03        -128  multi_headed_attention_1/dot_product_attention...
+121     FULLY_CONNECTED         699       38272.0  2.421753e-02  2.186668e-04   1.016199e-01        5.865961e-04  7.872617e-02           2  multi_headed_attention_1/dense_8/Tensordot/Mat...
+122             RESHAPE         703       38272.0  0.000000e+00  0.000000e+00   0.000000e+00        0.000000e+00  7.872617e-02           2         multi_headed_attention_1/dense_8/Tensordot
+123                 ADD         707       38272.0  2.075218e-02 -2.583296e-04   4.288816e-02        4.307199e-04  7.872826e-02           1           multi_headed_attention_1/dense_8/BiasAdd
+124             RESHAPE         714       38272.0  0.000000e+00  0.000000e+00   0.000000e+00        0.000000e+00  7.872826e-02           1                 multi_headed_attention_1/Reshape_2
+125           TRANSPOSE         718       38272.0  0.000000e+00  0.000000e+00   0.000000e+00        0.000000e+00  7.872826e-02           1               multi_headed_attention_1/transpose_2
+126        BATCH_MATMUL         722       38272.0  2.184550e-02  4.996014e-05   4.770822e-02        4.776080e-04  7.726092e-02          -1  multi_headed_attention_1/dot_product_attention...
+127           TRANSPOSE         726       38272.0  0.000000e+00  0.000000e+00   0.000000e+00        0.000000e+00  7.726092e-02          -1               multi_headed_attention_1/transpose_3
+128             RESHAPE         733       38272.0  0.000000e+00  0.000000e+00   0.000000e+00        0.000000e+00  7.726092e-02          -1                 multi_headed_attention_1/Reshape_3
+129             RESHAPE         743       38272.0  0.000000e+00  0.000000e+00   0.000000e+00        0.000000e+00  7.726092e-02          -1  multi_headed_attention_1/dense_9/Tensordot/Res...
+130     FULLY_CONNECTED         747       76544.0  1.078079e-01  2.842107e-05   2.597243e-01        1.162518e-02  3.676118e-01           8  multi_headed_attention_1/dense_9/Tensordot/Mat...
+131             RESHAPE         751       76544.0  0.000000e+00  0.000000e+00   0.000000e+00        0.000000e+00  3.676118e-01           8         multi_headed_attention_1/dense_9/Tensordot
+132                 ADD         755       76544.0  2.768063e-02 -1.522371e-03   1.369275e-01        7.685389e-04  3.676659e-01           8           multi_headed_attention_1/dense_9/BiasAdd
+133                 ADD         759       76544.0  1.110640e-01 -5.364991e-05   1.946310e-01        1.233544e-02  3.845951e-01           9                            add_normalization_3/add
+134                FILL         766         299.0  0.000000e+00  0.000000e+00   0.000000e+00        0.000000e+00  3.921569e-03        -128     add_normalization_3/layer_normalization_3/ones
+135                FILL         770         299.0  0.000000e+00  0.000000e+00   0.000000e+00        0.000000e+00  7.843137e-09           0    add_normalization_3/layer_normalization_3/zeros
+136             RESHAPE         776       76544.0  0.000000e+00  0.000000e+00   0.000000e+00        0.000000e+00  3.845951e-01           9  add_normalization_3/layer_normalization_3/Reshape
+137           TRANSPOSE         780       76544.0  0.000000e+00  0.000000e+00   0.000000e+00        0.000000e+00  3.845951e-01           9  add_normalization_3/layer_normalization_3/Fuse...
+138                MEAN         784         299.0  8.347467e-04 -4.318854e-06   1.501460e-03        7.347618e-07  2.877507e-03         -20  add_normalization_3/layer_normalization_3/Fuse...
+139  SQUARED_DIFFERENCE         788       76544.0  2.378474e+00 -7.006955e-01   5.595713e+00        6.153831e+00  1.097817e+01        -128  add_normalization_3/layer_normalization_3/Fuse...
+140                MEAN         792         299.0  5.387877e-02  2.291241e-02   1.215715e-01        3.784346e-03  1.845533e-01        -128  add_normalization_3/layer_normalization_3/Fuse...
+141                 ADD         796         299.0  1.298142e-04 -6.791991e-04   9.627117e-04        4.883863e-07  1.845572e-01        -128  add_normalization_3/layer_normalization_3/Fuse...
+142               RSQRT         800         299.0  1.765669e-03  5.042790e-05   1.610876e-02        1.053297e-05  3.479838e-03        -128  add_normalization_3/layer_normalization_3/Fuse...
+143                 MUL         804         299.0  0.000000e+00  0.000000e+00   0.000000e+00        0.000000e+00  3.479838e-03        -128  add_normalization_3/layer_normalization_3/Fuse...
+144                 MUL         808       76544.0  1.897926e-02 -2.250887e-05   3.512287e-02        3.607530e-04  6.765413e-02           2  add_normalization_3/layer_normalization_3/Fuse...
+145                 MUL         812         299.0  3.068971e-04  1.558376e-06   5.521863e-04        9.539634e-08  1.068170e-03          -5  add_normalization_3/layer_normalization_3/Fuse...
+146                 SUB         816         299.0  1.744731e-09 -1.352280e-10   6.926539e-09        3.539069e-18  1.068170e-03           4  add_normalization_3/layer_normalization_3/Fuse...
+147                 ADD         820       76544.0  1.946082e-02 -5.661893e-03   3.394026e-02        4.493008e-04  6.788734e-02           2  add_normalization_3/layer_normalization_3/Fuse...
+148           TRANSPOSE         824       76544.0  0.000000e+00  0.000000e+00   0.000000e+00        0.000000e+00  6.788734e-02           2  add_normalization_3/layer_normalization_3/Fuse...
+149             RESHAPE         828       76544.0  0.000000e+00  0.000000e+00   0.000000e+00        0.000000e+00  6.788734e-02           2  add_normalization_3/layer_normalization_3/Resh...
+150                 MUL         832       76544.0  1.923761e-02 -4.670400e-05   4.296346e-02        3.701739e-04  6.802922e-02           2    add_normalization_3/layer_normalization_3/mul_3
+151                 ADD         836       76544.0  1.793802e-02  6.865201e-05   3.378573e-02        3.217775e-04  6.802922e-02           2      add_normalization_3/layer_normalization_3/add
+152             RESHAPE         847       76544.0  0.000000e+00  0.000000e+00   0.000000e+00        0.000000e+00  6.802922e-02           2  positionwise_feed_forward_1/dense_10/Tensordot...
+153     FULLY_CONNECTED         851      306176.0  2.281691e-02  2.893412e-05   7.412866e-02        5.206162e-04  7.185965e-02          -4  positionwise_feed_forward_1/dense_10/Tensordot...
+154             RESHAPE         855      306176.0  0.000000e+00  0.000000e+00   0.000000e+00        0.000000e+00  7.185965e-02          -4     positionwise_feed_forward_1/dense_10/Tensordot
+155                 ADD         859      306176.0  2.344482e-02 -2.610286e-04   3.643212e-02        5.497407e-04  7.193499e-02          -4       positionwise_feed_forward_1/dense_10/BiasAdd
+156                 MUL         865      306176.0  6.527298e-02  1.041587e-02   1.348699e-01        4.379675e-03  2.711210e-01         -10             positionwise_feed_forward_1/GELU/mul_1
+157                 ADD         869      306176.0  9.719892e-02 -2.812594e-03   1.714077e-01        9.457930e-03  3.430560e-01          -9               positionwise_feed_forward_1/GELU/add
+158                 MUL         873      306176.0  1.309131e-07  1.725875e-09   2.189080e-06        1.731661e-14  2.737191e-01          -9             positionwise_feed_forward_1/GELU/mul_2
+159                TANH         877      306176.0  2.390722e-03  6.430820e-04   7.812500e-03        6.170076e-06  7.812500e-03           0              positionwise_feed_forward_1/GELU/Tanh
+160                 ADD         881      306176.0  1.574292e-03  6.100787e-04   3.921628e-03        2.860909e-06  7.843138e-03        -128             positionwise_feed_forward_1/GELU/add_1
+161                 MUL         885      306176.0  0.000000e+00  0.000000e+00   0.000000e+00        0.000000e+00  3.596750e-02          -4               positionwise_feed_forward_1/GELU/mul
+162                 MUL         889      306176.0  1.089389e-02 -1.842353e-03   1.861847e-02        1.224885e-04  3.756374e-02        -123             positionwise_feed_forward_1/GELU/mul_3
+163             RESHAPE         900      306176.0  0.000000e+00  0.000000e+00   0.000000e+00        0.000000e+00  3.756374e-02        -123  positionwise_feed_forward_1/dense_11/Tensordot...
+164     FULLY_CONNECTED         904       76544.0  4.129680e-01 -5.409452e-03   7.903849e-01        1.705970e-01  1.429285e+00           5  positionwise_feed_forward_1/dense_11/Tensordot...
+165             RESHAPE         908       76544.0  0.000000e+00  0.000000e+00   0.000000e+00        0.000000e+00  1.429285e+00           5     positionwise_feed_forward_1/dense_11/Tensordot
+166                 ADD         912       76544.0  1.786526e-02 -3.381599e-03   9.702469e-02        3.306204e-04  1.429047e+00           5       positionwise_feed_forward_1/dense_11/BiasAdd
+167                 ADD         916       76544.0  3.809095e-01 -9.895089e-03   7.290627e-01        1.455359e-01  1.458435e+00           6                            add_normalization_4/add
+168                FILL         923         299.0  0.000000e+00  0.000000e+00   0.000000e+00        0.000000e+00  3.921569e-03        -128     add_normalization_4/layer_normalization_4/ones
+169                FILL         927         299.0  0.000000e+00  0.000000e+00   0.000000e+00        0.000000e+00  7.843137e-09           0    add_normalization_4/layer_normalization_4/zeros
+170             RESHAPE         933       76544.0  0.000000e+00  0.000000e+00   0.000000e+00        0.000000e+00  1.458435e+00           6  add_normalization_4/layer_normalization_4/Reshape
+171           TRANSPOSE         937       76544.0  0.000000e+00  0.000000e+00   0.000000e+00        0.000000e+00  1.458435e+00           6  add_normalization_4/layer_normalization_4/Fuse...
+172                MEAN         941         299.0  8.308011e-03  2.216238e-04   1.702562e-02        6.958420e-05  2.224572e-02          60  add_normalization_4/layer_normalization_4/Fuse...
+173  SQUARED_DIFFERENCE         945       76544.0  2.822599e+01 -5.620541e+00   7.448563e+01        8.295946e+02  1.456010e+02        -128  add_normalization_4/layer_normalization_4/Fuse...
+174                MEAN         949         299.0  3.227518e+00  2.085487e-01   5.779788e+00        1.066302e+01  1.097935e+01        -128  add_normalization_4/layer_normalization_4/Fuse...
+175                 ADD         953         299.0  2.881185e-04 -7.708533e-04   1.005611e-03        6.818327e-07  1.097936e+01        -128  add_normalization_4/layer_normalization_4/Fuse...
+176               RSQRT         957         299.0  9.467448e-04          -inf            inf                 inf  3.886835e-03        -128  add_normalization_4/layer_normalization_4/Fuse...
+177                 MUL         961         299.0  0.000000e+00  0.000000e+00   0.000000e+00        0.000000e+00  3.886835e-03        -128  add_normalization_4/layer_normalization_4/Fuse...
+178                 MUL         965       76544.0  1.261830e-01  3.234136e-04   8.975560e+00        1.916232e-02  5.668981e-02           9  add_normalization_4/layer_normalization_4/Fuse...
+179                 MUL         969         299.0  1.585324e-02 -2.165802e-03   1.883906e-01        4.068131e-04  1.381007e-03         -12  add_normalization_4/layer_normalization_4/Fuse...
+180                 SUB         973         299.0  3.725344e-09 -6.098504e-10   1.123003e-08        1.450330e-17  1.381007e-03          11  add_normalization_4/layer_normalization_4/Fuse...
+181                 ADD         977       76544.0  1.836178e-02 -3.738774e-03   1.488065e-01        3.642162e-04  5.678013e-02          10  add_normalization_4/layer_normalization_4/Fuse...
+182           TRANSPOSE         981       76544.0  0.000000e+00  0.000000e+00   0.000000e+00        0.000000e+00  5.678013e-02          10  add_normalization_4/layer_normalization_4/Fuse...
+183             RESHAPE         985       76544.0  0.000000e+00  0.000000e+00   0.000000e+00        0.000000e+00  5.678013e-02          10  add_normalization_4/layer_normalization_4/Resh...
+184                 MUL         989       76544.0  1.925004e-02 -2.975304e-03   9.053139e-02        3.797786e-04  6.543183e-02          11    add_normalization_4/layer_normalization_4/mul_3
+185                 ADD         993       76544.0  1.318240e-02 -3.323079e-03   4.088269e-02        1.848199e-04  6.550475e-02          11      add_normalization_4/layer_normalization_4/add
+186                FILL         998       76544.0  0.000000e+00  0.000000e+00   0.000000e+00        0.000000e+00  3.921569e-03        -128                                       BroadcastTo2
+187                 MUL        1002       76544.0  4.786038e-04 -2.544630e-06   8.319299e-04        2.290680e-07  1.663885e-03           5                                       BroadcastTo3
+188                 ADD        1006       76544.0  1.921027e-02  5.493728e-05   5.066057e-02        3.690391e-04  6.640464e-02          11                                               add1
+189                FILL        1013         299.0  0.000000e+00  0.000000e+00   0.000000e+00        0.000000e+00  3.921569e-03        -128                         layer_normalization_5/ones
+190                FILL        1017         299.0  0.000000e+00  0.000000e+00   0.000000e+00        0.000000e+00  7.843137e-09           0                        layer_normalization_5/zeros
+191             RESHAPE        1023       76544.0  0.000000e+00  0.000000e+00   0.000000e+00        0.000000e+00  6.640464e-02          11                      layer_normalization_5/Reshape
+192           TRANSPOSE        1027       76544.0  0.000000e+00  0.000000e+00   0.000000e+00        0.000000e+00  6.640464e-02          11            layer_normalization_5/FusedBatchNormV32
+193                MEAN        1031         299.0  8.703483e-03 -7.506242e-04   1.082237e-01        1.384604e-04  2.444529e-04           6            layer_normalization_5/FusedBatchNormV33
+194  SQUARED_DIFFERENCE        1035       76544.0  7.482319e-02 -1.406171e-02   1.728226e-01        5.799217e-03  3.357259e-01        -128            layer_normalization_5/FusedBatchNormV34
+195                MEAN        1039         299.0  1.596623e+00 -6.413900e-01   9.360485e+00        3.361493e+00  4.808564e-03        -128            layer_normalization_5/FusedBatchNormV35
+196                 ADD        1043         299.0  6.003389e-05 -4.214021e-05   2.254991e-04        5.625807e-09  4.812485e-03        -128            layer_normalization_5/FusedBatchNormV36
+197               RSQRT        1047         299.0  1.061315e-03 -8.319782e-04   2.141025e-03        1.843499e-06  4.291821e-03        -128            layer_normalization_5/FusedBatchNormV37
+198                 MUL        1051         299.0  0.000000e+00  0.000000e+00   0.000000e+00        0.000000e+00  4.291821e-03        -128            layer_normalization_5/FusedBatchNormV38
+199                 MUL        1055       76544.0  1.331511e-02 -4.426049e-05   3.151155e-02        1.774876e-04  6.259464e-02          11            layer_normalization_5/FusedBatchNormV39
+200                 MUL        1059         299.0  7.620232e-05 -3.131408e-07   1.312048e-04        5.832815e-09  2.629394e-04           7           layer_normalization_5/FusedBatchNormV310
+201                 SUB        1063         299.0  6.628642e-10 -2.924001e-10   1.961383e-09        5.352961e-19  2.629394e-04          -8           layer_normalization_5/FusedBatchNormV311
+202                 ADD        1067       76544.0  1.384907e-02 -6.706585e-03   3.126491e-02        2.490090e-04  6.254832e-02          11           layer_normalization_5/FusedBatchNormV312
+203           TRANSPOSE        1071       76544.0  0.000000e+00  0.000000e+00   0.000000e+00        0.000000e+00  6.254832e-02          11           layer_normalization_5/FusedBatchNormV313
+204             RESHAPE        1075       76544.0  0.000000e+00  0.000000e+00   0.000000e+00        0.000000e+00  6.254832e-02          11                    layer_normalization_5/Reshape_1
+205                 MUL        1079       76544.0  1.412532e-02 -6.642682e-04   4.139259e-02        2.000421e-04  5.445146e-02          14                        layer_normalization_5/mul_3
+206                 ADD        1083       76544.0  1.690797e-02 -9.572900e-03   4.835672e-02        3.775957e-04  5.403951e-02          15                          layer_normalization_5/add
+207                MEAN        1087         256.0  4.776355e-03 -2.853622e-05   8.730076e-03        2.546706e-05  1.646431e-02          -2                                               Mean
+208     FULLY_CONNECTED        1091         256.0  1.953847e-03  8.626795e-06   1.239422e-02        1.429644e-05  9.547282e-03        -128                                MatMul;Relu;BiasAdd
+209     FULLY_CONNECTED        1095           1.0  0.000000e+00 -1.111660e-02   1.933802e-02        7.809257e-04  2.876696e-03        -125                          StatefulPartitionedCall:0
+2023-12-10 09:58:17,233 [INFO ]                  op_name         range    rmse/scale
+0           EXPAND_DIMS     23.929975  2.751951e-01
+1               CONV_2D      6.793423  2.952648e-01
+2               RESHAPE     12.080546  1.608947e-01
+3           EXPAND_DIMS     12.080546  0.000000e+00
+4       AVERAGE_POOL_2D     12.080546  0.000000e+00
+5                   ADD     11.598116  3.801457e-02
+6               RESHAPE      3.405601  5.802390e-02
+7                  FILL      1.000000  0.000000e+00
+8                   MUL      0.489979  2.888043e-01
+9                   ADD      3.727090  2.890081e-01
+10                 FILL      1.000000  0.000000e+00
+11                 FILL      0.000002  0.000000e+00
+12              RESHAPE      3.727090  0.000000e+00
+13            TRANSPOSE      3.727090  0.000000e+00
+14                 MEAN      1.371433  3.178885e-01
+15   SQUARED_DIFFERENCE      4.452920  2.296307e-01
+16                 MEAN      0.547054  2.962779e-01
+17                  ADD      0.548054  4.589049e-01
+18                RSQRT     15.745848  4.157330e+01
+19                  MUL     15.745848  0.000000e+00
+20                  MUL      9.606549  3.037147e-01
+21                  MUL      2.384117  2.467738e-01
+22                  SUB      2.384117  1.428423e-06
+23                  ADD      8.792654  3.326802e-01
+24            TRANSPOSE      8.792654  0.000000e+00
+25              RESHAPE      8.792654  0.000000e+00
+26                  MUL      8.606096  2.844383e-01
+27                  ADD      8.682471  2.893911e-01
+28              RESHAPE      8.682471  0.000000e+00
+29      FULLY_CONNECTED     13.589397  3.373220e-01
+30              RESHAPE     13.589397  0.000000e+00
+31                  ADD     13.666590  2.940356e-01
+32              RESHAPE     13.666590  0.000000e+00
+33            TRANSPOSE     13.666590  0.000000e+00
+34      FULLY_CONNECTED     16.061866  3.192651e-01
+35              RESHAPE     16.061866  0.000000e+00
+36                  ADD     16.148240  2.843503e-01
+37              RESHAPE     16.148240  0.000000e+00
+38            TRANSPOSE     16.148240  0.000000e+00
+39         BATCH_MATMUL    791.061000  2.887679e-01
+40                  MUL     69.920572  1.274111e-06
+41              SOFTMAX      0.996094  1.901133e-01
+42      FULLY_CONNECTED     15.370091  3.185204e-01
+43              RESHAPE     15.370091  0.000000e+00
+44                  ADD     15.420575  2.736660e-01
+45              RESHAPE     15.420575  0.000000e+00
+46            TRANSPOSE     15.420575  0.000000e+00
+47         BATCH_MATMUL     13.788238  2.886845e-01
+48            TRANSPOSE     13.788238  0.000000e+00
+49              RESHAPE     13.788238  0.000000e+00
+50              RESHAPE     13.788238  0.000000e+00
+51      FULLY_CONNECTED     13.103168  3.028338e-01
+52              RESHAPE     13.103168  0.000000e+00
+53                  ADD     13.229318  2.886953e-01
+54                  ADD     15.801880  2.887870e-01
+55                 FILL      1.000000  0.000000e+00
+56                 FILL      0.000002  0.000000e+00
+57              RESHAPE     15.801880  0.000000e+00
+58            TRANSPOSE     15.801880  0.000000e+00
+59                 MEAN      0.345499  4.923606e-01
+60   SQUARED_DIFFERENCE     63.224075  2.779759e-01
+61                 MEAN      4.931316  3.027504e-01
+62                  ADD      4.932316  3.119870e-02
+63                RSQRT      1.195838  3.046190e-01
+64                  MUL      1.195838  0.000000e+00
+65                  MUL     10.555507  2.823485e-01
+66                  MUL      0.219467  4.081438e-01
+67                  SUB      0.219467  2.182550e-06
+68                  ADD     10.513915  2.897937e-01
+69            TRANSPOSE     10.513915  0.000000e+00
+70              RESHAPE     10.513915  0.000000e+00
+71                  MUL     11.164726  2.816773e-01
+72                  ADD     11.191346  2.954707e-01
+73              RESHAPE     11.191346  0.000000e+00
+74      FULLY_CONNECTED     20.655138  3.090305e-01
+75              RESHAPE     20.655138  0.000000e+00
+76                  ADD     20.650391  3.390533e-01
+77                  MUL     99.871166  2.299994e-01
+78                  ADD    120.521553  2.948375e-01
+79                  MUL     96.162275  9.767714e-07
+80                 TANH      1.992188  2.440195e-01
+81                  ADD      2.000000  2.198295e-01
+82                  MUL     10.325196  0.000000e+00
+83                  MUL      9.776829  4.144000e-01
+84              RESHAPE      9.776829  0.000000e+00
+85      FULLY_CONNECTED     83.573343  2.907445e-01
+86              RESHAPE     83.573343  0.000000e+00
+87                  ADD     83.595579  8.025211e-02
+88                  ADD     85.804338  2.887958e-01
+89                 FILL      1.000000  0.000000e+00
+90                 FILL      0.000002  0.000000e+00
+91              RESHAPE     85.804338  0.000000e+00
+92            TRANSPOSE     85.804338  0.000000e+00
+93                 MEAN      0.671132  3.675501e-01
+94   SQUARED_DIFFERENCE   2199.590730  2.545643e-01
+95                 MEAN    175.261857  2.906021e-01
+96                  ADD    175.262859  1.332498e-03
+97                RSQRT      0.985917           inf
+98                  MUL      0.985917  0.000000e+00
+99                  MUL     10.029120  2.857049e-01
+100                 MUL      0.143655  2.965899e-01
+101                 SUB      0.143655  1.620293e-06
+102                 ADD     10.016886  2.731170e-01
+103           TRANSPOSE     10.016886  0.000000e+00
+104             RESHAPE     10.016886  0.000000e+00
+105                 MUL     10.061665  2.678465e-01
+106                 ADD     10.076550  2.902205e-01
+107             RESHAPE     10.076550  0.000000e+00
+108     FULLY_CONNECTED     24.452702  3.050320e-01
+109             RESHAPE     24.452702  0.000000e+00
+110                 ADD     24.471723  2.637686e-01
+111             RESHAPE     24.471723  0.000000e+00
+112           TRANSPOSE     24.471723  0.000000e+00
+113     FULLY_CONNECTED     24.602528  3.068753e-01
+114             RESHAPE     24.602528  0.000000e+00
+115                 ADD     24.524895  2.782782e-01
+116             RESHAPE     24.524895  0.000000e+00
+117           TRANSPOSE     24.524895  0.000000e+00
+118        BATCH_MATMUL   2375.913540  2.896734e-01
+119                 MUL    210.003057  2.292973e-06
+120             SOFTMAX      0.996094  5.637038e-02
+121     FULLY_CONNECTED     20.075173  3.076454e-01
+122             RESHAPE     20.075173  0.000000e+00
+123                 ADD     20.075706  2.636130e-01
+124             RESHAPE     20.075706  0.000000e+00
+125           TRANSPOSE     20.075706  0.000000e+00
+126        BATCH_MATMUL     19.701535  2.828629e-01
+127           TRANSPOSE     19.701535  0.000000e+00
+128             RESHAPE     19.701535  0.000000e+00
+129             RESHAPE     19.701535  0.000000e+00
+130     FULLY_CONNECTED     93.741001  2.932989e-01
+131             RESHAPE     93.741001  0.000000e+00
+132                 ADD     93.754804  7.540143e-02
+133                 ADD     98.071743  2.887844e-01
+134                FILL      1.000000  0.000000e+00
+135                FILL      0.000002  0.000000e+00
+136             RESHAPE     98.071743  0.000000e+00
+137           TRANSPOSE     98.071743  0.000000e+00
+138                MEAN      0.733764  2.978907e-01
+139  SQUARED_DIFFERENCE   2799.432840  2.259659e-01
+140                MEAN     47.061099  3.333294e-01
+141                 ADD     47.062096  3.786610e-03
+142               RSQRT      0.887359  9.326450e-01
+143                 MUL      0.887359  0.000000e+00
+144                 MUL     17.251803  2.807441e-01
+145                 MUL      0.272383  2.891514e-01
+146                 SUB      0.272383  1.761181e-06
+147                 ADD     17.311272  3.122337e-01
+148           TRANSPOSE     17.311272  0.000000e+00
+149             RESHAPE     17.311272  0.000000e+00
+150                 MUL     17.347451  2.828182e-01
+151                 ADD     17.347451  2.636831e-01
+152             RESHAPE     17.347451  0.000000e+00
+153     FULLY_CONNECTED     18.324211  3.175219e-01
+154             RESHAPE     18.324211  0.000000e+00
+155                 ADD     18.343422  3.259408e-01
+156                 MUL     69.135855  2.440944e-01
+157                 ADD     87.479280  2.834869e-01
+158                 MUL     69.798363  4.807578e-07
+159                TANH      1.992188  3.179474e-01
+160                 ADD      2.000000  2.156563e-01
+161                 MUL      9.171711  0.000000e+00
+162                 MUL      9.578754  2.946312e-01
+163             RESHAPE      9.578754  0.000000e+00
+164     FULLY_CONNECTED    364.467573  2.889795e-01
+165             RESHAPE    364.467573  0.000000e+00
+166                 ADD    364.406858  1.272385e-02
+167                 ADD    371.900848  2.615761e-01
+168                FILL      1.000000  0.000000e+00
+169                FILL      0.000002  0.000000e+00
+170             RESHAPE    371.900848  0.000000e+00
+171           TRANSPOSE    371.900848  0.000000e+00
+172                MEAN      5.672659  3.749806e-01
+173  SQUARED_DIFFERENCE  37128.262650  1.978192e-01
+174                MEAN   2799.735270  2.974154e-01
+175                 ADD   2799.736290  7.520764e-05
+176               RSQRT      0.991143           inf
+177                 MUL      0.991143  0.000000e+00
+178                 MUL     14.455902  2.441850e+00
+179                 MUL      0.352157  1.460500e+01
+180                 SUB      0.352157  2.757640e-06
+181                 ADD     14.478933  3.361114e-01
+182           TRANSPOSE     14.478933  0.000000e+00
+183             RESHAPE     14.478933  0.000000e+00
+184                 MUL     16.685117  2.978353e-01
+185                 ADD     16.703711  2.075399e-01
+186                FILL      1.000000  0.000000e+00
+187                 MUL      0.424291  2.876463e-01
+188                 ADD     16.933183  2.892929e-01
+189                FILL      1.000000  0.000000e+00
+190                FILL      0.000002  0.000000e+00
+191             RESHAPE     16.933183  0.000000e+00
+192           TRANSPOSE     16.933183  0.000000e+00
+193                MEAN      0.062335  4.813572e+01
+194  SQUARED_DIFFERENCE     85.610105  2.268296e-01
+195                MEAN      1.226184  3.812859e+02
+196                 ADD      1.227184  1.558558e-02
+197               RSQRT      1.094414  3.163588e-01
+198                 MUL      1.094414  0.000000e+00
+199                 MUL     15.961633  2.128369e-01
+200                 MUL      0.067050  2.904581e-01
+201                 SUB      0.067050  2.782540e-06
+202                 ADD     15.949823  2.522852e-01
+203           TRANSPOSE     15.949823  0.000000e+00
+204             RESHAPE     15.949823  0.000000e+00
+205                 MUL     13.885122  2.597474e-01
+206                 ADD     13.780075  3.595855e-01
+207                MEAN      4.198399  3.065109e-01
+208     FULLY_CONNECTED      2.434557  3.960356e-01
+209     FULLY_CONNECTED      0.733557  9.714286e+00
+2023-12-10 09:58:17,878 [INFO ]  Saving debug results plot to /home/lindo/Develop/nilm/ml/models/kettle/kettle_transformer_debug_w8_a8_fallback.png.
+2023-12-10 09:58:18,033 [INFO ]  Suspected layers: ['layer_normalization/FusedBatchNormV37', 'add_normalization_2/layer_normalization_2/FusedBatchNormV35', 'add_normalization_3/layer_normalization_3/FusedBatchNormV35', 'add_normalization_4/layer_normalization_4/FusedBatchNormV35', 'add_normalization_4/layer_normalization_4/FusedBatchNormV37', 'add_normalization_4/layer_normalization_4/FusedBatchNormV38', 'layer_normalization_5/FusedBatchNormV33', 'layer_normalization_5/FusedBatchNormV35', 'StatefulPartitionedCall:0']
+2023-12-10 09:58:18,250 [INFO ]  Quantized tflite model saved to /home/lindo/Develop/nilm/ml/models/kettle/kettle_transformer_w8_a8_fallback.tflite.
+2023-12-10 09:58:18,251 [INFO ]  interpreter input details: [{'name': 'serving_default_args_0:0', 'index': 0, 'shape': array([  1, 599,   1], dtype=int32), 'shape_signature': array([ -1, 599,   1], dtype=int32), 'dtype': <class 'numpy.float32'>, 'quantization': (0.0, 0), 'quantization_parameters': {'scales': array([], dtype=float32), 'zero_points': array([], dtype=int32), 'quantized_dimension': 0}, 'sparsity_parameters': {}}]
+2023-12-10 09:58:18,251 [INFO ]  interpreter output details: [{'name': 'StatefulPartitionedCall:0', 'index': 422, 'shape': array([1, 1], dtype=int32), 'shape_signature': array([-1,  1], dtype=int32), 'dtype': <class 'numpy.float32'>, 'quantization': (0.0, 0), 'quantization_parameters': {'scales': array([], dtype=float32), 'zero_points': array([], dtype=int32), 'quantized_dimension': 0}, 'sparsity_parameters': {}}]
+2023-12-10 09:58:18,251 [INFO ]  tflite model floating input: True
+2023-12-10 09:58:18,251 [INFO ]  tflite model floating output: True
+2023-12-10 09:58:18,360 [INFO ]  Running inference on 432000 samples...
+2023-12-10 13:18:10,369 [INFO ]  Inference run complete.
+2023-12-10 13:18:10,369 [INFO ]  Inference rate: 36.024 Hz
+2023-12-10 13:18:10,551 [INFO ]  De-normalizing predictions with mean = 0 and std = 3100.
+2023-12-10 13:18:10,551 [INFO ]  appliance threshold: 2000.0
+2023-12-10 13:18:10,581 [INFO ]  True positives: 3055
+2023-12-10 13:18:10,582 [INFO ]  True negatives: 425995
+2023-12-10 13:18:10,583 [INFO ]  False positives: 2873
+2023-12-10 13:18:10,583 [INFO ]  False negatives: 77
+2023-12-10 13:18:10,584 [INFO ]  Accuracy: 0.9931712962962963
+2023-12-10 13:18:10,586 [INFO ]  MCC: 0.7064372538553142
+2023-12-10 13:18:10,588 [INFO ]  F1: 0.67439293598234
+2023-12-10 13:18:10,608 [INFO ]  MAE: 15.770868155302825 (W)
+2023-12-10 13:18:10,609 [INFO ]  NDE: 0.9835516059946683
+2023-12-10 13:18:10,611 [INFO ]  SAE: 0.9794800094279709
+2023-12-10 13:18:10,614 [INFO ]  Ground truth EPD: 367.7028449232313 (Wh)
+2023-12-10 13:18:10,618 [INFO ]  Predicted EPD: 727.8604309353299 (Wh)
+2023-12-10 13:18:10,618 [INFO ]  EPD Relative Error: 97.94800094279718 (%)

@@ -1,0 +1,37 @@
+2023-12-12 18:57:41,384 [INFO ]  Machine name: titan
+2023-12-12 18:57:41,384 [INFO ]  Arguments: 
+2023-12-12 18:57:41,384 [INFO ]  Namespace(appliance_name='kettle', datadir='./dataset_management/refit', trained_model_dir='./models', model_arch='cnn', save_dir='/home/lindo/Develop/nilm/ml/models', plot=True, crop=None, batch_size=1024)
+2023-12-12 18:57:41,391 [INFO ]  File for test: kettle_test_H2.csv
+2023-12-12 18:57:41,391 [INFO ]  Loading from: ./dataset_management/refit/kettle/kettle_test_H2.csv
+2023-12-12 18:57:42,253 [INFO ]  There are 5.734M test samples.
+2023-12-12 18:57:42,253 [INFO ]  Window length: 599 (samples)
+2023-12-12 18:57:42,253 [INFO ]  Sample period: 8 (s)
+2023-12-12 18:57:42,253 [INFO ]  Appliance max power: 3100 (W)
+2023-12-12 18:57:42,253 [INFO ]  Appliance on threshold: 2000.0 (W)
+2023-12-12 18:57:42,253 [INFO ]  Train aggregate mean: 501.32453633286167 (W)
+2023-12-12 18:57:42,253 [INFO ]  Train aggregate std: 783.0367822932175 (W)
+2023-12-12 18:57:42,253 [INFO ]  Train appliance mean: 16.137261776311778 (W)
+2023-12-12 18:57:42,253 [INFO ]  Train appliance std: 196.89790951996966 (W)
+2023-12-12 18:57:42,253 [INFO ]  Test appliance mean: 23.155018918550294 (W)
+2023-12-12 18:57:42,253 [INFO ]  Test aggregate mean: 465.10226795866976 (W)
+2023-12-12 18:57:42,253 [INFO ]  Alternative appliance mean: 700.0 (W)
+2023-12-12 18:57:42,253 [INFO ]  Alternative appliance std: 1000.0 (W)
+2023-12-12 18:57:42,253 [INFO ]  Alternative aggregate mean: 522.0 (W)
+2023-12-12 18:57:42,253 [INFO ]  Alternative aggregate std: 814.0 (W)
+2023-12-12 18:57:42,253 [INFO ]  Using alt standardization.
+2023-12-12 18:57:43,273 [INFO ]  Loading saved model from ./models/kettle/savemodel_cnn.
+2023-12-12 18:57:55,979 [INFO ]  De-normalizing predictions with mean = 0 and std = 3100.
+2023-12-12 18:57:56,241 [INFO ]  True positives: 31405
+2023-12-12 18:57:56,263 [INFO ]  True negatives: 5677816
+2023-12-12 18:57:56,277 [INFO ]  False positives: 6222
+2023-12-12 18:57:56,296 [INFO ]  False negatives: 16909
+2023-12-12 18:57:56,329 [INFO ]  Accuracy: 0.9959648325852983
+2023-12-12 18:57:56,394 [INFO ]  MCC: 0.7346367237010113
+2023-12-12 18:57:56,452 [INFO ]  F1: 0.7308502344631782
+2023-12-12 18:57:56,791 [INFO ]  MAE: 8.78751332238556 (W)
+2023-12-12 18:57:56,820 [INFO ]  NDE: 0.46957253944979
+2023-12-12 18:57:56,844 [INFO ]  SAE: 0.22845041438749908
+2023-12-12 18:57:56,907 [INFO ]  Ground truth EPD: 426.6898282798285 (Wh)
+2023-12-12 18:57:56,957 [INFO ]  Predicted EPD: 329.1786779084773 (Wh)
+2023-12-12 18:57:56,957 [INFO ]  EPD Relative Error: -22.85293529598792 (%)
+2023-12-12 18:57:56,957 [INFO ]  Saving mains, ground truth and predictions to /home/lindo/Develop/nilm/ml/models/kettle.

@@ -1,0 +1,37 @@
+2023-12-20 16:44:23,285 [INFO ]  Machine name: titan
+2023-12-20 16:44:23,285 [INFO ]  Arguments: 
+2023-12-20 16:44:23,286 [INFO ]  Namespace(appliance_name='fridge', datadir='./dataset_management/refit', trained_model_dir='./models', model_arch='cnn', save_dir='/home/lindo/Develop/nilm/ml/models', plot=True, crop=None, batch_size=1024)
+2023-12-20 16:44:23,286 [INFO ]  File for test: fridge_test_H15.csv
+2023-12-20 16:44:23,286 [INFO ]  Loading from: ./dataset_management/refit/fridge/fridge_test_H15.csv
+2023-12-20 16:44:24,367 [INFO ]  There are 6.226M test samples.
+2023-12-20 16:44:24,367 [INFO ]  Window length: 599 (samples)
+2023-12-20 16:44:24,367 [INFO ]  Sample period: 8 (s)
+2023-12-20 16:44:24,367 [INFO ]  Appliance max power: 400.0 (W)
+2023-12-20 16:44:24,367 [INFO ]  Appliance on threshold: 50.0 (W)
+2023-12-20 16:44:24,367 [INFO ]  Train aggregate mean: 605.4483277115743 (W)
+2023-12-20 16:44:24,367 [INFO ]  Train aggregate std: 952.1533235759814 (W)
+2023-12-20 16:44:24,367 [INFO ]  Train appliance mean: 48.55206460642049 (W)
+2023-12-20 16:44:24,367 [INFO ]  Train appliance std: 62.114631485397986 (W)
+2023-12-20 16:44:24,367 [INFO ]  Test appliance mean: 24.40792692094185 (W)
+2023-12-20 16:44:24,367 [INFO ]  Test aggregate mean: 254.83458540217833 (W)
+2023-12-20 16:44:24,367 [INFO ]  Alternative appliance mean: 200.0 (W)
+2023-12-20 16:44:24,368 [INFO ]  Alternative appliance std: 400.0 (W)
+2023-12-20 16:44:24,368 [INFO ]  Alternative aggregate mean: 522.0 (W)
+2023-12-20 16:44:24,368 [INFO ]  Alternative aggregate std: 814.0 (W)
+2023-12-20 16:44:24,368 [INFO ]  Using alt standardization.
+2023-12-20 16:44:25,333 [INFO ]  Loading saved model from ./models/fridge/savemodel_cnn.
+2023-12-20 16:44:38,447 [INFO ]  De-normalizing predictions with mean = 0 and std = 400.0.
+2023-12-20 16:44:38,709 [INFO ]  True positives: 1657583
+2023-12-20 16:44:38,732 [INFO ]  True negatives: 3753378
+2023-12-20 16:44:38,747 [INFO ]  False positives: 531620
+2023-12-20 16:44:38,767 [INFO ]  False negatives: 282315
+2023-12-20 16:44:38,803 [INFO ]  Accuracy: 0.869245205060454
+2023-12-20 16:44:38,873 [INFO ]  MCC: 0.7084768694385288
+2023-12-20 16:44:38,935 [INFO ]  F1: 0.8028783989541549
+2023-12-20 16:44:39,526 [INFO ]  MAE: 11.908742454136442 (W)
+2023-12-20 16:44:39,556 [INFO ]  NDE: 0.39639564426150264
+2023-12-20 16:44:39,582 [INFO ]  SAE: 0.07097595060791889
+2023-12-20 16:44:39,647 [INFO ]  Ground truth EPD: 581.8577672622964 (Wh)
+2023-12-20 16:44:39,697 [INFO ]  Predicted EPD: 623.158715417971 (Wh)
+2023-12-20 16:44:39,697 [INFO ]  EPD Relative Error: 7.098117526212643 (%)
+2023-12-20 16:44:39,697 [INFO ]  Saving mains, ground truth and predictions to /home/lindo/Develop/nilm/ml/models/fridge.

@@ -1,0 +1,10 @@
+2023-12-18 05:07:13,904 [INFO ]  Machine name: titan
+2023-12-18 05:07:13,904 [INFO ]  Arguments: 
+2023-12-18 05:07:13,904 [INFO ]  Namespace(appliance_name='kettle', model_arch='transformer', datadir='/home/lindo/Develop/nilm/ml/dataset_management/refit', save_dir='/home/lindo/Develop/nilm/ml/models', crop=None, evaluate=False, num_eval=432000, test_type='test', prune=False, quant_mode='convert_only', debug_model=False, fix_model=False, use_tpu=False)
+2023-12-18 05:07:13,904 [INFO ]  Savemodel file path: /home/lindo/Develop/nilm/ml/models/kettle/savemodel_transformer
+2023-12-18 05:07:15,658 [WARNI]  No training configuration found in save file, so the model was *not* compiled. Compile it manually.
+2023-12-18 05:07:15,665 [INFO ]  dataset: /home/lindo/Develop/nilm/ml/dataset_management/refit/kettle/kettle_test_H2.csv
+2023-12-18 05:07:16,509 [INFO ]  Loaded 5.734M samples from dataset.
+2023-12-18 05:07:16,515 [INFO ]  Converting model to tflite using convert_only quantization.
+2023-12-18 05:07:17,408 [INFO ]  Assets written to: /tmp/tmp7a2igx8e/assets
+2023-12-18 05:07:18,756 [INFO ]  Quantized tflite model saved to /home/lindo/Develop/nilm/ml/models/kettle/kettle_transformer_convert_only.tflite.

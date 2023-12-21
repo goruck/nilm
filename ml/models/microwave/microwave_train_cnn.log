@@ -1,0 +1,69 @@
+2023-12-12 20:34:23,264 [INFO ]  *** Training model from scratch ***
+2023-12-12 20:34:23,264 [INFO ]  Machine name: titan
+2023-12-12 20:34:23,264 [INFO ]  Arguments: 
+2023-12-12 20:34:23,264 [INFO ]  Namespace(appliance_name='microwave', model_arch='cnn', datadir='./dataset_management/refit', save_dir='/home/lindo/Develop/nilm/ml/models', batchsize=512, n_epoch=50, crop_train_dataset=None, crop_val_dataset=None, do_not_use_distributed_training=False, resume_training=False, plot_display=True)
+2023-12-12 20:34:23,264 [INFO ]  Window length: 599
+2023-12-12 20:34:23,264 [INFO ]  Training dataset: ./dataset_management/refit/microwave/microwave_training_.csv
+2023-12-12 20:34:23,264 [INFO ]  Validation dataset: ./dataset_management/refit/microwave/microwave_validation_H17.csv
+2023-12-12 20:34:23,264 [INFO ]  Checkpoint file path: /home/lindo/Develop/nilm/ml/models/microwave/checkpoints_cnn
+2023-12-12 20:34:23,264 [INFO ]  SaveModel file path: /home/lindo/Develop/nilm/ml/models/microwave/savemodel_cnn
+2023-12-12 20:34:23,264 [INFO ]  Training history file path: /home/lindo/Develop/nilm/ml/models/microwave/history_cnn
+2023-12-12 20:34:27,112 [INFO ]  There are 18.221M training samples.
+2023-12-12 20:34:27,113 [INFO ]  There are 5.432M validation samples.
+2023-12-12 20:34:27,113 [INFO ]  Normalized on power threshold: 0.06666666666666667
+2023-12-12 20:34:27,113 [INFO ]  L1 loss multiplier: 1.0
+2023-12-12 20:34:27,113 [INFO ]  Using MirroredStrategy with devices ('/job:localhost/replica:0/task:0/device:GPU:0', '/job:localhost/replica:0/task:0/device:GPU:1')
+2023-12-12 20:34:27,283 [INFO ]  Number of replicas: 2.
+2023-12-12 20:34:27,283 [INFO ]  Global batch size: 1024.
+2023-12-12 20:34:28,087 [INFO ]  Learning rate: 0.0001
+2023-12-12 20:34:28,843 [INFO ]  Collective all_reduce tensors: 16 all_reduces, num_devices = 2, group_size = 2, implementation = CommunicationImplementation.NCCL, num_packs = 1
+2023-12-12 20:34:29,395 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+2023-12-12 20:34:29,760 [INFO ]  Collective all_reduce tensors: 16 all_reduces, num_devices = 2, group_size = 2, implementation = CommunicationImplementation.NCCL, num_packs = 1
+2023-12-12 20:34:29,884 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+2023-12-12 20:34:34,340 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+2023-12-12 20:34:34,344 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+2023-12-12 20:34:34,346 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+2023-12-12 20:34:34,347 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+2023-12-12 20:34:34,373 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+2023-12-12 20:34:34,374 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+2023-12-12 20:34:34,375 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+2023-12-12 20:34:34,376 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+2023-12-12 20:42:16,036 [INFO ]  Collective all_reduce tensors: 16 all_reduces, num_devices = 2, group_size = 2, implementation = CommunicationImplementation.NCCL, num_packs = 1
+2023-12-12 20:42:17,029 [INFO ]  Running test loop after epoch: 1.
+2023-12-12 20:43:39,060 [INFO ]  Current val loss of 0.04138 < than val loss of inf, saving model to /home/lindo/Develop/nilm/ml/models/microwave/savemodel_cnn.
+2023-12-12 20:43:39,060 [WARNI]  Compiled the loaded model, but the compiled metrics have yet to be built. `model.compile_metrics` will be empty until you train or evaluate the model.
+2023-12-12 20:43:39,770 [INFO ]  Assets written to: /home/lindo/Develop/nilm/ml/models/microwave/savemodel_cnn/assets
+2023-12-12 20:43:39,792 [INFO ]  epoch: 1 loss: 0.2453 mse: 0.0009065 mae: 0.01655 val_loss: 0.04138 val_mse: 0.00685 val_mae: 0.02967
+2023-12-12 20:43:40,046 [INFO ]  Reshuffling training dataset.
+2023-12-12 20:51:25,563 [INFO ]  Running test loop after epoch: 2.
+2023-12-12 20:52:46,375 [INFO ]  Current val loss of 0.0274 < than val loss of 0.04138, saving model to /home/lindo/Develop/nilm/ml/models/microwave/savemodel_cnn.
+2023-12-12 20:52:46,376 [WARNI]  Compiled the loaded model, but the compiled metrics have yet to be built. `model.compile_metrics` will be empty until you train or evaluate the model.
+2023-12-12 20:52:46,880 [INFO ]  Assets written to: /home/lindo/Develop/nilm/ml/models/microwave/savemodel_cnn/assets
+2023-12-12 20:52:46,901 [INFO ]  epoch: 2 loss: 0.1908 mse: 0.0007149 mae: 0.01456 val_loss: 0.0274 val_mse: 0.002079 val_mae: 0.0188
+2023-12-12 20:52:47,242 [INFO ]  Reshuffling training dataset.
+2023-12-12 21:00:35,688 [INFO ]  Running test loop after epoch: 3.
+2023-12-12 21:01:56,079 [INFO ]  Current val loss of 0.02438 < than val loss of 0.0274, saving model to /home/lindo/Develop/nilm/ml/models/microwave/savemodel_cnn.
+2023-12-12 21:01:56,079 [WARNI]  Compiled the loaded model, but the compiled metrics have yet to be built. `model.compile_metrics` will be empty until you train or evaluate the model.
+2023-12-12 21:01:56,581 [INFO ]  Assets written to: /home/lindo/Develop/nilm/ml/models/microwave/savemodel_cnn/assets
+2023-12-12 21:01:56,603 [INFO ]  epoch: 3 loss: 0.1475 mse: 0.0008324 mae: 0.01413 val_loss: 0.02438 val_mse: 0.002621 val_mae: 0.01746
+2023-12-12 21:01:57,058 [INFO ]  Reshuffling training dataset.
+2023-12-12 21:09:43,225 [INFO ]  Running test loop after epoch: 4.
+2023-12-12 21:11:03,418 [INFO ]  epoch: 4 loss: 0.1114 mse: 0.0007861 mae: 0.01296 val_loss: 0.02806 val_mse: 0.001604 val_mae: 0.0146
+2023-12-12 21:11:04,003 [INFO ]  Reshuffling training dataset.
+2023-12-12 21:18:53,708 [INFO ]  Running test loop after epoch: 5.
+2023-12-12 21:20:14,580 [INFO ]  epoch: 5 loss: 0.09241 mse: 0.0007645 mae: 0.01213 val_loss: 0.02884 val_mse: 0.001876 val_mae: 0.01734
+2023-12-12 21:20:15,256 [INFO ]  Reshuffling training dataset.
+2023-12-12 21:28:03,676 [INFO ]  Running test loop after epoch: 6.
+2023-12-12 21:29:24,946 [INFO ]  epoch: 6 loss: 0.08152 mse: 0.0007456 mae: 0.01144 val_loss: 0.02522 val_mse: 0.002497 val_mae: 0.01675
+2023-12-12 21:29:25,749 [INFO ]  Reshuffling training dataset.
+2023-12-12 21:37:14,629 [INFO ]  Running test loop after epoch: 7.
+2023-12-12 21:38:35,014 [INFO ]  epoch: 7 loss: 0.07387 mse: 0.0006492 mae: 0.0103 val_loss: 0.02697 val_mse: 0.001427 val_mae: 0.0133
+2023-12-12 21:38:35,957 [INFO ]  Reshuffling training dataset.
+2023-12-12 21:46:23,572 [INFO ]  Running test loop after epoch: 8.
+2023-12-12 21:47:44,319 [INFO ]  epoch: 8 loss: 0.06846 mse: 0.000547 mae: 0.009406 val_loss: 0.0254 val_mse: 0.001197 val_mae: 0.01249
+2023-12-12 21:47:45,371 [INFO ]  Reshuffling training dataset.
+2023-12-12 21:55:31,006 [INFO ]  Running test loop after epoch: 9.
+2023-12-12 21:56:52,538 [INFO ]  epoch: 9 loss: 0.06404 mse: 0.0004859 mae: 0.008887 val_loss: 0.02493 val_mse: 0.001145 val_mae: 0.01092
+2023-12-12 21:56:53,707 [INFO ]  Early termination of training.
+2023-12-12 21:56:54,367 [INFO ]  Plot directory: /home/lindo/Develop/nilm/ml/models/microwave/train_cnn_loss
+2023-12-13 04:36:01,382 [INFO ]  Plot directory: /home/lindo/Develop/nilm/ml/models/microwave/train_cnn_mae

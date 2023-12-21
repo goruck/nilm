@@ -1,0 +1,32 @@
+2023-12-12 04:39:09,216 [INFO ]  Machine name: titan
+2023-12-12 04:39:09,216 [INFO ]  Arguments: 
+2023-12-12 04:39:09,216 [INFO ]  Namespace(appliance_name='washingmachine', model_arch='cnn', datadir='/home/lindo/Develop/nilm/ml/dataset_management/refit', save_dir='/home/lindo/Develop/nilm/ml/models', crop=None, evaluate=True, num_eval=432000, test_type='test', prune=False, quant_mode='w8', debug_model=False, fix_model=False, use_tpu=False)
+2023-12-12 04:39:09,216 [INFO ]  Savemodel file path: /home/lindo/Develop/nilm/ml/models/washingmachine/savemodel_cnn
+2023-12-12 04:39:10,538 [WARNI]  No training configuration found in save file, so the model was *not* compiled. Compile it manually.
+2023-12-12 04:39:10,539 [INFO ]  dataset: /home/lindo/Develop/nilm/ml/dataset_management/refit/washingmachine/washingmachine_test_H8.csv
+2023-12-12 04:39:11,410 [INFO ]  Loaded 6.118M samples from dataset.
+2023-12-12 04:39:11,416 [INFO ]  Converting model to tflite using w8 quantization.
+2023-12-12 04:39:11,972 [INFO ]  Assets written to: /tmp/tmptk00cap_/assets
+2023-12-12 04:39:13,699 [INFO ]  Quantized tflite model saved to /home/lindo/Develop/nilm/ml/models/washingmachine/washingmachine_cnn_w8.tflite.
+2023-12-12 04:39:13,720 [INFO ]  interpreter input details: [{'name': 'serving_default_conv1d_input:0', 'index': 0, 'shape': array([  1, 599,   1], dtype=int32), 'shape_signature': array([ -1, 599,   1], dtype=int32), 'dtype': <class 'numpy.float32'>, 'quantization': (0.0, 0), 'quantization_parameters': {'scales': array([], dtype=float32), 'zero_points': array([], dtype=int32), 'quantized_dimension': 0}, 'sparsity_parameters': {}}]
+2023-12-12 04:39:13,720 [INFO ]  interpreter output details: [{'name': 'StatefulPartitionedCall:0', 'index': 57, 'shape': array([1, 1], dtype=int32), 'shape_signature': array([-1,  1], dtype=int32), 'dtype': <class 'numpy.float32'>, 'quantization': (0.0, 0), 'quantization_parameters': {'scales': array([], dtype=float32), 'zero_points': array([], dtype=int32), 'quantized_dimension': 0}, 'sparsity_parameters': {}}]
+2023-12-12 04:39:13,720 [INFO ]  tflite model floating input: True
+2023-12-12 04:39:13,720 [INFO ]  tflite model floating output: True
+2023-12-12 04:39:13,839 [INFO ]  Running inference on 432000 samples...
+2023-12-12 04:44:41,888 [INFO ]  Inference run complete.
+2023-12-12 04:44:41,888 [INFO ]  Inference rate: 1316.877 Hz
+2023-12-12 04:44:42,051 [INFO ]  De-normalizing predictions with mean = 0 and std = 2500.0.
+2023-12-12 04:44:42,052 [INFO ]  appliance threshold: 20.0
+2023-12-12 04:44:42,086 [INFO ]  True positives: 13314
+2023-12-12 04:44:42,088 [INFO ]  True negatives: 415185
+2023-12-12 04:44:42,088 [INFO ]  False positives: 2064
+2023-12-12 04:44:42,089 [INFO ]  False negatives: 1437
+2023-12-12 04:44:42,090 [INFO ]  Accuracy: 0.9918958333333333
+2023-12-12 04:44:42,092 [INFO ]  MCC: 0.8798075997951622
+2023-12-12 04:44:42,094 [INFO ]  F1: 0.8837996614557403
+2023-12-12 04:44:42,115 [INFO ]  MAE: 15.332955726964054 (W)
+2023-12-12 04:44:42,117 [INFO ]  NDE: 0.38107949873989533
+2023-12-12 04:44:42,118 [INFO ]  SAE: 0.29299993373558403
+2023-12-12 04:44:42,122 [INFO ]  Ground truth EPD: 726.8430000175238 (Wh)
+2023-12-12 04:44:42,125 [INFO ]  Predicted EPD: 513.8780491762161 (Wh)
+2023-12-12 04:44:42,125 [INFO ]  EPD Relative Error: -29.299993373558415 (%)

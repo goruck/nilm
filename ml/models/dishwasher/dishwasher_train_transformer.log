@@ -1,0 +1,55 @@
+2023-12-03 05:51:22,149 [INFO ]  *** Training model from scratch ***
+2023-12-03 05:51:22,149 [INFO ]  Machine name: titan
+2023-12-03 05:51:22,149 [INFO ]  Arguments: 
+2023-12-03 05:51:22,149 [INFO ]  Namespace(appliance_name='dishwasher', model_arch='transformer', datadir='./dataset_management/refit', save_dir='/home/lindo/Develop/nilm/ml/models', batchsize=512, n_epoch=50, crop_train_dataset=None, crop_val_dataset=None, do_not_use_distributed_training=False, resume_training=False, plot_display=True)
+2023-12-03 05:51:22,149 [INFO ]  Window length: 599
+2023-12-03 05:51:22,149 [INFO ]  Training dataset: ./dataset_management/refit/dishwasher/dishwasher_training_.csv
+2023-12-03 05:51:22,149 [INFO ]  Validation dataset: ./dataset_management/refit/dishwasher/dishwasher_validation_H18.csv
+2023-12-03 05:51:22,149 [INFO ]  Checkpoint file path: /home/lindo/Develop/nilm/ml/models/dishwasher/checkpoints_transformer
+2023-12-03 05:51:22,149 [INFO ]  SaveModel file path: /home/lindo/Develop/nilm/ml/models/dishwasher/savemodel_transformer
+2023-12-03 05:51:22,149 [INFO ]  Training history file path: /home/lindo/Develop/nilm/ml/models/dishwasher/history_transformer
+2023-12-03 05:51:27,662 [INFO ]  There are 30.816M training samples.
+2023-12-03 05:51:27,662 [INFO ]  There are 5.008M validation samples.
+2023-12-03 05:51:27,662 [INFO ]  Normalized on power threshold: 0.004
+2023-12-03 05:51:27,662 [INFO ]  L1 loss multiplier: 1.0
+2023-12-03 05:51:27,663 [INFO ]  Using MirroredStrategy with devices ('/job:localhost/replica:0/task:0/device:GPU:0', '/job:localhost/replica:0/task:0/device:GPU:1')
+2023-12-03 05:51:27,832 [INFO ]  Number of replicas: 2.
+2023-12-03 05:51:27,833 [INFO ]  Global batch size: 1024.
+2023-12-03 05:51:29,145 [INFO ]  Learning rate: 0.0001
+2023-12-03 05:51:30,896 [INFO ]  Collective all_reduce tensors: 44 all_reduces, num_devices = 2, group_size = 2, implementation = CommunicationImplementation.NCCL, num_packs = 1
+2023-12-03 05:51:32,277 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+2023-12-03 05:51:33,217 [INFO ]  Collective all_reduce tensors: 44 all_reduces, num_devices = 2, group_size = 2, implementation = CommunicationImplementation.NCCL, num_packs = 1
+2023-12-03 05:51:33,512 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+2023-12-03 05:51:40,037 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+2023-12-03 05:51:40,041 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+2023-12-03 05:51:40,045 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+2023-12-03 05:51:40,046 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+2023-12-03 05:51:40,271 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+2023-12-03 05:51:40,272 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+2023-12-03 05:51:40,274 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+2023-12-03 05:51:40,275 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+2023-12-03 07:43:11,921 [INFO ]  Running test loop after epoch: 1.
+2023-12-03 07:51:10,968 [INFO ]  Current val loss of 0.2191 < than val loss of inf, saving model to /home/lindo/Develop/nilm/ml/models/dishwasher/savemodel_transformer.
+2023-12-03 07:51:13,226 [INFO ]  Assets written to: /home/lindo/Develop/nilm/ml/models/dishwasher/savemodel_transformer/assets
+2023-12-03 07:51:13,277 [INFO ]  epoch: 1 loss: 1.214 mse: 0.00527 mae: 0.01654 val_loss: 0.2191 val_mse: 0.004849 val_mae: 0.01362
+2023-12-03 07:51:13,538 [INFO ]  Reshuffling training dataset.
+2023-12-03 09:43:00,806 [INFO ]  Running test loop after epoch: 2.
+2023-12-03 09:50:59,920 [INFO ]  epoch: 2 loss: 0.9866 mse: 0.003475 mae: 0.008682 val_loss: 0.2292 val_mse: 0.004808 val_mae: 0.01051
+2023-12-03 09:51:00,363 [INFO ]  Reshuffling training dataset.
+2023-12-03 11:42:59,971 [INFO ]  Running test loop after epoch: 3.
+2023-12-03 11:50:59,770 [INFO ]  epoch: 3 loss: 0.8875 mse: 0.002941 mae: 0.00758 val_loss: 0.234 val_mse: 0.004413 val_mae: 0.008763
+2023-12-03 11:51:00,397 [INFO ]  Reshuffling training dataset.
+2023-12-03 13:42:58,055 [INFO ]  Running test loop after epoch: 4.
+2023-12-03 13:50:57,718 [INFO ]  epoch: 4 loss: 0.8174 mse: 0.002551 mae: 0.006708 val_loss: 0.2933 val_mse: 0.006638 val_mae: 0.009284
+2023-12-03 13:50:58,587 [INFO ]  Reshuffling training dataset.
+2023-12-03 15:42:59,849 [INFO ]  Running test loop after epoch: 5.
+2023-12-03 15:50:59,881 [INFO ]  epoch: 5 loss: 0.7624 mse: 0.002194 mae: 0.005979 val_loss: 0.2707 val_mse: 0.006384 val_mae: 0.01091
+2023-12-03 15:51:00,958 [INFO ]  Reshuffling training dataset.
+2023-12-03 17:43:05,719 [INFO ]  Running test loop after epoch: 6.
+2023-12-03 17:51:06,124 [INFO ]  epoch: 6 loss: 0.7077 mse: 0.001915 mae: 0.005383 val_loss: 0.2604 val_mse: 0.006121 val_mae: 0.01205
+2023-12-03 17:51:07,349 [INFO ]  Reshuffling training dataset.
+2023-12-03 19:43:11,143 [INFO ]  Running test loop after epoch: 7.
+2023-12-03 19:51:11,539 [INFO ]  epoch: 7 loss: 0.6692 mse: 0.001694 mae: 0.004916 val_loss: 0.3202 val_mse: 0.007975 val_mae: 0.01195
+2023-12-03 19:51:12,962 [INFO ]  Early termination of training.
+2023-12-03 19:51:13,736 [INFO ]  Plot directory: /home/lindo/Develop/nilm/ml/models/dishwasher/train_transformer_loss
+2023-12-03 19:51:26,358 [INFO ]  Plot directory: /home/lindo/Develop/nilm/ml/models/dishwasher/train_transformer_mae

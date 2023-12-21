@@ -1,0 +1,62 @@
+2023-12-20 14:19:34,208 [INFO ]  *** Training model from scratch ***
+2023-12-20 14:19:34,208 [INFO ]  Machine name: titan
+2023-12-20 14:19:34,208 [INFO ]  Arguments: 
+2023-12-20 14:19:34,208 [INFO ]  Namespace(appliance_name='fridge', model_arch='cnn', datadir='./dataset_management/refit', save_dir='/home/lindo/Develop/nilm/ml/models', batchsize=512, n_epoch=50, crop_train_dataset=None, crop_val_dataset=None, do_not_use_distributed_training=False, resume_training=False, plot_display=True)
+2023-12-20 14:19:34,208 [INFO ]  Window length: 599
+2023-12-20 14:19:34,208 [INFO ]  Training dataset: ./dataset_management/refit/fridge/fridge_training_.csv
+2023-12-20 14:19:34,208 [INFO ]  Validation dataset: ./dataset_management/refit/fridge/fridge_validation_H12.csv
+2023-12-20 14:19:34,208 [INFO ]  Checkpoint file path: /home/lindo/Develop/nilm/ml/models/fridge/checkpoints_cnn
+2023-12-20 14:19:34,208 [INFO ]  SaveModel file path: /home/lindo/Develop/nilm/ml/models/fridge/savemodel_cnn
+2023-12-20 14:19:34,208 [INFO ]  Training history file path: /home/lindo/Develop/nilm/ml/models/fridge/history_cnn
+2023-12-20 14:19:38,574 [INFO ]  There are 19.334M training samples.
+2023-12-20 14:19:38,574 [INFO ]  There are 5.860M validation samples.
+2023-12-20 14:19:38,574 [INFO ]  Normalized on power threshold: 0.125
+2023-12-20 14:19:38,574 [INFO ]  L1 loss multiplier: 1e-06
+2023-12-20 14:19:38,574 [INFO ]  Using MirroredStrategy with devices ('/job:localhost/replica:0/task:0/device:GPU:0', '/job:localhost/replica:0/task:0/device:GPU:1')
+2023-12-20 14:19:38,737 [INFO ]  Number of replicas: 2.
+2023-12-20 14:19:38,737 [INFO ]  Global batch size: 1024.
+2023-12-20 14:19:39,507 [INFO ]  Learning rate: 0.0001
+2023-12-20 14:19:40,312 [INFO ]  Collective all_reduce tensors: 16 all_reduces, num_devices = 2, group_size = 2, implementation = CommunicationImplementation.NCCL, num_packs = 1
+2023-12-20 14:19:40,823 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+2023-12-20 14:19:41,162 [INFO ]  Collective all_reduce tensors: 16 all_reduces, num_devices = 2, group_size = 2, implementation = CommunicationImplementation.NCCL, num_packs = 1
+2023-12-20 14:19:41,282 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+2023-12-20 14:19:45,325 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+2023-12-20 14:19:45,330 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+2023-12-20 14:19:45,333 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+2023-12-20 14:19:45,334 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+2023-12-20 14:19:45,358 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+2023-12-20 14:19:45,359 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+2023-12-20 14:19:45,361 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+2023-12-20 14:19:45,362 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+2023-12-20 14:27:50,427 [INFO ]  Running test loop after epoch: 1.
+2023-12-20 14:28:32,310 [INFO ]  Current val loss of 3.597 < than val loss of inf, saving model to /home/lindo/Develop/nilm/ml/models/fridge/savemodel_cnn.
+2023-12-20 14:28:32,310 [WARNI]  Compiled the loaded model, but the compiled metrics have yet to be built. `model.compile_metrics` will be empty until you train or evaluate the model.
+2023-12-20 14:28:32,876 [INFO ]  Assets written to: /home/lindo/Develop/nilm/ml/models/fridge/savemodel_cnn/assets
+2023-12-20 14:28:32,897 [INFO ]  epoch: 1 loss: 1.481 mse: 0.005135 mae: 0.0414 val_loss: 3.597 val_mse: 0.009391 val_mae: 0.06913
+2023-12-20 14:28:33,193 [INFO ]  Reshuffling training dataset.
+2023-12-20 14:36:39,485 [INFO ]  Running test loop after epoch: 2.
+2023-12-20 14:37:20,380 [INFO ]  Current val loss of 3.57 < than val loss of 3.597, saving model to /home/lindo/Develop/nilm/ml/models/fridge/savemodel_cnn.
+2023-12-20 14:37:20,380 [WARNI]  Compiled the loaded model, but the compiled metrics have yet to be built. `model.compile_metrics` will be empty until you train or evaluate the model.
+2023-12-20 14:37:20,988 [INFO ]  Assets written to: /home/lindo/Develop/nilm/ml/models/fridge/savemodel_cnn/assets
+2023-12-20 14:37:21,011 [INFO ]  epoch: 2 loss: 0.3679 mse: 0.001659 mae: 0.02209 val_loss: 3.57 val_mse: 0.009617 val_mae: 0.07153
+2023-12-20 14:37:21,420 [INFO ]  Reshuffling training dataset.
+2023-12-20 14:45:27,920 [INFO ]  Running test loop after epoch: 3.
+2023-12-20 14:46:09,284 [INFO ]  epoch: 3 loss: 0.1817 mse: 0.001092 mae: 0.01683 val_loss: 3.616 val_mse: 0.009706 val_mae: 0.07163
+2023-12-20 14:46:09,722 [INFO ]  Reshuffling training dataset.
+2023-12-20 14:54:18,643 [INFO ]  Running test loop after epoch: 4.
+2023-12-20 14:55:00,099 [INFO ]  epoch: 4 loss: 0.1293 mse: 0.0008808 mae: 0.01438 val_loss: 3.681 val_mse: 0.009621 val_mae: 0.06922
+2023-12-20 14:55:00,666 [INFO ]  Reshuffling training dataset.
+2023-12-20 15:03:07,378 [INFO ]  Running test loop after epoch: 5.
+2023-12-20 15:03:48,143 [INFO ]  epoch: 5 loss: 0.1045 mse: 0.0007542 mae: 0.01276 val_loss: 3.827 val_mse: 0.009718 val_mae: 0.06802
+2023-12-20 15:03:48,807 [INFO ]  Reshuffling training dataset.
+2023-12-20 15:12:00,487 [INFO ]  Running test loop after epoch: 6.
+2023-12-20 15:12:41,689 [INFO ]  epoch: 6 loss: 0.09223 mse: 0.00068 mae: 0.01171 val_loss: 3.809 val_mse: 0.009741 val_mae: 0.06793
+2023-12-20 15:12:42,470 [INFO ]  Reshuffling training dataset.
+2023-12-20 15:20:54,084 [INFO ]  Running test loop after epoch: 7.
+2023-12-20 15:21:35,855 [INFO ]  epoch: 7 loss: 0.08422 mse: 0.0006269 mae: 0.01094 val_loss: 3.921 val_mse: 0.0102 val_mae: 0.0709
+2023-12-20 15:21:36,802 [INFO ]  Reshuffling training dataset.
+2023-12-20 15:29:43,122 [INFO ]  Running test loop after epoch: 8.
+2023-12-20 15:30:24,499 [INFO ]  epoch: 8 loss: 0.07854 mse: 0.0005837 mae: 0.01029 val_loss: 3.917 val_mse: 0.01053 val_mae: 0.07184
+2023-12-20 15:30:25,545 [INFO ]  Early termination of training.
+2023-12-20 15:30:26,164 [INFO ]  Plot directory: /home/lindo/Develop/nilm/ml/models/fridge/train_cnn_loss
+2023-12-20 16:43:58,992 [INFO ]  Plot directory: /home/lindo/Develop/nilm/ml/models/fridge/train_cnn_mae

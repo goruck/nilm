@@ -1,0 +1,10 @@
+2023-12-20 16:48:10,389 [INFO ]  Machine name: titan
+2023-12-20 16:48:10,389 [INFO ]  Arguments: 
+2023-12-20 16:48:10,389 [INFO ]  Namespace(appliance_name='fridge', model_arch='transformer', datadir='/home/lindo/Develop/nilm/ml/dataset_management/refit', save_dir='/home/lindo/Develop/nilm/ml/models', crop=None, evaluate=False, num_eval=432000, test_type='test', prune=False, quant_mode='w8', debug_model=False, fix_model=False, use_tpu=False)
+2023-12-20 16:48:10,389 [INFO ]  Savemodel file path: /home/lindo/Develop/nilm/ml/models/fridge/savemodel_transformer
+2023-12-20 16:48:12,126 [WARNI]  No training configuration found in save file, so the model was *not* compiled. Compile it manually.
+2023-12-20 16:48:12,133 [INFO ]  dataset: /home/lindo/Develop/nilm/ml/dataset_management/refit/fridge/fridge_test_H15.csv
+2023-12-20 16:48:13,141 [INFO ]  Loaded 6.226M samples from dataset.
+2023-12-20 16:48:13,147 [INFO ]  Converting model to tflite using w8 quantization.
+2023-12-20 16:48:14,014 [INFO ]  Assets written to: /tmp/tmpt3zc5k53/assets
+2023-12-20 16:48:15,498 [INFO ]  Quantized tflite model saved to /home/lindo/Develop/nilm/ml/models/fridge/fridge_transformer_w8.tflite.

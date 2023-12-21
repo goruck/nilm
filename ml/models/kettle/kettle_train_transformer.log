@@ -1,0 +1,68 @@
+2023-11-27 19:26:52,543 [INFO ]  *** Training model from scratch ***
+2023-11-27 19:26:52,543 [INFO ]  Machine name: titan
+2023-11-27 19:26:52,543 [INFO ]  Arguments: 
+2023-11-27 19:26:52,543 [INFO ]  Namespace(appliance_name='kettle', model_arch='transformer', datadir='./dataset_management/refit', save_dir='/home/lindo/Develop/nilm/ml/models', batchsize=512, n_epoch=50, crop_train_dataset=None, crop_val_dataset=None, do_not_use_distributed_training=False, resume_training=False, plot_display=True)
+2023-11-27 19:26:52,543 [INFO ]  Appliance name: kettle
+2023-11-27 19:26:52,543 [INFO ]  Window length: 599
+2023-11-27 19:26:52,543 [INFO ]  Training dataset: ./dataset_management/refit/kettle/kettle_training_.csv
+2023-11-27 19:26:52,543 [INFO ]  Validation dataset: ./dataset_management/refit/kettle/kettle_validation_H5.csv
+2023-11-27 19:26:52,543 [INFO ]  Checkpoint file path: /home/lindo/Develop/nilm/ml/models/kettle/checkpoints_transformer
+2023-11-27 19:26:52,543 [INFO ]  SaveModel file path: /home/lindo/Develop/nilm/ml/models/kettle/savemodel_transformer
+2023-11-27 19:27:02,289 [INFO ]  There are 60.429M training samples.
+2023-11-27 19:27:02,289 [INFO ]  There are 7.431M validation samples.
+2023-11-27 19:27:02,289 [INFO ]  Normalized on power threshold: 0.6451612903225806
+2023-11-27 19:27:02,289 [INFO ]  L1 loss multiplier: 1.0
+2023-11-27 19:27:02,289 [INFO ]  Using MirroredStrategy with devices ('/job:localhost/replica:0/task:0/device:GPU:0', '/job:localhost/replica:0/task:0/device:GPU:1')
+2023-11-27 19:27:02,459 [INFO ]  Number of replicas: 2.
+2023-11-27 19:27:02,460 [INFO ]  Global batch size: 1024.
+2023-11-27 19:27:04,926 [INFO ]  Learning rate: 0.0001
+2023-11-27 19:27:06,669 [INFO ]  Collective all_reduce tensors: 44 all_reduces, num_devices = 2, group_size = 2, implementation = CommunicationImplementation.NCCL, num_packs = 1
+2023-11-27 19:27:08,172 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+2023-11-27 19:27:09,117 [INFO ]  Collective all_reduce tensors: 44 all_reduces, num_devices = 2, group_size = 2, implementation = CommunicationImplementation.NCCL, num_packs = 1
+2023-11-27 19:27:09,407 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+2023-11-27 19:27:15,960 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+2023-11-27 19:27:15,962 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+2023-11-27 19:27:15,964 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+2023-11-27 19:27:15,965 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+2023-11-27 19:27:16,189 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+2023-11-27 19:27:16,190 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+2023-11-27 19:27:16,191 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+2023-11-27 19:27:16,192 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+2023-11-27 23:06:05,162 [INFO ]  Running test loop after epoch: 1.
+2023-11-27 23:17:55,619 [INFO ]  Current val loss of 0.1597 < than val loss of inf, saving model to /home/lindo/Develop/nilm/ml/models/kettle/savemodel_transformer.
+2023-11-27 23:17:57,849 [INFO ]  Assets written to: /home/lindo/Develop/nilm/ml/models/kettle/savemodel_transformer/assets
+2023-11-27 23:17:57,898 [INFO ]  epoch: 1 loss: 0.2792 mse: 0.011 mae: 0.05046 val_loss: 0.1597 val_mse: 0.01458 val_mae: 0.07111
+2023-11-27 23:17:57,991 [INFO ]  Reshuffling training dataset.
+2023-11-28 02:56:52,653 [INFO ]  Running test loop after epoch: 2.
+2023-11-28 03:08:42,230 [INFO ]  Current val loss of 0.137 < than val loss of 0.1597, saving model to /home/lindo/Develop/nilm/ml/models/kettle/savemodel_transformer.
+2023-11-28 03:08:44,493 [INFO ]  Assets written to: /home/lindo/Develop/nilm/ml/models/kettle/savemodel_transformer/assets
+2023-11-28 03:08:44,547 [INFO ]  epoch: 2 loss: 0.2585 mse: 0.009045 mae: 0.04223 val_loss: 0.137 val_mse: 0.009452 val_mae: 0.04196
+2023-11-28 03:08:44,639 [INFO ]  Reshuffling training dataset.
+2023-11-28 06:47:33,363 [INFO ]  Running test loop after epoch: 3.
+2023-11-28 06:59:23,149 [INFO ]  Current val loss of 0.1241 < than val loss of 0.137, saving model to /home/lindo/Develop/nilm/ml/models/kettle/savemodel_transformer.
+2023-11-28 06:59:25,470 [INFO ]  Assets written to: /home/lindo/Develop/nilm/ml/models/kettle/savemodel_transformer/assets
+2023-11-28 06:59:25,533 [INFO ]  epoch: 3 loss: 0.2527 mse: 0.009017 mae: 0.04087 val_loss: 0.1241 val_mse: 0.01471 val_mae: 0.09123
+2023-11-28 06:59:25,630 [INFO ]  Reshuffling training dataset.
+2023-11-28 10:38:12,481 [INFO ]  Running test loop after epoch: 4.
+2023-11-28 10:50:04,032 [INFO ]  epoch: 4 loss: 0.2446 mse: 0.008941 mae: 0.04051 val_loss: 0.1422 val_mse: 0.01035 val_mae: 0.06855
+2023-11-28 10:50:04,125 [INFO ]  Reshuffling training dataset.
+2023-11-28 14:29:34,163 [INFO ]  Running test loop after epoch: 5.
+2023-11-28 14:41:27,065 [INFO ]  epoch: 5 loss: 0.2355 mse: 0.008805 mae: 0.03966 val_loss: 0.1446 val_mse: 0.01221 val_mae: 0.05122
+2023-11-28 14:41:27,166 [INFO ]  Reshuffling training dataset.
+2023-11-28 18:21:18,537 [INFO ]  Running test loop after epoch: 6.
+2023-11-28 18:33:11,448 [INFO ]  epoch: 6 loss: 0.2287 mse: 0.008739 mae: 0.03925 val_loss: 0.1476 val_mse: 0.01831 val_mae: 0.06466
+2023-11-28 18:33:11,550 [INFO ]  Reshuffling training dataset.
+2023-11-28 22:12:42,333 [INFO ]  Running test loop after epoch: 7.
+2023-11-28 22:24:34,701 [INFO ]  epoch: 7 loss: 0.2228 mse: 0.008562 mae: 0.03835 val_loss: 0.1687 val_mse: 0.01831 val_mae: 0.06437
+2023-11-28 22:24:34,809 [INFO ]  Reshuffling training dataset.
+2023-11-29 02:03:58,098 [INFO ]  Running test loop after epoch: 8.
+2023-11-29 02:15:49,841 [INFO ]  epoch: 8 loss: 0.2198 mse: 0.008723 mae: 0.03796 val_loss: 0.148 val_mse: 0.01317 val_mae: 0.05424
+2023-11-29 02:15:49,939 [INFO ]  Reshuffling training dataset.
+2023-11-29 05:55:25,507 [INFO ]  Running test loop after epoch: 9.
+2023-11-29 06:07:18,033 [INFO ]  epoch: 9 loss: 0.2164 mse: 0.008666 mae: 0.03703 val_loss: 0.1409 val_mse: 0.009235 val_mae: 0.04709
+2023-11-29 06:07:18,141 [INFO ]  Reshuffling training dataset.
+2023-11-29 09:46:52,885 [INFO ]  Running test loop after epoch: 10.
+2023-11-29 09:58:45,443 [INFO ]  epoch: 10 loss: 0.2106 mse: 0.008661 mae: 0.03578 val_loss: 0.144 val_mse: 0.01099 val_mae: 0.04143
+2023-11-29 09:58:45,533 [INFO ]  Early termination of training.
+2023-11-29 09:58:47,126 [INFO ]  Plot directory: /home/lindo/Develop/nilm/ml/models/kettle/train_transformer_loss
+2023-11-29 18:46:31,420 [INFO ]  Plot directory: /home/lindo/Develop/nilm/ml/models/kettle/train_transformer_mae

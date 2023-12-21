@@ -1,0 +1,98 @@
+2023-12-12 20:08:58,942 [INFO ]  Machine name: titan
+2023-12-12 20:08:58,942 [INFO ]  Arguments: 
+2023-12-12 20:08:58,942 [INFO ]  Namespace(appliance_name='kettle', model_arch='cnn', datadir='/home/lindo/Develop/nilm/ml/dataset_management/refit', save_dir='/home/lindo/Develop/nilm/ml/models', crop=None, evaluate=True, num_eval=432000, test_type='test', prune=False, quant_mode='w8_a8_fallback', debug_model=True, fix_model=False, use_tpu=False)
+2023-12-12 20:08:58,942 [INFO ]  Savemodel file path: /home/lindo/Develop/nilm/ml/models/kettle/savemodel_cnn
+2023-12-12 20:09:00,265 [WARNI]  No training configuration found in save file, so the model was *not* compiled. Compile it manually.
+2023-12-12 20:09:00,267 [INFO ]  dataset: /home/lindo/Develop/nilm/ml/dataset_management/refit/kettle/kettle_test_H2.csv
+2023-12-12 20:09:01,086 [INFO ]  Loaded 5.734M samples from dataset.
+2023-12-12 20:09:01,092 [INFO ]  Converting model to tflite using w8_a8_fallback quantization.
+2023-12-12 20:09:01,092 [INFO ]  Debugging model...
+2023-12-12 20:09:01,661 [INFO ]  Assets written to: /tmp/tmpe42t1way/assets
+2023-12-12 20:15:59,869 [INFO ]  Saving debug results to /home/lindo/Develop/nilm/ml/models/kettle/kettle_cnn_debug_w8_a8_fallback.csv.
+2023-12-12 20:15:59,871 [INFO ]              op_name  tensor_idx  num_elements        stddev    mean_error  max_abs_error  mean_squared_error     scale  zero_point                                        tensor_name
+0       EXPAND_DIMS          46         599.0  1.996296e-02 -6.693771e-03   4.351144e-02        6.669383e-04  0.093843        -121                       cnn/conv1d/Conv1D/ExpandDims
+1           CONV_2D          50        9584.0  4.656183e-03 -8.270474e-04   1.704280e-02        2.302611e-05  0.021639        -128  cnn/conv1d/Relu;cnn/conv1d/BiasAdd;cnn/conv1d/...
+2           RESHAPE          54        9584.0  5.056973e-08  5.804542e-09   1.433285e-07        2.653411e-15  0.021639        -128  cnn/conv1d/Relu;cnn/conv1d/BiasAdd;cnn/conv1d/...
+3       EXPAND_DIMS          58        9584.0  5.056973e-08  5.804542e-09   1.433285e-07        2.653411e-15  0.021639        -128                       cnn/max_pooling1d/ExpandDims
+4       MAX_POOL_2D          62        4800.0  5.153082e-08  5.943724e-09   1.431600e-07        2.747693e-15  0.021639        -128                          cnn/max_pooling1d/MaxPool
+5           RESHAPE          66        4800.0  5.153082e-08  5.943724e-09   1.431600e-07        2.747693e-15  0.021639        -128                         cnn/max_pooling1d/Squeeze1
+6       EXPAND_DIMS          70        4800.0  5.153082e-08  5.943724e-09   1.431600e-07        2.747693e-15  0.021639        -128                     cnn/conv1d_1/Conv1D/ExpandDims
+7           CONV_2D          74        9600.0  2.438793e-03 -1.097670e-05   1.124373e-02        6.002472e-06  0.013704        -128  cnn/conv1d_1/Relu;cnn/conv1d_1/BiasAdd;cnn/con...
+8           RESHAPE          78        9600.0  1.951968e-08  2.376251e-10   6.957187e-08        3.875988e-16  0.013704        -128  cnn/conv1d_1/Relu;cnn/conv1d_1/BiasAdd;cnn/con...
+9       EXPAND_DIMS          82        9600.0  1.951968e-08  2.376251e-10   6.957187e-08        3.875988e-16  0.013704        -128                     cnn/max_pooling1d_1/ExpandDims
+10      MAX_POOL_2D          86        4800.0  2.025408e-08  2.493127e-10   6.937775e-08        4.160694e-16  0.013704        -128                        cnn/max_pooling1d_1/MaxPool
+11          RESHAPE          90        4800.0  2.025408e-08  2.493127e-10   6.937775e-08        4.160694e-16  0.013704        -128                       cnn/max_pooling1d_1/Squeeze1
+12      EXPAND_DIMS          94        4800.0  2.025408e-08  2.493127e-10   6.937775e-08        4.160694e-16  0.013704        -128                     cnn/conv1d_2/Conv1D/ExpandDims
+13          CONV_2D          98        9600.0  2.809035e-03 -2.911707e-04   1.430348e-02        8.006044e-06  0.023180        -128  cnn/conv1d_2/Relu;cnn/conv1d_2/BiasAdd;cnn/con...
+14          RESHAPE         102        9600.0  2.468690e-08 -4.641751e-09   1.216754e-07        6.404339e-16  0.023180        -128  cnn/conv1d_2/Relu;cnn/conv1d_2/BiasAdd;cnn/con...
+15      EXPAND_DIMS         106        9600.0  2.468690e-08 -4.641751e-09   1.216754e-07        6.404339e-16  0.023180        -128                     cnn/max_pooling1d_2/ExpandDims
+16      MAX_POOL_2D         110        4800.0  2.669069e-08 -5.298515e-09   1.210745e-07        7.512960e-16  0.023180        -128                        cnn/max_pooling1d_2/MaxPool
+17          RESHAPE         114        4800.0  2.669069e-08 -5.298515e-09   1.210745e-07        7.512960e-16  0.023180        -128                       cnn/max_pooling1d_2/Squeeze1
+18      EXPAND_DIMS         118        4800.0  2.669069e-08 -5.298515e-09   1.210745e-07        7.512960e-16  0.023180        -128                     cnn/conv1d_3/Conv1D/ExpandDims
+19          CONV_2D         122        9600.0  4.254700e-03 -1.233651e-04   2.353764e-02        1.816690e-05  0.042458        -128  cnn/conv1d_3/Relu;cnn/conv1d_3/BiasAdd;cnn/con...
+20          RESHAPE         126        9600.0  4.165697e-08 -6.789684e-09   2.548961e-07        1.817505e-15  0.042458        -128  cnn/conv1d_3/Relu;cnn/conv1d_3/BiasAdd;cnn/con...
+21      EXPAND_DIMS         130        9600.0  4.165697e-08 -6.789684e-09   2.548961e-07        1.817505e-15  0.042458        -128                     cnn/max_pooling1d_3/ExpandDims
+22      MAX_POOL_2D         134        4864.0  4.491348e-08 -7.904573e-09   2.516489e-07        2.107877e-15  0.042458        -128                        cnn/max_pooling1d_3/MaxPool
+23          RESHAPE         138        4864.0  4.491348e-08 -7.904573e-09   2.516489e-07        2.107877e-15  0.042458        -128                       cnn/max_pooling1d_3/Squeeze1
+24      EXPAND_DIMS         142        4864.0  4.491348e-08 -7.904573e-09   2.516489e-07        2.107877e-15  0.042458        -128                     cnn/conv1d_4/Conv1D/ExpandDims
+25          CONV_2D         146        9728.0  6.662043e-04 -2.882341e-05   1.564769e-02        4.569800e-07  0.011716        -128  cnn/conv1d_4/Relu;cnn/conv1d_4/BiasAdd;cnn/con...
+26          RESHAPE         150        9728.0  4.456465e-09 -2.334344e-11   7.478473e-08        2.006082e-17  0.011716        -128                                cnn/flatten/Reshape
+27  FULLY_CONNECTED         154        1024.0  7.775870e-03  4.135502e-04   1.395102e-01        6.594468e-05  0.006765        -128  cnn/dense/MatMul;cnn/dense/Relu;cnn/dense/BiasAdd
+28  FULLY_CONNECTED         158         512.0  3.342055e-03  8.631229e-05   1.681989e-02        1.347803e-05  0.005931        -128  cnn/dense_1/MatMul;cnn/dense_1/Relu;cnn/dense_...
+29  FULLY_CONNECTED         162           1.0  0.000000e+00  1.704467e-03   2.101153e-03        6.230170e-05  0.003886         -81                          StatefulPartitionedCall:0
+2023-12-12 20:15:59,892 [INFO ]              op_name      range    rmse/scale
+0       EXPAND_DIMS  23.929975  2.751951e-01
+1           CONV_2D   5.518012  2.217521e-01
+2           RESHAPE   5.518012  2.380454e-06
+3       EXPAND_DIMS   5.518012  2.380454e-06
+4       MAX_POOL_2D   5.518012  2.422377e-06
+5           RESHAPE   5.518012  2.422377e-06
+6       EXPAND_DIMS   5.518012  2.422377e-06
+7           CONV_2D   3.494575  1.787767e-01
+8           RESHAPE   3.494575  1.436604e-06
+9       EXPAND_DIMS   3.494575  1.436604e-06
+10      MAX_POOL_2D   3.494575  1.488431e-06
+11          RESHAPE   3.494575  1.488431e-06
+12      EXPAND_DIMS   3.494575  1.488431e-06
+13          CONV_2D   5.910911  1.220660e-01
+14          RESHAPE   5.910911  1.091749e-06
+15      EXPAND_DIMS   5.910911  1.091749e-06
+16      MAX_POOL_2D   5.910911  1.182473e-06
+17          RESHAPE   5.910911  1.182473e-06
+18      EXPAND_DIMS   5.910911  1.182473e-06
+19          CONV_2D  10.826710  1.003885e-01
+20          RESHAPE  10.826710  1.004110e-06
+21      EXPAND_DIMS  10.826710  1.004110e-06
+22      MAX_POOL_2D  10.826710  1.081350e-06
+23          RESHAPE  10.826710  1.081350e-06
+24      EXPAND_DIMS  10.826710  1.081350e-06
+25          CONV_2D   2.987664  5.769750e-02
+26          RESHAPE   2.987664  3.822811e-07
+27  FULLY_CONNECTED   1.725032  1.200419e+00
+28  FULLY_CONNECTED   1.512342  6.190184e-01
+29  FULLY_CONNECTED   0.990833  2.031374e+00
+2023-12-12 20:16:00,225 [INFO ]  Saving debug results plot to /home/lindo/Develop/nilm/ml/models/kettle/kettle_cnn_debug_w8_a8_fallback.png.
+2023-12-12 20:16:00,306 [INFO ]  Suspected layers: ['cnn/dense/MatMul;cnn/dense/Relu;cnn/dense/BiasAdd', 'StatefulPartitionedCall:0']
+2023-12-12 20:16:01,372 [INFO ]  Quantized tflite model saved to /home/lindo/Develop/nilm/ml/models/kettle/kettle_cnn_w8_a8_fallback.tflite.
+2023-12-12 20:16:01,386 [INFO ]  interpreter input details: [{'name': 'serving_default_conv1d_input:0', 'index': 0, 'shape': array([  1, 599,   1], dtype=int32), 'shape_signature': array([ -1, 599,   1], dtype=int32), 'dtype': <class 'numpy.float32'>, 'quantization': (0.0, 0), 'quantization_parameters': {'scales': array([], dtype=float32), 'zero_points': array([], dtype=int32), 'quantized_dimension': 0}, 'sparsity_parameters': {}}]
+2023-12-12 20:16:01,387 [INFO ]  interpreter output details: [{'name': 'StatefulPartitionedCall:0', 'index': 59, 'shape': array([1, 1], dtype=int32), 'shape_signature': array([-1,  1], dtype=int32), 'dtype': <class 'numpy.float32'>, 'quantization': (0.0, 0), 'quantization_parameters': {'scales': array([], dtype=float32), 'zero_points': array([], dtype=int32), 'quantized_dimension': 0}, 'sparsity_parameters': {}}]
+2023-12-12 20:16:01,387 [INFO ]  tflite model floating input: True
+2023-12-12 20:16:01,387 [INFO ]  tflite model floating output: True
+2023-12-12 20:16:01,505 [INFO ]  Running inference on 432000 samples...
+2023-12-12 20:17:26,297 [INFO ]  Inference run complete.
+2023-12-12 20:17:26,297 [INFO ]  Inference rate: 5094.854 Hz
+2023-12-12 20:17:26,461 [INFO ]  De-normalizing predictions with mean = 0 and std = 3100.
+2023-12-12 20:17:26,462 [INFO ]  appliance threshold: 2000.0
+2023-12-12 20:17:26,495 [INFO ]  True positives: 1687
+2023-12-12 20:17:26,497 [INFO ]  True negatives: 428563
+2023-12-12 20:17:26,497 [INFO ]  False positives: 305
+2023-12-12 20:17:26,498 [INFO ]  False negatives: 1445
+2023-12-12 20:17:26,499 [INFO ]  Accuracy: 0.9959490740740741
+2023-12-12 20:17:26,501 [INFO ]  MCC: 0.673611202382389
+2023-12-12 20:17:26,503 [INFO ]  F1: 0.6584699453551912
+2023-12-12 20:17:26,523 [INFO ]  MAE: 8.767660523591218 (W)
+2023-12-12 20:17:26,524 [INFO ]  NDE: 0.5447141347687091
+2023-12-12 20:17:26,526 [INFO ]  SAE: 0.36699899713618017
+2023-12-12 20:17:26,529 [INFO ]  Ground truth EPD: 367.7028449232313 (Wh)
+2023-12-12 20:17:26,533 [INFO ]  Predicted EPD: 232.75626959228515 (Wh)
+2023-12-12 20:17:26,533 [INFO ]  EPD Relative Error: -36.69989971361798 (%)
