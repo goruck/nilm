@@ -1,0 +1,29 @@
+2023-12-12 04:38:03,247 [INFO ]  Machine name: radar
+2023-12-12 04:38:03,247 [INFO ]  Arguments: 
+2023-12-12 04:38:03,247 [INFO ]  Namespace(appliance_name='washingmachine', model_arch='cnn', datadir='../ml/dataset_management/refit', save_dir='../ml/models', model_path='../ml/models/', crop=None, num_eval=100000, test_type='test', quant_mode='w8_a8', use_fixed_model=False)
+2023-12-12 04:38:03,248 [INFO ]  tflite model: ../ml/models/washingmachine/washingmachine_cnn_w8_a8.tflite
+2023-12-12 04:38:03,248 [INFO ]  dataset: ../ml/dataset_management/refit/washingmachine/washingmachine_test_H8.csv
+2023-12-12 04:38:10,675 [INFO ]  Loaded 6.118M samples from dataset.
+2023-12-12 04:38:10,756 [INFO ]  interpreter input details: [{'name': 'serving_default_conv1d_input:0', 'index': 0, 'shape': array([  1, 599,   1], dtype=int32), 'shape_signature': array([ -1, 599,   1], dtype=int32), 'dtype': <class 'numpy.float32'>, 'quantization': (0.0, 0), 'quantization_parameters': {'scales': array([], dtype=float32), 'zero_points': array([], dtype=int32), 'quantized_dimension': 0}, 'sparsity_parameters': {}}]
+2023-12-12 04:38:10,757 [INFO ]  interpreter output details: [{'name': 'StatefulPartitionedCall:0', 'index': 59, 'shape': array([1, 1], dtype=int32), 'shape_signature': array([-1,  1], dtype=int32), 'dtype': <class 'numpy.float32'>, 'quantization': (0.0, 0), 'quantization_parameters': {'scales': array([], dtype=float32), 'zero_points': array([], dtype=int32), 'quantized_dimension': 0}, 'sparsity_parameters': {}}]
+2023-12-12 04:38:10,758 [INFO ]  tflite model floating input: True
+2023-12-12 04:38:10,759 [INFO ]  tflite model floating output: True
+2023-12-12 04:38:11,512 [INFO ]  Running inference on 100000 samples...
+2023-12-12 04:45:12,312 [INFO ]  Inference run complete.
+2023-12-12 04:45:12,313 [INFO ]  Inference rate: 237.643 Hz
+2023-12-12 04:45:12,428 [INFO ]  Train appliance mean: 22.22078550102201 (W)
+2023-12-12 04:45:12,429 [INFO ]  Train appliance std: 189.70389890256996 (W)
+2023-12-12 04:45:12,430 [INFO ]  De-normalizing predictions with mean = 0 and std = 2500.0.
+2023-12-12 04:45:12,465 [INFO ]  True positives: 3314
+2023-12-12 04:45:12,469 [INFO ]  True negatives: 95768
+2023-12-12 04:45:12,472 [INFO ]  False positives: 487
+2023-12-12 04:45:12,475 [INFO ]  False negatives: 431
+2023-12-12 04:45:12,479 [INFO ]  Accuracy: 0.99082
+2023-12-12 04:45:12,487 [INFO ]  MCC: 0.8736024255149563
+2023-12-12 04:45:12,494 [INFO ]  F1: 0.8783461436522662
+2023-12-12 04:45:12,519 [INFO ]  MAE: 13.522147137711048 (W)
+2023-12-12 04:45:12,524 [INFO ]  NDE: 0.2882450274635025
+2023-12-12 04:45:12,529 [INFO ]  SAE: 0.3261594945968775
+2023-12-12 04:45:12,536 [INFO ]  Ground truth EPD: 797.8684799953651 (Wh)
+2023-12-12 04:45:12,543 [INFO ]  Predicted EPD: 537.6360998052977 (Wh)
+2023-12-12 04:45:12,544 [INFO ]  EPD Relative Error: -32.61594945968778 (%)

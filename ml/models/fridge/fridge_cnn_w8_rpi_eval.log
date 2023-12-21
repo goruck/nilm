@@ -1,0 +1,29 @@
+2023-12-14 19:17:40,221 [INFO ]  Machine name: radar
+2023-12-14 19:17:40,222 [INFO ]  Arguments: 
+2023-12-14 19:17:40,222 [INFO ]  Namespace(appliance_name='fridge', model_arch='cnn', datadir='../ml/dataset_management/refit', save_dir='../ml/models', model_path='../ml/models/', crop=None, num_eval=100000, test_type='test', quant_mode='w8', use_fixed_model=False)
+2023-12-14 19:17:40,222 [INFO ]  tflite model: ../ml/models/fridge/fridge_cnn_w8.tflite
+2023-12-14 19:17:40,223 [INFO ]  dataset: ../ml/dataset_management/refit/fridge/fridge_test_H15.csv
+2023-12-14 19:17:48,368 [INFO ]  Loaded 6.226M samples from dataset.
+2023-12-14 19:17:48,449 [INFO ]  interpreter input details: [{'name': 'serving_default_conv1d_input:0', 'index': 0, 'shape': array([  1, 599,   1], dtype=int32), 'shape_signature': array([ -1, 599,   1], dtype=int32), 'dtype': <class 'numpy.float32'>, 'quantization': (0.0, 0), 'quantization_parameters': {'scales': array([], dtype=float32), 'zero_points': array([], dtype=int32), 'quantized_dimension': 0}, 'sparsity_parameters': {}}]
+2023-12-14 19:17:48,451 [INFO ]  interpreter output details: [{'name': 'StatefulPartitionedCall:0', 'index': 57, 'shape': array([1, 1], dtype=int32), 'shape_signature': array([-1,  1], dtype=int32), 'dtype': <class 'numpy.float32'>, 'quantization': (0.0, 0), 'quantization_parameters': {'scales': array([], dtype=float32), 'zero_points': array([], dtype=int32), 'quantized_dimension': 0}, 'sparsity_parameters': {}}]
+2023-12-14 19:17:48,452 [INFO ]  tflite model floating input: True
+2023-12-14 19:17:48,453 [INFO ]  tflite model floating output: True
+2023-12-14 19:17:49,193 [INFO ]  Running inference on 100000 samples...
+2023-12-14 19:25:45,781 [INFO ]  Inference run complete.
+2023-12-14 19:25:45,781 [INFO ]  Inference rate: 209.825 Hz
+2023-12-14 19:25:45,888 [INFO ]  Train appliance mean: 48.55206460642049 (W)
+2023-12-14 19:25:45,888 [INFO ]  Train appliance std: 62.114631485397986 (W)
+2023-12-14 19:25:45,888 [INFO ]  De-normalizing predictions with mean = 0 and std = 400.0.
+2023-12-14 19:25:45,925 [INFO ]  True positives: 20437
+2023-12-14 19:25:45,928 [INFO ]  True negatives: 55245
+2023-12-14 19:25:45,930 [INFO ]  False positives: 7297
+2023-12-14 19:25:45,932 [INFO ]  False negatives: 17021
+2023-12-14 19:25:45,936 [INFO ]  Accuracy: 0.75682
+2023-12-14 19:25:45,943 [INFO ]  MCC: 0.4637302228759523
+2023-12-14 19:25:45,948 [INFO ]  F1: 0.6269787704012761
+2023-12-14 19:25:45,977 [INFO ]  MAE: 20.48729360918045 (W)
+2023-12-14 19:25:45,981 [INFO ]  NDE: 0.680922156973644
+2023-12-14 19:25:45,986 [INFO ]  SAE: 0.23219314363082305
+2023-12-14 19:25:45,992 [INFO ]  Ground truth EPD: 646.8511207516481 (Wh)
+2023-12-14 19:25:45,998 [INFO ]  Predicted EPD: 495.90560995742794 (Wh)
+2023-12-14 19:25:45,999 [INFO ]  EPD Relative Error: -23.335433139362856 (%)

@@ -1,0 +1,29 @@
+2023-12-17 19:31:06,567 [INFO ]  Machine name: radar
+2023-12-17 19:31:06,568 [INFO ]  Arguments: 
+2023-12-17 19:31:06,568 [INFO ]  Namespace(appliance_name='microwave', model_arch='transformer', datadir='../ml/dataset_management/refit', save_dir='../ml/models', model_path='../ml/models/', crop=None, num_eval=100000, test_type='test', quant_mode='convert_only', use_fixed_model=False)
+2023-12-17 19:31:06,568 [INFO ]  tflite model: ../ml/models/microwave/microwave_transformer_convert_only.tflite
+2023-12-17 19:31:06,569 [INFO ]  dataset: ../ml/dataset_management/refit/microwave/microwave_test_H4.csv
+2023-12-17 19:31:14,343 [INFO ]  Loaded 6.761M samples from dataset.
+2023-12-17 19:31:14,430 [INFO ]  interpreter input details: [{'name': 'serving_default_args_0:0', 'index': 0, 'shape': array([  1, 599,   1], dtype=int32), 'shape_signature': array([ -1, 599,   1], dtype=int32), 'dtype': <class 'numpy.float32'>, 'quantization': (0.0, 0), 'quantization_parameters': {'scales': array([], dtype=float32), 'zero_points': array([], dtype=int32), 'quantized_dimension': 0}, 'sparsity_parameters': {}}]
+2023-12-17 19:31:14,432 [INFO ]  interpreter output details: [{'name': 'StatefulPartitionedCall:0', 'index': 399, 'shape': array([1, 1], dtype=int32), 'shape_signature': array([-1,  1], dtype=int32), 'dtype': <class 'numpy.float32'>, 'quantization': (0.0, 0), 'quantization_parameters': {'scales': array([], dtype=float32), 'zero_points': array([], dtype=int32), 'quantized_dimension': 0}, 'sparsity_parameters': {}}]
+2023-12-17 19:31:14,434 [INFO ]  tflite model floating input: True
+2023-12-17 19:31:14,434 [INFO ]  tflite model floating output: True
+2023-12-17 19:31:15,253 [INFO ]  Running inference on 100000 samples...
+2023-12-18 00:00:45,161 [INFO ]  Inference run complete.
+2023-12-18 00:00:45,161 [INFO ]  Inference rate: 6.184 Hz
+2023-12-18 00:00:45,263 [INFO ]  Train appliance mean: 3.4617193220425304 (W)
+2023-12-18 00:00:45,264 [INFO ]  Train appliance std: 64.22826568216946 (W)
+2023-12-18 00:00:45,264 [INFO ]  De-normalizing predictions with mean = 0 and std = 3000.0.
+2023-12-18 00:00:45,299 [INFO ]  True positives: 767
+2023-12-18 00:00:45,303 [INFO ]  True negatives: 98695
+2023-12-18 00:00:45,305 [INFO ]  False positives: 153
+2023-12-18 00:00:45,307 [INFO ]  False negatives: 385
+2023-12-18 00:00:45,310 [INFO ]  Accuracy: 0.99462
+2023-12-18 00:00:45,317 [INFO ]  MCC: 0.7424297108746343
+2023-12-18 00:00:45,323 [INFO ]  F1: 0.7403474903474904
+2023-12-18 00:00:45,345 [INFO ]  MAE: 8.033638246760368 (W)
+2023-12-18 00:00:45,349 [INFO ]  NDE: 0.5380432465581878
+2023-12-18 00:00:45,353 [INFO ]  SAE: 0.37307841872761294
+2023-12-18 00:00:45,360 [INFO ]  Ground truth EPD: 307.0406399708176 (Wh)
+2023-12-18 00:00:45,366 [INFO ]  Predicted EPD: 192.4904035253906 (Wh)
+2023-12-18 00:00:45,366 [INFO ]  EPD Relative Error: -37.307841872761315 (%)

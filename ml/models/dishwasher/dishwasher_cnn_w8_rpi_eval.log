@@ -1,0 +1,29 @@
+2023-12-14 19:31:27,752 [INFO ]  Machine name: radar
+2023-12-14 19:31:27,752 [INFO ]  Arguments: 
+2023-12-14 19:31:27,753 [INFO ]  Namespace(appliance_name='dishwasher', model_arch='cnn', datadir='../ml/dataset_management/refit', save_dir='../ml/models', model_path='../ml/models/', crop=None, num_eval=100000, test_type='test', quant_mode='w8', use_fixed_model=False)
+2023-12-14 19:31:27,753 [INFO ]  tflite model: ../ml/models/dishwasher/dishwasher_cnn_w8.tflite
+2023-12-14 19:31:27,754 [INFO ]  dataset: ../ml/dataset_management/refit/dishwasher/dishwasher_test_H20.csv
+2023-12-14 19:31:32,279 [INFO ]  Loaded 5.169M samples from dataset.
+2023-12-14 19:31:32,346 [INFO ]  interpreter input details: [{'name': 'serving_default_conv1d_input:0', 'index': 0, 'shape': array([  1, 599,   1], dtype=int32), 'shape_signature': array([ -1, 599,   1], dtype=int32), 'dtype': <class 'numpy.float32'>, 'quantization': (0.0, 0), 'quantization_parameters': {'scales': array([], dtype=float32), 'zero_points': array([], dtype=int32), 'quantized_dimension': 0}, 'sparsity_parameters': {}}]
+2023-12-14 19:31:32,347 [INFO ]  interpreter output details: [{'name': 'StatefulPartitionedCall:0', 'index': 57, 'shape': array([1, 1], dtype=int32), 'shape_signature': array([-1,  1], dtype=int32), 'dtype': <class 'numpy.float32'>, 'quantization': (0.0, 0), 'quantization_parameters': {'scales': array([], dtype=float32), 'zero_points': array([], dtype=int32), 'quantized_dimension': 0}, 'sparsity_parameters': {}}]
+2023-12-14 19:31:32,347 [INFO ]  tflite model floating input: True
+2023-12-14 19:31:32,347 [INFO ]  tflite model floating output: True
+2023-12-14 19:31:32,962 [INFO ]  Running inference on 100000 samples...
+2023-12-14 19:39:30,446 [INFO ]  Inference run complete.
+2023-12-14 19:39:30,446 [INFO ]  Inference rate: 209.431 Hz
+2023-12-14 19:39:30,550 [INFO ]  Train appliance mean: 46.040618889481905 (W)
+2023-12-14 19:39:30,550 [INFO ]  Train appliance std: 305.87980576285474 (W)
+2023-12-14 19:39:30,550 [INFO ]  De-normalizing predictions with mean = 0 and std = 2500.0.
+2023-12-14 19:39:30,585 [INFO ]  True positives: 1311
+2023-12-14 19:39:30,588 [INFO ]  True negatives: 95869
+2023-12-14 19:39:30,590 [INFO ]  False positives: 2820
+2023-12-14 19:39:30,593 [INFO ]  False negatives: 0
+2023-12-14 19:39:30,597 [INFO ]  Accuracy: 0.9718
+2023-12-14 19:39:30,604 [INFO ]  MCC: 0.5552370943718583
+2023-12-14 19:39:30,610 [INFO ]  F1: 0.48180815876515987
+2023-12-14 19:39:30,633 [INFO ]  MAE: 3.0747428344816714 (W)
+2023-12-14 19:39:30,637 [INFO ]  NDE: 0.20395474767325078
+2023-12-14 19:39:30,641 [INFO ]  SAE: 0.19857240390862763
+2023-12-14 19:39:30,648 [INFO ]  Ground truth EPD: 243.19080000143052 (Wh)
+2023-12-14 19:39:30,655 [INFO ]  Predicted EPD: 291.48178176617677 (Wh)
+2023-12-14 19:39:30,655 [INFO ]  EPD Relative Error: 19.857240390862724 (%)

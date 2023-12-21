@@ -1,0 +1,29 @@
+2023-12-06 04:06:39,885 [INFO ]  Machine name: radar
+2023-12-06 04:06:39,886 [INFO ]  Arguments: 
+2023-12-06 04:06:39,887 [INFO ]  Namespace(appliance_name='kettle', model_arch='cnn', datadir='../ml/dataset_management/refit', save_dir='../ml/models', model_path='../ml/models/', crop=None, num_eval=100000, test_type='test', quant_mode='w8_a8_fallback')
+2023-12-06 04:06:39,887 [INFO ]  tflite model: ../ml/models/kettle/kettle_cnn_w8_a8_fallback.tflite
+2023-12-06 04:06:39,888 [INFO ]  dataset: ../ml/dataset_management/refit/kettle/kettle_test_H2.csv
+2023-12-06 04:06:44,944 [INFO ]  Loaded 5.734M samples from dataset.
+2023-12-06 04:06:45,019 [INFO ]  interpreter input details: [{'name': 'serving_default_conv1d_input:0', 'index': 0, 'shape': array([  1, 599,   1], dtype=int32), 'shape_signature': array([ -1, 599,   1], dtype=int32), 'dtype': <class 'numpy.float32'>, 'quantization': (0.0, 0), 'quantization_parameters': {'scales': array([], dtype=float32), 'zero_points': array([], dtype=int32), 'quantized_dimension': 0}, 'sparsity_parameters': {}}]
+2023-12-06 04:06:45,021 [INFO ]  interpreter output details: [{'name': 'StatefulPartitionedCall:0', 'index': 59, 'shape': array([1, 1], dtype=int32), 'shape_signature': array([-1,  1], dtype=int32), 'dtype': <class 'numpy.float32'>, 'quantization': (0.0, 0), 'quantization_parameters': {'scales': array([], dtype=float32), 'zero_points': array([], dtype=int32), 'quantized_dimension': 0}, 'sparsity_parameters': {}}]
+2023-12-06 04:06:45,021 [INFO ]  tflite model floating input: True
+2023-12-06 04:06:45,022 [INFO ]  tflite model floating output: True
+2023-12-06 04:06:45,726 [INFO ]  Running inference on 100000 samples...
+2023-12-06 04:13:54,888 [INFO ]  Inference run complete.
+2023-12-06 04:13:54,888 [INFO ]  Inference rate: 233.013 Hz
+2023-12-06 04:13:55,002 [INFO ]  Train appliance mean: 16.137261776311778 (W)
+2023-12-06 04:13:55,002 [INFO ]  Train appliance std: 196.89790951996966 (W)
+2023-12-06 04:13:55,002 [INFO ]  De-normalizing predictions with mean = 0 and std = 3100.
+2023-12-06 04:13:55,038 [INFO ]  True positives: 377
+2023-12-06 04:13:55,042 [INFO ]  True negatives: 99151
+2023-12-06 04:13:55,044 [INFO ]  False positives: 60
+2023-12-06 04:13:55,046 [INFO ]  False negatives: 412
+2023-12-06 04:13:55,050 [INFO ]  Accuracy: 0.99528
+2023-12-06 04:13:55,058 [INFO ]  MCC: 0.6400929245339956
+2023-12-06 04:13:55,064 [INFO ]  F1: 0.6150081566068515
+2023-12-06 04:13:55,086 [INFO ]  MAE: 10.160935272216797 (W)
+2023-12-06 04:13:55,091 [INFO ]  NDE: 0.5911798512193508
+2023-12-06 04:13:55,096 [INFO ]  SAE: 0.44398139040528617
+2023-12-06 04:13:55,103 [INFO ]  Ground truth EPD: 398.7914440136718 (Wh)
+2023-12-06 04:13:55,110 [INFO ]  Predicted EPD: 221.73546421875 (Wh)
+2023-12-06 04:13:55,110 [INFO ]  EPD Relative Error: -44.39813904052861 (%)

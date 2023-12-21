@@ -1,0 +1,29 @@
+2023-12-13 05:26:12,517 [INFO ]  Machine name: radar
+2023-12-13 05:26:12,518 [INFO ]  Arguments: 
+2023-12-13 05:26:12,518 [INFO ]  Namespace(appliance_name='microwave', model_arch='cnn', datadir='../ml/dataset_management/refit', save_dir='../ml/models', model_path='../ml/models/', crop=None, num_eval=100000, test_type='test', quant_mode='w8', use_fixed_model=False)
+2023-12-13 05:26:12,518 [INFO ]  tflite model: ../ml/models/microwave/microwave_cnn_w8.tflite
+2023-12-13 05:26:12,519 [INFO ]  dataset: ../ml/dataset_management/refit/microwave/microwave_test_H4.csv
+2023-12-13 05:26:24,835 [INFO ]  Loaded 6.761M samples from dataset.
+2023-12-13 05:26:24,923 [INFO ]  interpreter input details: [{'name': 'serving_default_conv1d_input:0', 'index': 0, 'shape': array([  1, 599,   1], dtype=int32), 'shape_signature': array([ -1, 599,   1], dtype=int32), 'dtype': <class 'numpy.float32'>, 'quantization': (0.0, 0), 'quantization_parameters': {'scales': array([], dtype=float32), 'zero_points': array([], dtype=int32), 'quantized_dimension': 0}, 'sparsity_parameters': {}}]
+2023-12-13 05:26:24,925 [INFO ]  interpreter output details: [{'name': 'StatefulPartitionedCall:0', 'index': 57, 'shape': array([1, 1], dtype=int32), 'shape_signature': array([-1,  1], dtype=int32), 'dtype': <class 'numpy.float32'>, 'quantization': (0.0, 0), 'quantization_parameters': {'scales': array([], dtype=float32), 'zero_points': array([], dtype=int32), 'quantized_dimension': 0}, 'sparsity_parameters': {}}]
+2023-12-13 05:26:24,926 [INFO ]  tflite model floating input: True
+2023-12-13 05:26:24,926 [INFO ]  tflite model floating output: True
+2023-12-13 05:26:25,756 [INFO ]  Running inference on 100000 samples...
+2023-12-13 05:34:28,224 [INFO ]  Inference run complete.
+2023-12-13 05:34:28,225 [INFO ]  Inference rate: 207.268 Hz
+2023-12-13 05:34:28,332 [INFO ]  Train appliance mean: 3.4617193220425304 (W)
+2023-12-13 05:34:28,332 [INFO ]  Train appliance std: 64.22826568216946 (W)
+2023-12-13 05:34:28,332 [INFO ]  De-normalizing predictions with mean = 0 and std = 3000.0.
+2023-12-13 05:34:28,366 [INFO ]  True positives: 788
+2023-12-13 05:34:28,370 [INFO ]  True negatives: 98451
+2023-12-13 05:34:28,372 [INFO ]  False positives: 397
+2023-12-13 05:34:28,374 [INFO ]  False negatives: 364
+2023-12-13 05:34:28,378 [INFO ]  Accuracy: 0.99239
+2023-12-13 05:34:28,385 [INFO ]  MCC: 0.6705880873564598
+2023-12-13 05:34:28,391 [INFO ]  F1: 0.6743688489516475
+2023-12-13 05:34:28,414 [INFO ]  MAE: 9.722538812642098 (W)
+2023-12-13 05:34:28,418 [INFO ]  NDE: 0.6925923532872666
+2023-12-13 05:34:28,423 [INFO ]  SAE: 0.15279531366020124
+2023-12-13 05:34:28,430 [INFO ]  Ground truth EPD: 307.0406399708176 (Wh)
+2023-12-13 05:34:28,436 [INFO ]  Predicted EPD: 260.12626908004756 (Wh)
+2023-12-13 05:34:28,437 [INFO ]  EPD Relative Error: -15.279531366020137 (%)
