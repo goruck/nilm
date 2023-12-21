@@ -1,0 +1,80 @@
+Profiling Info for Benchmark Initialization:
+============================== Run Order ==============================
+node type, first, avg_ms, %, cdf%, mem KB, times called, name
+AllocateTensors, 0.36, 0.36, 100%, 100%, 0, 1, AllocateTensors/0
+
+============================== Top by Computation Time ==============================
+node type, first, avg_ms, %, cdf%, mem KB, times called, name
+AllocateTensors, 0.36, 0.36, 100%, 100%, 0, 1, AllocateTensors/0
+
+Number of nodes executed: 1
+============================== Summary by node type ==============================
+node type, count, avg_ms, avg %, cdf %, mem KB, times called
+AllocateTensors, 1, 0.36, 100%, 100%, 0, 1
+
+Timings (microseconds): count=1 curr=360
+Memory (bytes): count=0
+1 nodes observed
+
+
+Operator-wise Profiling Info for Regular Benchmark Runs:
+============================== Run Order ==============================
+node type, first, avg_ms, %, cdf%, mem KB, times called, name
+EXPAND_DIMS, 0.004, 0.00269853, 0.0776035%, 0.0776035%, 0, 1, [cnn/conv1d/Conv1D/ExpandDims]:0
+CONV_2D, 0.058, 0.0564743, 1.62407%, 1.70167%, 0, 1, [cnn/conv1d/Relu;cnn/conv1d/BiasAdd;cnn/conv1d/Conv1D/Squeeze;cnn/conv1d/BiasAdd/ReadVariableOp;cnn/conv1d/Conv1D]:1
+RESHAPE, 0.001, 0.000911765, 0.0262202%, 1.72789%, 0, 1, [cnn/conv1d/Relu;cnn/conv1d/BiasAdd;cnn/conv1d/Conv1D/Squeeze;cnn/conv1d/BiasAdd/ReadVariableOp]:2
+EXPAND_DIMS, 0, 0.000367647, 0.0105727%, 1.73847%, 0, 1, [cnn/max_pooling1d/ExpandDims]:3
+MAX_POOL_2D, 0.041, 0.0394963, 1.13582%, 2.87429%, 0, 1, [cnn/max_pooling1d/MaxPool]:4
+RESHAPE, 0, 0.000356618, 0.0102555%, 2.88454%, 0, 1, [cnn/max_pooling1d/Squeeze1]:5
+EXPAND_DIMS, 0.001, 0.000371324, 0.0106784%, 2.89522%, 0, 1, [cnn/conv1d_1/Conv1D/ExpandDims]:6
+CONV_2D, 0.211, 0.13361, 3.84232%, 6.73755%, 0, 1, [cnn/conv1d_1/Relu;cnn/conv1d_1/BiasAdd;cnn/conv1d_1/Conv1D/Squeeze;cnn/conv1d_1/BiasAdd/ReadVariableOp;cnn/conv1d_1/Conv1D]:7
+RESHAPE, 0.001, 0.000610294, 0.0175506%, 6.7551%, 0, 1, [cnn/conv1d_1/Relu;cnn/conv1d_1/BiasAdd;cnn/conv1d_1/Conv1D/Squeeze;cnn/conv1d_1/BiasAdd/ReadVariableOp]:8
+EXPAND_DIMS, 0.001, 0.000283088, 0.00814096%, 6.76324%, 0, 1, [cnn/max_pooling1d_1/ExpandDims]:9
+MAX_POOL_2D, 0.026, 0.0229485, 0.659947%, 7.42318%, 0, 1, [cnn/max_pooling1d_1/MaxPool]:10
+RESHAPE, 0, 0.000463235, 0.0133216%, 7.43651%, 0, 1, [cnn/max_pooling1d_1/Squeeze1]:11
+EXPAND_DIMS, 0.001, 0.000305147, 0.00877532%, 7.44528%, 0, 1, [cnn/conv1d_2/Conv1D/ExpandDims]:12
+CONV_2D, 0.08, 0.0810331, 2.33032%, 9.77561%, 0, 1, [cnn/conv1d_2/Relu;cnn/conv1d_2/BiasAdd;cnn/conv1d_2/Conv1D/Squeeze;cnn/conv1d_2/BiasAdd/ReadVariableOp;cnn/conv1d_2/Conv1D]:13
+RESHAPE, 0.001, 0.000349265, 0.010044%, 9.78565%, 0, 1, [cnn/conv1d_2/Relu;cnn/conv1d_2/BiasAdd;cnn/conv1d_2/Conv1D/Squeeze;cnn/conv1d_2/BiasAdd/ReadVariableOp]:14
+EXPAND_DIMS, 0.001, 0.000367647, 0.0105727%, 9.79622%, 0, 1, [cnn/max_pooling1d_2/ExpandDims]:15
+MAX_POOL_2D, 0.018, 0.0180257, 0.518378%, 10.3146%, 0, 1, [cnn/max_pooling1d_2/MaxPool]:16
+RESHAPE, 0.001, 0.000327206, 0.00940968%, 10.324%, 0, 1, [cnn/max_pooling1d_2/Squeeze1]:17
+EXPAND_DIMS, 0.001, 0.000272059, 0.00782378%, 10.3318%, 0, 1, [cnn/conv1d_3/Conv1D/ExpandDims]:18
+CONV_2D, 0.11, 0.112243, 3.22784%, 13.5597%, 0, 1, [cnn/conv1d_3/Relu;cnn/conv1d_3/BiasAdd;cnn/conv1d_3/Conv1D/Squeeze;cnn/conv1d_3/BiasAdd/ReadVariableOp;cnn/conv1d_3/Conv1D]:19
+RESHAPE, 0, 0.000408088, 0.0117357%, 13.5714%, 0, 1, [cnn/conv1d_3/Relu;cnn/conv1d_3/BiasAdd;cnn/conv1d_3/Conv1D/Squeeze;cnn/conv1d_3/BiasAdd/ReadVariableOp]:20
+EXPAND_DIMS, 0.001, 0.000235294, 0.00676652%, 13.5782%, 0, 1, [cnn/max_pooling1d_3/ExpandDims]:21
+MAX_POOL_2D, 0.016, 0.0160809, 0.462449%, 14.0406%, 0, 1, [cnn/max_pooling1d_3/MaxPool]:22
+RESHAPE, 0.001, 0.000389706, 0.011207%, 14.0518%, 0, 1, [cnn/max_pooling1d_3/Squeeze1]:23
+EXPAND_DIMS, 0.001, 0.000283088, 0.00814096%, 14.06%, 0, 1, [cnn/conv1d_4/Conv1D/ExpandDims]:24
+CONV_2D, 0.197, 0.194952, 5.60637%, 19.6663%, 0, 1, [cnn/conv1d_4/Relu;cnn/conv1d_4/BiasAdd;cnn/conv1d_4/Conv1D/Squeeze;cnn/conv1d_4/BiasAdd/ReadVariableOp;cnn/conv1d_4/Conv1D]:25
+RESHAPE, 0, 0.000529412, 0.0152247%, 19.6816%, 0, 1, [cnn/flatten/Reshape]:26
+FULLY_CONNECTED, 2.711, 2.61881, 75.3109%, 94.9925%, 0, 1, [cnn/dense/MatMul;cnn/dense/Relu;cnn/dense/BiasAdd]:27
+FULLY_CONNECTED, 0.146, 0.146632, 4.21681%, 99.2093%, 0, 1, [cnn/dense_1/MatMul;cnn/dense_1/Relu;cnn/dense_1/BiasAdd]:28
+FULLY_CONNECTED, 0.031, 0.0274963, 0.790731%, 100%, 0, 1, [StatefulPartitionedCall:0]:29
+
+============================== Top by Computation Time ==============================
+node type, first, avg_ms, %, cdf%, mem KB, times called, name
+FULLY_CONNECTED, 2.711, 2.61881, 75.3109%, 75.3109%, 0, 1, [cnn/dense/MatMul;cnn/dense/Relu;cnn/dense/BiasAdd]:27
+CONV_2D, 0.197, 0.194952, 5.60637%, 80.9173%, 0, 1, [cnn/conv1d_4/Relu;cnn/conv1d_4/BiasAdd;cnn/conv1d_4/Conv1D/Squeeze;cnn/conv1d_4/BiasAdd/ReadVariableOp;cnn/conv1d_4/Conv1D]:25
+FULLY_CONNECTED, 0.146, 0.146632, 4.21681%, 85.1341%, 0, 1, [cnn/dense_1/MatMul;cnn/dense_1/Relu;cnn/dense_1/BiasAdd]:28
+CONV_2D, 0.211, 0.13361, 3.84232%, 88.9764%, 0, 1, [cnn/conv1d_1/Relu;cnn/conv1d_1/BiasAdd;cnn/conv1d_1/Conv1D/Squeeze;cnn/conv1d_1/BiasAdd/ReadVariableOp;cnn/conv1d_1/Conv1D]:7
+CONV_2D, 0.11, 0.112243, 3.22784%, 92.2042%, 0, 1, [cnn/conv1d_3/Relu;cnn/conv1d_3/BiasAdd;cnn/conv1d_3/Conv1D/Squeeze;cnn/conv1d_3/BiasAdd/ReadVariableOp;cnn/conv1d_3/Conv1D]:19
+CONV_2D, 0.08, 0.0810331, 2.33032%, 94.5346%, 0, 1, [cnn/conv1d_2/Relu;cnn/conv1d_2/BiasAdd;cnn/conv1d_2/Conv1D/Squeeze;cnn/conv1d_2/BiasAdd/ReadVariableOp;cnn/conv1d_2/Conv1D]:13
+CONV_2D, 0.058, 0.0564743, 1.62407%, 96.1586%, 0, 1, [cnn/conv1d/Relu;cnn/conv1d/BiasAdd;cnn/conv1d/Conv1D/Squeeze;cnn/conv1d/BiasAdd/ReadVariableOp;cnn/conv1d/Conv1D]:1
+MAX_POOL_2D, 0.041, 0.0394963, 1.13582%, 97.2944%, 0, 1, [cnn/max_pooling1d/MaxPool]:4
+FULLY_CONNECTED, 0.031, 0.0274963, 0.790731%, 98.0852%, 0, 1, [StatefulPartitionedCall:0]:29
+MAX_POOL_2D, 0.026, 0.0229485, 0.659947%, 98.7451%, 0, 1, [cnn/max_pooling1d_1/MaxPool]:10
+
+Number of nodes executed: 30
+============================== Summary by node type ==============================
+node type, count, avg_ms, avg %, cdf %, mem KB, times called
+FULLY_CONNECTED, 3, 2.791, 80.5716%, 80.5716%, 0, 3
+CONV_2D, 5, 0.576, 16.6282%, 97.1998%, 0, 5
+MAX_POOL_2D, 4, 0.095, 2.74249%, 99.9423%, 0, 4
+EXPAND_DIMS, 9, 0.002, 0.0577367%, 100%, 0, 9
+RESHAPE, 9, 0, 0%, 100%, 0, 9
+
+Timings (microseconds): count=272 first=3661 curr=3456 min=3413 max=4487 avg=3477.33 std=86
+Memory (bytes): count=0
+30 nodes observed
+
+

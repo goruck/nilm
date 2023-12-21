@@ -1,0 +1,75 @@
+Profiling Info for Benchmark Initialization:
+============================== Run Order ==============================
+node type, first, avg_ms, %, cdf%, mem KB, times called, name
+ModifyGraphWithDelegate, 1.564, 0.9315, 78.7072%, 78.7072%, 0, 2, ModifyGraphWithDelegate/0
+AllocateTensors, 0.334, 0.252, 21.2928%, 100%, 0, 2, AllocateTensors/0
+
+============================== Top by Computation Time ==============================
+node type, first, avg_ms, %, cdf%, mem KB, times called, name
+ModifyGraphWithDelegate, 1.564, 0.9315, 78.7072%, 78.7072%, 0, 2, ModifyGraphWithDelegate/0
+AllocateTensors, 0.334, 0.252, 21.2928%, 100%, 0, 2, AllocateTensors/0
+
+Number of nodes executed: 2
+============================== Summary by node type ==============================
+node type, count, avg_ms, avg %, cdf %, mem KB, times called
+ModifyGraphWithDelegate, 1, 1.863, 78.7072%, 78.7072%, 0, 2
+AllocateTensors, 1, 0.504, 21.2928%, 100%, 0, 2
+
+Timings (microseconds): count=1 curr=2367
+Memory (bytes): count=0
+2 nodes observed
+
+
+Operator-wise Profiling Info for Regular Benchmark Runs:
+============================== Run Order ==============================
+node type, first, avg_ms, %, cdf%, mem KB, times called, name
+EXPAND_DIMS, 0.004, 0.00240909, 0.0671702%, 0.0671702%, 0, 1, [cnn/conv1d/Conv1D/ExpandDims]:0
+Convolution (NHWC, F32) IGEMM, 0.307, 0.0587462, 1.63796%, 1.70513%, 0, 1, Delegate/Convolution (NHWC	 F32) IGEMM:0
+Copy (NC, X32), 0.01, 0.00515682, 0.718911%, 2.42404%, 0, 5, Delegate/Copy (NC	 X32):1
+EXPAND_DIMS, 0.002, 0.000761364, 0.0212283%, 2.44527%, 0, 1, [cnn/max_pooling1d/ExpandDims]:3
+Max Pooling (NHWC, F32), 0.033, 0.0222254, 2.47875%, 4.92402%, 0, 4, Delegate/Max Pooling (NHWC	 F32):0
+EXPAND_DIMS, 0.001, 0.000356061, 0.00992767%, 4.93394%, 0, 1, [cnn/conv1d_1/Conv1D/ExpandDims]:6
+CONV_2D, 0.127, 0.1185, 3.30401%, 8.23796%, 0, 1, [cnn/conv1d_1/Relu;cnn/conv1d_1/BiasAdd;cnn/conv1d_1/Conv1D/Squeeze;cnn/conv1d_1/BiasAdd/ReadVariableOp;cnn/conv1d_1/Conv1D]:7
+Copy (NC, X32), 0.021, 0.0186402, 2.0789%, 10.3169%, 0, 4, Delegate/Copy (NC	 X32):0
+EXPAND_DIMS, 0.001, 0.000518939, 0.014469%, 10.3313%, 0, 1, [cnn/max_pooling1d_1/ExpandDims]:9
+Fully Connected (NC, F32) GEMM, 0.008, 0.00703409, 0.196124%, 10.5274%, 0, 1, Delegate/Fully Connected (NC	 F32) GEMM:0
+FULLY_CONNECTED, 0.147, 0.146352, 4.08059%, 14.608%, 0, 1, [cnn/dense_1/MatMul;cnn/dense_1/Relu;cnn/dense_1/BiasAdd]:28
+FULLY_CONNECTED, 3.048, 2.65885, 74.134%, 88.742%, 0, 1, [cnn/dense/MatMul;cnn/dense/Relu;cnn/dense/BiasAdd]:27
+CONV_2D, 0.2, 0.204337, 5.69732%, 94.4393%, 0, 1, [cnn/conv1d_4/Relu;cnn/conv1d_4/BiasAdd;cnn/conv1d_4/Conv1D/Squeeze;cnn/conv1d_4/BiasAdd/ReadVariableOp;cnn/conv1d_4/Conv1D]:25
+EXPAND_DIMS, 0.001, 0.000329545, 0.00918837%, 94.4485%, 0, 1, [cnn/conv1d_4/Conv1D/ExpandDims]:24
+EXPAND_DIMS, 0.001, 0.000405303, 0.0113006%, 94.4598%, 0, 1, [cnn/max_pooling1d_3/ExpandDims]:21
+EXPAND_DIMS, 0.001, 0.000469697, 0.0130961%, 94.4729%, 0, 1, [cnn/conv1d_2/Conv1D/ExpandDims]:12
+CONV_2D, 0.081, 0.0828295, 2.30945%, 96.7824%, 0, 1, [cnn/conv1d_2/Relu;cnn/conv1d_2/BiasAdd;cnn/conv1d_2/Conv1D/Squeeze;cnn/conv1d_2/BiasAdd/ReadVariableOp;cnn/conv1d_2/Conv1D]:13
+EXPAND_DIMS, 0, 0.000329545, 0.00918837%, 96.7916%, 0, 1, [cnn/max_pooling1d_2/ExpandDims]:15
+EXPAND_DIMS, 0.001, 0.000473485, 0.0132017%, 96.8048%, 0, 1, [cnn/conv1d_3/Conv1D/ExpandDims]:18
+CONV_2D, 0.116, 0.114598, 3.19523%, 100%, 0, 1, [cnn/conv1d_3/Relu;cnn/conv1d_3/BiasAdd;cnn/conv1d_3/Conv1D/Squeeze;cnn/conv1d_3/BiasAdd/ReadVariableOp;cnn/conv1d_3/Conv1D]:19
+
+============================== Top by Computation Time ==============================
+node type, first, avg_ms, %, cdf%, mem KB, times called, name
+FULLY_CONNECTED, 3.048, 2.65885, 74.134%, 74.134%, 0, 1, [cnn/dense/MatMul;cnn/dense/Relu;cnn/dense/BiasAdd]:27
+CONV_2D, 0.2, 0.204337, 5.69732%, 79.8313%, 0, 1, [cnn/conv1d_4/Relu;cnn/conv1d_4/BiasAdd;cnn/conv1d_4/Conv1D/Squeeze;cnn/conv1d_4/BiasAdd/ReadVariableOp;cnn/conv1d_4/Conv1D]:25
+FULLY_CONNECTED, 0.147, 0.146352, 4.08059%, 83.9119%, 0, 1, [cnn/dense_1/MatMul;cnn/dense_1/Relu;cnn/dense_1/BiasAdd]:28
+CONV_2D, 0.127, 0.1185, 3.30401%, 87.2159%, 0, 1, [cnn/conv1d_1/Relu;cnn/conv1d_1/BiasAdd;cnn/conv1d_1/Conv1D/Squeeze;cnn/conv1d_1/BiasAdd/ReadVariableOp;cnn/conv1d_1/Conv1D]:7
+CONV_2D, 0.116, 0.114598, 3.19523%, 90.4111%, 0, 1, [cnn/conv1d_3/Relu;cnn/conv1d_3/BiasAdd;cnn/conv1d_3/Conv1D/Squeeze;cnn/conv1d_3/BiasAdd/ReadVariableOp;cnn/conv1d_3/Conv1D]:19
+CONV_2D, 0.081, 0.0828295, 2.30945%, 92.7206%, 0, 1, [cnn/conv1d_2/Relu;cnn/conv1d_2/BiasAdd;cnn/conv1d_2/Conv1D/Squeeze;cnn/conv1d_2/BiasAdd/ReadVariableOp;cnn/conv1d_2/Conv1D]:13
+Convolution (NHWC, F32) IGEMM, 0.307, 0.0587462, 1.63796%, 94.3585%, 0, 1, Delegate/Convolution (NHWC	 F32) IGEMM:0
+Max Pooling (NHWC, F32), 0.033, 0.0222254, 2.47875%, 96.8373%, 0, 4, Delegate/Max Pooling (NHWC	 F32):0
+Copy (NC, X32), 0.021, 0.0186402, 2.0789%, 98.9162%, 0, 4, Delegate/Copy (NC	 X32):0
+Fully Connected (NC, F32) GEMM, 0.008, 0.00703409, 0.196124%, 99.1123%, 0, 1, Delegate/Fully Connected (NC	 F32) GEMM:0
+
+Number of nodes executed: 20
+============================== Summary by node type ==============================
+node type, count, avg_ms, avg %, cdf %, mem KB, times called
+FULLY_CONNECTED, 2, 2.804, 78.4116%, 78.4116%, 0, 2
+CONV_2D, 4, 0.518, 14.4855%, 92.8971%, 0, 4
+Copy (NC, X32), 2, 0.099, 2.76846%, 95.6656%, 0, 9
+Max Pooling (NHWC, F32), 1, 0.088, 2.46085%, 98.1264%, 0, 4
+Convolution (NHWC, F32) IGEMM, 1, 0.058, 1.62192%, 99.7483%, 0, 1
+Fully Connected (NC, F32) GEMM, 1, 0.007, 0.195749%, 99.9441%, 0, 1
+EXPAND_DIMS, 9, 0.002, 0.0559284%, 100%, 0, 9
+
+Timings (microseconds): count=264 first=4233 curr=3552 min=3509 max=4845 avg=3586.55 std=122
+Memory (bytes): count=0
+20 nodes observed
+
+

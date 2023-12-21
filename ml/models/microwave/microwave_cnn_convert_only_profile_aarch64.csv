@@ -1,0 +1,68 @@
+Profiling Info for Benchmark Initialization:
+============================== Run Order ==============================
+node type, first, avg_ms, %, cdf%, mem KB, times called, name
+ModifyGraphWithDelegate, 110.056, 55.0745, 99.8296%, 99.8296%, 0, 2, ModifyGraphWithDelegate/0
+AllocateTensors, 0.148, 0.094, 0.170387%, 100%, 0, 2, AllocateTensors/0
+
+============================== Top by Computation Time ==============================
+node type, first, avg_ms, %, cdf%, mem KB, times called, name
+ModifyGraphWithDelegate, 110.056, 55.0745, 99.8296%, 99.8296%, 0, 2, ModifyGraphWithDelegate/0
+AllocateTensors, 0.148, 0.094, 0.170387%, 100%, 0, 2, AllocateTensors/0
+
+Number of nodes executed: 2
+============================== Summary by node type ==============================
+node type, count, avg_ms, avg %, cdf %, mem KB, times called
+ModifyGraphWithDelegate, 1, 110.149, 99.8296%, 99.8296%, 0, 2
+AllocateTensors, 1, 0.188, 0.170387%, 100%, 0, 2
+
+Timings (microseconds): count=1 curr=110337
+Memory (bytes): count=0
+2 nodes observed
+
+
+Operator-wise Profiling Info for Regular Benchmark Runs:
+============================== Run Order ==============================
+node type, first, avg_ms, %, cdf%, mem KB, times called, name
+Fully Connected (NC, F32) GEMM, 0.008, 0.00618182, 0.0476846%, 0.0476846%, 0, 1, Delegate/Fully Connected (NC	 F32) GEMM:4
+Fully Connected (NC, F32) GEMM, 0.653, 0.675429, 5.21005%, 5.25773%, 0, 1, Delegate/Fully Connected (NC	 F32) GEMM:3
+Fully Connected (NC, F32) GEMM, 11.254, 11.4042, 87.9687%, 93.2265%, 0, 1, Delegate/Fully Connected (NC	 F32) GEMM:2
+EXPAND_DIMS, 0.003, 0.00322078, 0.0248441%, 93.2513%, 0, 1, [cnn/conv1d/Conv1D/ExpandDims]:0
+Convolution (NHWC, F32) IGEMM, 0.325, 0.143449, 5.53262%, 98.7839%, 0, 5, Delegate/Convolution (NHWC	 F32) IGEMM:0
+Copy (NC, X32), 0.011, 0.00507215, 0.352125%, 99.1361%, 0, 9, Delegate/Copy (NC	 X32):1
+EXPAND_DIMS, 0.001, 0.000545455, 0.00420747%, 99.1403%, 0, 1, [cnn/max_pooling1d/ExpandDims]:3
+Max Pooling (NHWC, F32), 0.032, 0.0270942, 0.835984%, 99.9763%, 0, 4, Delegate/Max Pooling (NHWC	 F32):0
+EXPAND_DIMS, 0.001, 0.000363636, 0.00280498%, 99.9791%, 0, 1, [cnn/conv1d_4/Conv1D/ExpandDims]:24
+EXPAND_DIMS, 0, 0.000545455, 0.00420747%, 99.9833%, 0, 1, [cnn/max_pooling1d_3/ExpandDims]:21
+EXPAND_DIMS, 0.001, 0.000324675, 0.00250445%, 99.9858%, 0, 1, [cnn/conv1d_3/Conv1D/ExpandDims]:18
+EXPAND_DIMS, 0.001, 0.000493506, 0.00380676%, 99.9896%, 0, 1, [cnn/conv1d_1/Conv1D/ExpandDims]:6
+EXPAND_DIMS, 0.001, 0.000454545, 0.00350622%, 99.9931%, 0, 1, [cnn/max_pooling1d_1/ExpandDims]:9
+EXPAND_DIMS, 0, 0.000467532, 0.0036064%, 99.9967%, 0, 1, [cnn/conv1d_2/Conv1D/ExpandDims]:12
+EXPAND_DIMS, 0.001, 0.000428571, 0.00330587%, 100%, 0, 1, [cnn/max_pooling1d_2/ExpandDims]:15
+
+============================== Top by Computation Time ==============================
+node type, first, avg_ms, %, cdf%, mem KB, times called, name
+Fully Connected (NC, F32) GEMM, 11.254, 11.4042, 87.9687%, 87.9687%, 0, 1, Delegate/Fully Connected (NC	 F32) GEMM:2
+Fully Connected (NC, F32) GEMM, 0.653, 0.675429, 5.21005%, 93.1788%, 0, 1, Delegate/Fully Connected (NC	 F32) GEMM:3
+Convolution (NHWC, F32) IGEMM, 0.325, 0.143449, 5.53262%, 98.7114%, 0, 5, Delegate/Convolution (NHWC	 F32) IGEMM:0
+Max Pooling (NHWC, F32), 0.032, 0.0270942, 0.835984%, 99.5474%, 0, 4, Delegate/Max Pooling (NHWC	 F32):0
+Fully Connected (NC, F32) GEMM, 0.008, 0.00618182, 0.0476846%, 99.5951%, 0, 1, Delegate/Fully Connected (NC	 F32) GEMM:4
+Copy (NC, X32), 0.011, 0.00507215, 0.352125%, 99.9472%, 0, 9, Delegate/Copy (NC	 X32):1
+EXPAND_DIMS, 0.003, 0.00322078, 0.0248441%, 99.9721%, 0, 1, [cnn/conv1d/Conv1D/ExpandDims]:0
+EXPAND_DIMS, 0, 0.000545455, 0.00420747%, 99.9763%, 0, 1, [cnn/max_pooling1d_3/ExpandDims]:21
+EXPAND_DIMS, 0.001, 0.000545455, 0.00420747%, 99.9805%, 0, 1, [cnn/max_pooling1d/ExpandDims]:3
+EXPAND_DIMS, 0.001, 0.000493506, 0.00380676%, 99.9843%, 0, 1, [cnn/conv1d_1/Conv1D/ExpandDims]:6
+
+Number of nodes executed: 15
+============================== Summary by node type ==============================
+node type, count, avg_ms, avg %, cdf %, mem KB, times called
+Fully Connected (NC, F32) GEMM, 3, 12.085, 93.2628%, 93.2628%, 0, 3
+Convolution (NHWC, F32) IGEMM, 1, 0.717, 5.53326%, 98.7961%, 0, 5
+Max Pooling (NHWC, F32), 1, 0.108, 0.833462%, 99.6296%, 0, 4
+Copy (NC, X32), 1, 0.045, 0.347276%, 99.9769%, 0, 9
+EXPAND_DIMS, 9, 0.003, 0.0231517%, 100%, 0, 9
+
+Timings (microseconds): count=77 first=13000 curr=12742 min=12397 max=15048 avg=12964 std=452
+Memory (bytes): count=0
+15 nodes observed
+
+
