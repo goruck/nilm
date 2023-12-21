@@ -1,16 +1,18 @@
-.vscode/*
-*.log
+/.vscode
+#*.log
 *.tflite
 *.pb
 *.index
 variables.data*
 pruning_logs*
-*.csv
+#*.csv
 *.npy
 __pycache__
+/.venv
+ml/transformer_model_old
 
 # Ignore everything in directory transformer_model
-*/transformer_model/*
+#*/transformer_model/*
 
 # Except...
-!*/transformer_model/ELTransformer.py
+#!*/transformer_model/ELTransformer.py
