@@ -160,39 +160,39 @@ I performed [Post-training quantization](https://www.tensorflow.org/lite/perform
 |w8_a8|Same as w8 but quantize activations from float32 to int8. Enforce full int8 quantization for all operators.|
 |w8_a16|Same as w8 but quantize activations to int16.|
 
-The `cnn` model was quantized using all modes to understand the best tradeoff between latency and accuracy. Only the weights for the ```transformer``` model were quantized to int8 using mode `w8`, the activations needed to be kept in Float32 to maintain acceptable accuracy. See [convert_keras_to_tflite.py](./ml/convert_keras_to_tflite.py) for the code that does this quantization which also uses [TensorFlow Lite's quantization debugger](https://www.tensorflow.org/lite/performance/quantization_debugger) to check how well each layer in the model was quantized. 
+The `cnn` model was quantized using all modes to understand the best tradeoff between latency and accuracy. Only the weights for the ```transformer``` model were quantized to int8 using mode `w8`, the activations needed to be kept in Float32 to maintain acceptable accuracy. See [convert_keras_to_tflite.py](./ml/convert_keras_to_tflite.py) for the code that does this quantization which also uses [TensorFlow Lite's quantization debugger](https://www.tensorflow.org/lite/performance/quantization_debugger) to check how well each layer in the model was quantized. I also profiled the converted models using the [TensorFlow Lite Model Benchmark Tool](https://github.com/tensorflow/tensorflow/tree/master/tensorflow/lite/tools/benchmark) to quantify inference latencies.
 
-The quantized inference results are shown in the tables below, where $R_{x86}$ is the inference rate on a 3.8 GHz x86 machine using eight tflite interpreter threads and $R_{arm}$ is the inference rate on the aarch-64-based Raspberry Pi 4 using four threads with both computers using the TensorFlow Lite [XNNPACK](https://github.com/google/XNNPACK) CPU delegate. $R_{tpu}$ is the infernce rate on the Google Coral Edge TPU. Model inputs and outputs were keep in float32 to maximize inference speed for the x86 and ARM-based machines but were set to int8 for the edge tpu.
+The quantized inference results are shown in the tables below, where $L_{x86}$ is the average inference latency on a 3.8 GHz x86 machine using eight tflite interpreter threads and $L_{arm}$ is the average inference latency on the ARM aarch-64-based Raspberry Pi 4 using four threads with both computers using the TensorFlow Lite [XNNPACK](https://github.com/google/XNNPACK) CPU delegate. $L_{tpu}$ is the average inference latency on the Google Coral Edge TPU. Model inputs and outputs were keep in float32 to maximize inference speed for the x86- and ARM-based machines but were set to int8 for the edge tpu.
 
 ### CNN Model Results and Discussion
 
 The quantized results for the ```cnn``` models are shown in the table below for quantization mode ```w8```.
 
-|Appliance|$F1\uparrow$|$MCC\uparrow$|$ACC\uparrow$|$MAE$ $(W)$ $\downarrow$|$SAE\downarrow$|$NDE\downarrow$|$EpD_e$ ($\%$)|$R_{x86}$ ($Hz$)|$R_{arm}$ ($Hz$)|
+|Appliance|$F1\uparrow$|$MCC\uparrow$|$ACC\uparrow$|$MAE$ $(W)$ $\downarrow$|$SAE\downarrow$|$NDE\downarrow$|$EpD_e$ ($\%$)|$L_{x86}$ (${\mu}s$)|$L_{arm}$ (${\mu}s$)|
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-|kettle|0.7428|0.7454|0.9966|7.371|0.2013|0.4500|-20.13|1385|210.3|
-|microwave|0.6400|0.6373|0.9933|7.971|0.1578|0.7194|-15.78|1302|207.3|
-|fridge|0.6491|0.5040|0.7935|17.78|0.0907|0.7000|-8.971|1365|209.8|
-|dishwasher|0.5143|0.5787|0.9719|5.3955|0.0569|0.3647|-5.694|1321|209.4|
-|washingmachine|0.8838|0.8791|0.9919|15.33|0.2930|0.3811|-29.30|1317|237.6|
+|kettle|0.7428|0.7454|0.9966|7.371|0.2013|0.4500|-20.13|743.910|3809.41|
+|microwave|0.6400|0.6373|0.9933|7.971|0.1578|0.7194|-15.78|736.549|3586.55|
+|fridge|0.6491|0.5040|0.7935|17.78|0.0907|0.7000|-8.971|731.371|3520.54|
+|dishwasher|0.5143|0.5787|0.9719|5.3955|0.0569|0.3647|-5.694|742.279|3519.52|
+|washingmachine|0.8838|0.8791|0.9919|15.33|0.2930|0.3811|-29.30|751.801|3515.68|
 
 The quantized results for the ```cnn kettle``` model are shown below for the other quantization modes.
 
-|Mode|$F1\uparrow$|$MCC\uparrow$|$ACC\uparrow$|$MAE$ $(W)$ $\downarrow$|$SAE\downarrow$|$NDE\downarrow$|$EpD_e$ ($\%$)|$R_{x86}$ ($Hz$)|$R_{arm}$ ($Hz$)|$R_{tpu}$ ($Hz$)|
+|Mode|$F1\uparrow$|$MCC\uparrow$|$ACC\uparrow$|$MAE$ $(W)$ $\downarrow$|$SAE\downarrow$|$NDE\downarrow$|$EpD_e$ ($\%$)|$L_{x86}$ (${\mu}s$)|$L_{arm}$ (${\mu}s$)|$L_{tpu}$ (${\mu}s$)|
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-|convert_only|0.7119|0.7199|0.9964|7.812|0.2862|0.4780|-28.65|3188|79.49|NA|
-|w8_a8_fallback|0.6584|0.6736|0.9959|8.677|0.3700|0.5448|-36.70|5095|233.0|NA|
-|w8_a8|0.6584|0.6736|0.9960|8.768|0.3670|0.5447|-36.70|5113|232.0|TBD|
-|w8_a16|0.7474|0.7479|0.9966|7.431|0.1531|0.4516|-15.31|214.1|40.38|NA|
+|convert_only|0.7119|0.7199|0.9964|7.812|0.2862|0.4780|-28.65|309.531|12890.10|NA|
+|w8_a8_fallback|0.6584|0.6736|0.9959|8.677|0.3700|0.5448|-36.70|186.483|3435.56|NA|
+|w8_a8|0.6584|0.6736|0.9960|8.768|0.3670|0.5447|-36.70|185.403|3258.19|TBD|
+|w8_a16|0.7474|0.7479|0.9966|7.431|0.1531|0.4516|-15.31|5095.38|24065.3|NA|
 
 The quantized results for the ```cnn microwave``` model are shown below for the other quantization modes.
 
-|Mode|$F1\uparrow$|$MCC\uparrow$|$ACC\uparrow$|$MAE$ $(W)$ $\downarrow$|$SAE\downarrow$|$NDE\downarrow$|$EpD_e$ ($\%$)|$R_{x86}$ ($Hz$)|$R_{arm}$ ($Hz$)|$R_{tpu}$ ($Hz$)|
+|Mode|$F1\uparrow$|$MCC\uparrow$|$ACC\uparrow$|$MAE$ $(W)$ $\downarrow$|$SAE\downarrow$|$NDE\downarrow$|$EpD_e$ ($\%$)|$L_{x86}$ (${\mu}s$)|$L_{arm}$ (${\mu}s$)|$L_{tpu}$ (${\mu}s$)|
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-|convert_only|0.6410|0.6384|0.9933|7.976|0.1630|0.7195|-18.30|3196|79.92|NA|
-|w8_a8_fallback|0.6268|0.6238|0.9931|8.006|0.1796|0.7206|-17.96|5096|233.0|NA|
-|w8_a8|0.6268|0.6238|0.9931|8.005|0.1796|0.7206|-17.96|5088|236.7|TBD|
-|w8_a16|0.6391|0.6365|0.9933|7.968|0.1590|0.7172|-15.89|214.1|40.38|NA|
+|convert_only|0.6410|0.6384|0.9933|7.976|0.1630|0.7195|-18.30|302.750|13055.3|NA|
+|w8_a8_fallback|0.6268|0.6238|0.9931|8.006|0.1796|0.7206|-17.96|187.232|3458.30|NA|
+|w8_a8|0.6268|0.6238|0.9931|8.005|0.1796|0.7206|-17.96|183.910|3466.65|TBD|
+|w8_a16|0.6391|0.6365|0.9933|7.968|0.1590|0.7172|-15.89|5100.76|24052.0|NA|
 
 Results for the other appliance models are omitted for brevity but show similar characteristics as a function of quantization mode.
 
@@ -334,19 +334,161 @@ Layer quantization efficacy metrics for the ```cnn washingmachine``` model are s
 | 28      | FULLY_CONNECTED | 3.79172    | 1.75E-01 |
 | 29      | FULLY_CONNECTED | 1.102378   | 9.51E-01 | Yes |
 
+#### Model Memory Footprint
+
+I used the [TFLite Model Benchmark Tool](https://github.com/tensorflow/tensorflow/tree/master/tensorflow/lite/tools/benchmark) to get the approximate RAM consumption of the TFLite ```cnn microwave``` model at runtime which is shown in the table below for each quantization mode as well as the TFLite model disk space. The other `cnn` models show similar characteristics. The findings for the x86 architecture were identical to the arm architecture. Note that the Keras model consumes about 42.49 (MB) on disk.
+
+| Quant Mode | TFLite Disk (MB) | TFLite RAM (MB) |
+| --- | --- | --- |
+| convert_only | 42.485044 | 84.957 |
+| w8 | 10.642040 | 12.7109 |
+| w8_a8 | 10.648016 | 23.3633 |
+| w8_a16 | 10.660984 | 10.1836 |
+
 ### Transformer Model Results and Discussion
 
-The quantized results for the ```transformer``` model are shown in the table below for quantization mode ```w8``` (**in progress**).
+Note that even though the XNNPACK delagate was enabled during `transformer` model inference evaluation nothing was actually accelerated because the `transformer` model contains dynamic tensors. The following warning is shown when using the TFLite interpreter for inference:
 
-|Appliance|$F1\uparrow$|$MCC\uparrow$|$ACC\uparrow$|$MAE$ $(W)$ $\downarrow$|$SAE\downarrow$|$NDE\downarrow$|$EpD_e$ ($\%$)|$R_{x86}$ ($Hz$)|$R_{\pi}$ ($Hz$)|
+`Attempting to use a delegate that only supports static-sized tensors with a graph that has dynamic-sized tensors (tensor#94 is a dynamic-sized tensor).`
+
+This means that all operators are unsupported by XNNPACK and will fall back to the default implementations. A future effort will involve refactoring the `transformer` model use only static-size tensors. Note that a tensor could be marked dynamic at TFLite runtime when there is a control-flow operation (e.g., `if`, `while` etc.) prepared. In other words, even when the model graph itself doesn't have any tensors of dynamic shapes statically, at runtime a model could have dynamic tensors. The current transformer model uses `if` control-flow operations.
+
+The quantized results for the ```transformer``` model are shown in the table below for quantization mode ```w8```.
+
+|Appliance|$F1\uparrow$|$MCC\uparrow$|$ACC\uparrow$|$MAE$ $(W)$ $\downarrow$|$SAE\downarrow$|$NDE\downarrow$|$EpD_e$ ($\%$)|$L_{x86}$ (${\mu}s$)|$L_{arm}$ (${\mu}s$)|
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-|kettle|0.8460|0.8483|0.9977|5.117|0.1761|0.2760|-17.61|46.07|11.59|
-|microwave|0.6221|0.6283|0.9943|7.652|0.4811|0.6841|-48.11|5128|x|
-|fridge|0.5980|0.4354|0.7665|19.17|0.1101|0.7746|-10.88|5108|x|
-|dishwasher|0.6645|0.6775|0.9842|5.874|0.0167|0.3895|-1.668|5050|x|
-|washingmachine|0.8910|0.8872|0.9926|15.08|0.3796|0.3442|-37.96|5094|x|
+|kettle|0.8460|0.8483|0.9977|5.117|0.1761|0.2760|-17.61|20520|61939|
+|microwave|0.7375|0.7355|0.9952|6.969|0.3435|0.6049|-34.35|20905|60823|
+|fridge|0.7437|0.6261|0.8381|14.52|0.0838|0.5518|-8.560|20986|61862|
+|dishwasher|0.6671|0.6905|0.9860|6.214|0.1117|0.4521|-11.17|20983|63432|
+|washingmachine|0.8910|0.8872|0.9926|15.08|0.3796|0.3442|-37.96|21426|60901|
 
-In all cases the quantized model sizes are about four times smaller than the float versions.
+The quantized results for the ```transformer``` `kettle` and `microwave` models are shown in the table below for quantization mode ```convert_only```.
+
+|Appliance|$F1\uparrow$|$MCC\uparrow$|$ACC\uparrow$|$MAE$ $(W)$ $\downarrow$|$SAE\downarrow$|$NDE\downarrow$|$EpD_e$ ($\%$)|$L_{x86}$ (${\mu}s$)|$L_{arm}$ (${\mu}s$)|
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+|kettle|0.8460|0.8483|0.9977|5.117|0.1761|0.2760|-17.61|7100|69746|
+|microwave|0.6719|0.6736|0.9948|7.054|0.3930|0.6518|-39.30|7050|68667|
+
+#### Model Profiling on x86 (slowest to fastest)
+
+| w8 node type          | count | avg_ms | avg %      | cdf %    | mem KB | times called |
+| ------------------ | ----- | ------ | ---------- | -------- | ------ | ------------ |
+| FULLY_CONNECTED    | 14    | 16.243 | 79.5485%   | 79.5485% | 0      | 14           |
+| ADD                | 41    | 0.667  | 3.26657%   | 82.815%  | 0      | 41           |
+| MUL                | 42    | 0.661  | 3.23718%   | 86.0522% | 0      | 42           |
+| BATCH_MATMUL       | 4     | 0.582  | 2.85029%   | 88.9025% | 0      | 4            |
+| TRANSPOSE          | 20    | 0.551  | 2.69847%   | 91.601%  | 0      | 20           |
+| RESHAPE            | 48    | 0.384  | 1.8806%    | 93.4816% | 0      | 48           |
+| POW                | 2     | 0.371  | 1.81694%   | 95.2985% | 0      | 2            |
+| SOFTMAX            | 2     | 0.202  | 0.989275%  | 96.2878% | 0      | 2            |
+| MEAN               | 13    | 0.177  | 0.86684%   | 97.1546% | 0      | 13           |
+| CONV_2D            | 1     | 0.152  | 0.744405%  | 97.899%  | 0      | 1            |
+| SQUARED_DIFFERENCE | 6     | 0.119  | 0.582791%  | 98.4818% | 0      | 6            |
+| TANH               | 2     | 0.11   | 0.538714%  | 99.0205% | 0      | 2            |
+| AVERAGE_POOL_2D    | 1     | 0.086  | 0.421176%  | 99.4417% | 0      | 1            |
+| FILL               | 14    | 0.059  | 0.288947%  | 99.7306% | 0      | 14           |
+| SQUARE             | 1     | 0.036  | 0.176306%  | 99.9069% | 0      | 1            |
+| SQRT               | 1     | 0.019  | 0.0930506% | 100%     | 0      | 1            |
+| SUB                | 6     | 0      | 0%         | 100%     | 0      | 6            |
+| STRIDED_SLICE      | 14    | 0      | 0%         | 100%     | 0      | 14           |
+| SHAPE              | 24    | 0      | 0%         | 100%     | 0      | 24           |
+| RSQRT              | 6     | 0      | 0%         | 100%     | 0      | 6            |
+| REDUCE_PROD        | 16    | 0      | 0%         | 100%     | 0      | 16           |
+| PACK               | 22    | 0      | 0%         | 100%     | 0      | 22           |
+| GATHER             | 16    | 0      | 0%         | 100%     | 0      | 16           |
+| EXPAND_DIMS        | 2     | 0      | 0%         | 100%     | 0      | 2            |
+| CONCATENATION      | 8     | 0      | 0%         | 100%     | 0      | 8            |
+
+| convert_only node type          | count | avg_ms | avg %     | cdf %    | mem KB | times called |
+| ------------------ | ----- | ------ | --------- | -------- | ------ | ------------ |
+| FULLY_CONNECTED    | 14    | 2.211  | 31.0447%  | 31.0447% | 0      | 14           |
+| ADD                | 41    | 1.344  | 18.8711%  | 49.9158% | 0      | 41           |
+| MUL                | 42    | 0.693  | 9.73041%  | 59.6462% | 0      | 42           |
+| RESHAPE            | 48    | 0.619  | 8.69138%  | 68.3375% | 0      | 48           |
+| BATCH_MATMUL       | 4     | 0.529  | 7.42769%  | 75.7652% | 0      | 4            |
+| TRANSPOSE          | 20    | 0.4    | 5.6164%   | 81.3816% | 0      | 20           |
+| POW                | 2     | 0.394  | 5.53215%  | 86.9138% | 0      | 2            |
+| MEAN               | 13    | 0.216  | 3.03286%  | 89.9466% | 0      | 13           |
+| SOFTMAX            | 2     | 0.155  | 2.17636%  | 92.123%  | 0      | 2            |
+| SQUARED_DIFFERENCE | 6     | 0.128  | 1.79725%  | 93.9202% | 0      | 6            |
+| TANH               | 2     | 0.119  | 1.67088%  | 95.5911% | 0      | 2            |
+| AVERAGE_POOL_2D    | 1     | 0.102  | 1.43218%  | 97.0233% | 0      | 1            |
+| FILL               | 14    | 0.099  | 1.39006%  | 98.4134% | 0      | 14           |
+| CONV_2D            | 1     | 0.051  | 0.716091% | 99.1294% | 0      | 1            |
+| SQUARE             | 1     | 0.037  | 0.519517% | 99.649%  | 0      | 1            |
+| SQRT               | 1     | 0.025  | 0.351025% | 100%     | 0      | 1            |
+| SUB                | 6     | 0      | 0%        | 100%     | 0      | 6            |
+| STRIDED_SLICE      | 14    | 0      | 0%        | 100%     | 0      | 14           |
+| SHAPE              | 24    | 0      | 0%        | 100%     | 0      | 24           |
+| RSQRT              | 6     | 0      | 0%        | 100%     | 0      | 6            |
+| REDUCE_PROD        | 16    | 0      | 0%        | 100%     | 0      | 16           |
+| PACK               | 22    | 0      | 0%        | 100%     | 0      | 22           |
+| GATHER             | 16    | 0      | 0%        | 100%     | 0      | 16           |
+| EXPAND_DIMS        | 2     | 0      | 0%        | 100%     | 0      | 2            |
+| CONCATENATION      | 8     | 0      | 0%        | 100%     | 0      | 8            |
+
+#### Model Profiling on aarch64 (slowest to fastest)
+
+| convert_only node type | count | avg_ms | avg %       | cdf %    | mem KB | times called |
+| ---------------------- | ----- | ------ | ----------- | -------- | ------ | ------------ |
+| FULLY_CONNECTED        | 14    | 30.777 | 44.8716%    | 44.8716% | 0      | 14           |
+| MUL                    | 42    | 8.571  | 12.4962%    | 57.3678% | 0      | 42           |
+| ADD                    | 41    | 7.425  | 10.8254%    | 68.1931% | 0      | 41           |
+| POW                    | 2     | 5.308  | 7.73885%    | 75.932%  | 0      | 2            |
+| BATCH_MATMUL           | 4     | 3.82   | 5.56941%    | 81.5014% | 0      | 4            |
+| TRANSPOSE              | 20    | 3.352  | 4.88708%    | 86.3885% | 0      | 20           |
+| RESHAPE                | 48    | 2.927  | 4.26745%    | 90.6559% | 0      | 48           |
+| TANH                   | 2     | 2.02   | 2.94508%    | 93.601%  | 0      | 2            |
+| SOFTMAX                | 2     | 1.182  | 1.72331%    | 95.3243% | 0      | 2            |
+| MEAN                   | 13    | 0.927  | 1.35153%    | 96.6758% | 0      | 13           |
+| SQUARED_DIFFERENCE     | 6     | 0.761  | 1.10951%    | 97.7854% | 0      | 6            |
+| AVERAGE_POOL_2D        | 1     | 0.517  | 0.753765%   | 98.5391% | 0      | 1            |
+| SQUARE                 | 1     | 0.326  | 0.475295%   | 99.0144% | 0      | 1            |
+| CONV_2D                | 1     | 0.281  | 0.409687%   | 99.4241% | 0      | 1            |
+| SQRT                   | 1     | 0.148  | 0.215778%   | 99.6399% | 0      | 1            |
+| PACK                   | 22    | 0.105  | 0.153086%   | 99.793%  | 0      | 22           |
+| FILL                   | 14    | 0.077  | 0.112263%   | 99.9052% | 0      | 14           |
+| SUB                    | 6     | 0.022  | 0.0320751%  | 99.9373% | 0      | 6            |
+| RSQRT                  | 6     | 0.022  | 0.0320751%  | 99.9694% | 0      | 6            |
+| STRIDED_SLICE          | 14    | 0.012  | 0.0174955%  | 99.9869% | 0      | 14           |
+| SHAPE                  | 24    | 0.005  | 0.0072898%  | 99.9942% | 0      | 24           |
+| EXPAND_DIMS            | 2     | 0.003  | 0.00437388% | 99.9985% | 0      | 2            |
+| CONCATENATION          | 8     | 0.001  | 0.00145796% | 100%     | 0      | 8            |
+| REDUCE_PROD            | 16    | 0      | 0%          | 100%     | 0      | 16           |
+| GATHER                 | 16    | 0      | 0%          | 100%     | 0      | 16           |
+
+| w8 node type       | count | avg_ms | avg %       | cdf %    | mem KB | times called |
+| ------------------ | ----- | ------ | ----------- | -------- | ------ | ------------ |
+| FULLY_CONNECTED    | 14    | 22.759 | 38.6283%    | 38.6283% | 0      | 14           |
+| MUL                | 42    | 7.718  | 13.0996%    | 51.7278% | 0      | 42           |
+| ADD                | 41    | 6.952  | 11.7994%    | 63.5273% | 0      | 41           |
+| POW                | 2     | 5.074  | 8.61197%    | 72.1392% | 0      | 2            |
+| BATCH_MATMUL       | 4     | 3.773  | 6.40382%    | 78.5431% | 0      | 4            |
+| TRANSPOSE          | 20    | 2.982  | 5.06127%    | 83.6043% | 0      | 20           |
+| RESHAPE            | 48    | 2.902  | 4.92549%    | 88.5298% | 0      | 48           |
+| TANH               | 2     | 1.95   | 3.30968%    | 91.8395% | 0      | 2            |
+| SOFTMAX            | 2     | 1.222  | 2.07407%    | 93.9136% | 0      | 2            |
+| MEAN               | 13    | 0.91   | 1.54452%    | 95.4581% | 0      | 13           |
+| SQUARED_DIFFERENCE | 6     | 0.79   | 1.34085%    | 96.7989% | 0      | 6            |
+| CONV_2D            | 1     | 0.659  | 1.1185%     | 97.9174% | 0      | 1            |
+| AVERAGE_POOL_2D    | 1     | 0.48   | 0.814692%   | 98.7321% | 0      | 1            |
+| SQUARE             | 1     | 0.359  | 0.609321%   | 99.3414% | 0      | 1            |
+| SQRT               | 1     | 0.126  | 0.213857%   | 99.5553% | 0      | 1            |
+| PACK               | 22    | 0.107  | 0.181608%   | 99.7369% | 0      | 22           |
+| FILL               | 14    | 0.082  | 0.139176%   | 99.8761% | 0      | 14           |
+| SUB                | 6     | 0.025  | 0.0424319%  | 99.9185% | 0      | 6            |
+| RSQRT              | 6     | 0.023  | 0.0390373%  | 99.9576% | 0      | 6            |
+| STRIDED_SLICE      | 14    | 0.013  | 0.0220646%  | 99.9796% | 0      | 14           |
+| EXPAND_DIMS        | 2     | 0.005  | 0.00848637% | 99.9881% | 0      | 2            |
+| SHAPE              | 24    | 0.004  | 0.0067891%  | 99.9949% | 0      | 24           |
+| GATHER             | 16    | 0.002  | 0.00339455% | 99.9983% | 0      | 16           |
+| CONCATENATION      | 8     | 0.001  | 0.00169727% | 100%     | 0      | 8            |
+| REDUCE_PROD        | 16    | 0      | 0%          | 100%     | 0      | 16           |
+
+#### Quantization Efficacy
+
+#### Model Memory Footprint
 
 ## NILM Prototype System Components
 
