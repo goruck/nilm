@@ -490,7 +490,7 @@ The quantized results for the ```transformer``` `kettle` and `microwave` models 
 
 #### Quantization Efficacy
 
-Layer quantization efficacy metrics for the `transformer kettle` model using mode `w8_a8` are shown below, although as noted above quantizing the transformer model's activations results in very poor model performance. You can see the `RSQRT` operator in particular does not quantize well, these operators are used in the Gaussian error linear activation functions which helps explain the poor performance of the model. 
+Layer quantization efficacy metrics for the `transformer kettle` model using mode `w8_a8` are shown in the table below, although as noted above quantizing the transformer model's activations results in very poor model performance. You can see the `RSQRT` operator in particular does not quantize well, these operators are used in the Gaussian error linear activation functions which helps explain the poor performance of the model. The other `transformer `appliance models show similar efficacy metrics.
 
 | layer | op_name            | range       | rmse/scale   | Suspect? |
 | --- | ------------------ | ----------- | ------------ | -------- |
@@ -705,14 +705,9 @@ Layer quantization efficacy metrics for the `transformer kettle` model using mod
 | 208 | FULLY_CONNECTED    | 2.434557    | 0.3960356    |          |
 | 209 | FULLY_CONNECTED    | 0.733557    | 9.714286     | Yes |	
 
-
-Layer quantization efficacy metrics for the `transformer washingmachine` model using mode `w8_a8` are shown below.
-
-TBA
-
 #### Model Memory Footprint
 
-Identical to the `cnn` case, I used the [TFLite Model Benchmark Tool](https://github.com/tensorflow/tensorflow/tree/master/tensorflow/lite/tools/benchmark) to get the approximate RAM consumption of the TFLite `microwave` model at runtime which is shown in the table below for each relevant quantization mode as well as the TFLite model disk space. The other `transformer` models show similar characteristics. Note that the Keras model consumes about 6.02 (MB) on disk. You can see that there is about a three times reduction in model size due to the weights being quantized from float32 to int8 which is less than the four times reduction seen in the `cnn` case likely because there are fewer layers with weights. YOu can also see that the x86 TFLite runtime is more memory efficient than its aarch64 counterpart for this model.
+Identical to the `cnn` case, I used the [TFLite Model Benchmark Tool](https://github.com/tensorflow/tensorflow/tree/master/tensorflow/lite/tools/benchmark) to get the approximate RAM consumption of the TFLite `microwave` model at runtime which is shown in the table below for each relevant quantization mode as well as the TFLite model disk space. The other `transformer` models show similar characteristics. Note that the Keras model consumes about 6.02 (MB) on disk. You can see that there is about a three times reduction in model size due to the weights being quantized from float32 to int8 which is less than the four times reduction seen in the `cnn` case likely because there are fewer layers with weights. You can also see that the x86 TFLite runtime is more memory efficient than its aarch64 counterpart for this model.
 
 | Quant Mode | Disk (MB) | aarch64 RAM (MB) | x86 RAM (MB)
 | --- | --- | --- | --- |
