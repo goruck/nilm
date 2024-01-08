@@ -1,0 +1,29 @@
+2024-01-08 03:48:24,662 [INFO ]  Machine name: edge-tpu
+2024-01-08 03:48:24,663 [INFO ]  Arguments: 
+2024-01-08 03:48:24,663 [INFO ]  Namespace(appliance_name='kettle', crop=None, datadir='../ml/dataset_management/refit', model_arch='cnn', model_path='../ml/models/', num_eval=100000, save_dir='../ml/models', test_type='test')
+2024-01-08 03:48:24,663 [INFO ]  tflite model: ../ml/models/kettle/kettle_cnn_w8_a8_edgetpu.tflite
+2024-01-08 03:48:24,664 [INFO ]  dataset: ../ml/dataset_management/refit/kettle/kettle_test_H2.csv
+2024-01-08 03:48:32,928 [INFO ]  Loaded 5.734M samples from dataset.
+2024-01-08 03:48:33,153 [INFO ]  interpreter input details: [{'name': 'serving_default_conv1d_input:0', 'index': 0, 'shape': array([  1, 599,   1], dtype=int32), 'shape_signature': array([  1, 599,   1], dtype=int32), 'dtype': <class 'numpy.int8'>, 'quantization': (0.09384304285049438, -121), 'quantization_parameters': {'scales': array([0.09384304], dtype=float32), 'zero_points': array([-121], dtype=int32), 'quantized_dimension': 0}, 'sparsity_parameters': {}}]
+2024-01-08 03:48:33,156 [INFO ]  interpreter output details: [{'name': 'StatefulPartitionedCall:0', 'index': 1, 'shape': array([1, 1], dtype=int32), 'shape_signature': array([1, 1], dtype=int32), 'dtype': <class 'numpy.int8'>, 'quantization': (0.0038856184110045433, -81), 'quantization_parameters': {'scales': array([0.00388562], dtype=float32), 'zero_points': array([-81], dtype=int32), 'quantized_dimension': 0}, 'sparsity_parameters': {}}]
+2024-01-08 03:48:33,157 [INFO ]  tflite model floating input: False
+2024-01-08 03:48:33,158 [INFO ]  tflite model floating output: False
+2024-01-08 03:48:34,073 [INFO ]  Running inference on 100000 samples...
+2024-01-08 04:34:46,639 [INFO ]  Inference run complete.
+2024-01-08 04:34:46,639 [INFO ]  Inference rate: 36.068 Hz
+2024-01-08 04:34:46,933 [INFO ]  Train appliance mean: 16.137261776311778 (W)
+2024-01-08 04:34:46,934 [INFO ]  Train appliance std: 196.89790951996966 (W)
+2024-01-08 04:34:46,934 [INFO ]  De-normalizing predictions with mean = 0 and std = 3100.
+2024-01-08 04:34:47,042 [INFO ]  True positives: 535
+2024-01-08 04:34:47,046 [INFO ]  True negatives: 99138
+2024-01-08 04:34:47,049 [INFO ]  False positives: 73
+2024-01-08 04:34:47,052 [INFO ]  False negatives: 254
+2024-01-08 04:34:47,056 [INFO ]  Accuracy: 0.99673
+2024-01-08 04:34:47,065 [INFO ]  MCC: 0.7708966577460102
+2024-01-08 04:34:47,073 [INFO ]  F1: 0.7659269863994274
+2024-01-08 04:34:47,113 [INFO ]  MAE: 7.136801450099945 (W)
+2024-01-08 04:34:47,120 [INFO ]  NDE: 0.4056800475142276
+2024-01-08 04:34:47,127 [INFO ]  SAE: 0.2335470784860148
+2024-01-08 04:34:47,138 [INFO ]  Ground truth EPD: 398.7914440136718 (Wh)
+2024-01-08 04:34:47,149 [INFO ]  Predicted EPD: 305.65486733905976 (Wh)
+2024-01-08 04:34:47,150 [INFO ]  EPD Relative Error: -23.354707848601446 (%)
