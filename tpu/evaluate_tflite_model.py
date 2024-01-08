@@ -30,13 +30,6 @@ def get_arguments():
         help='Name of target appliance.'
     )
     parser.add_argument(
-        '--model_arch',
-        type=str,
-        default='cnn',
-        choices=['cnn', 'transformer', 'fcn', 'resnet'],
-        help='Network architecture to use.'
-    )
-    parser.add_argument(
         '--datadir',
         type=str,
         default='../ml/dataset_management/refit',
