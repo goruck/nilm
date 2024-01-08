@@ -89,7 +89,7 @@ I also used accuracy ($ACC$), F1-score ($F1$) and Matthew’s correlation coeffi
 
 $$F1=\frac{TP}{TP+\frac{1}{2}(FP+FN)}\tag{6}$$
 
-$$MCC=\frac{TN \times TP+FN \times FP }{\sqrt{(TP+FP)(TP+FN)(TN+FP)(TN+FN)}}\tag{7}$$
+$$MCC=\frac{TN \times TP-FN \times FP }{\sqrt{(TP+FP)(TP+FN)(TN+FP)(TN+FN)}}\tag{7}$$
 
 $MAE$, $SAE$, $NDE$ and $EpD_e$ (defined as $ 100\% \times (EpD_{predicted} - EpD_{ground\_truth}) / EpD_{ground\_truth}$) reflect the model's ability to correctly predict the appliance energy consumption levels. $F1$ and $MCC$ indicates the model's ability to correctly predict appliance activations using imbalanced classes. $ACC$ is less useful in this application because most of the time the model will correctly predict the appliance is off which dominates the dataset.
 
