@@ -123,7 +123,10 @@ if __name__ == '__main__':
     )
 
     # Perform inference on windowed samples.
-    interpreter = tflite.Interpreter(model_path=model_filepath)
+    interpreter = tflite.Interpreter(
+        model_path=model_filepath,
+        experimental_delegates=[tflite.load_delegate('libedgetpu.so.1')]
+    )
     results = common.tflite_infer(
         interpreter=interpreter,
         provider=provider,
