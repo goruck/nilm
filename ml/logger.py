@@ -1,13 +1,15 @@
 """Logger for NILM project.
 
-Copyright (c) 2023 Lindo St. Angel
+Copyright (c) 2023~2024 Lindo St. Angel
 """
 
 import logging
 import time
 
 class Logger():
-    def __init__(self, log_file_name:str=None, append:bool=False) -> None:
+    """Logger class for NILM project."""
+    def __init__(self, level:str='info', log_file_name:str=None, append:bool=False) -> None:
+        """Inits logger."""
         if log_file_name is None:
             log_file_name = '{}.log'.format(time.strftime("%Y-%m-%d-%H:%M:%S").replace(':','-'))
 
@@ -15,36 +17,47 @@ class Logger():
         with open(log_file_name, mode=mode, encoding='utf-8'):
             pass
 
-        self.rootLogger = logging.getLogger()
+        self.root_logger = logging.getLogger()
 
-        logFormatter = logging.Formatter('%(asctime)s [%(levelname)-5.5s]  %(message)s')
+        log_formatter = logging.Formatter('%(asctime)s [%(levelname)-5.5s]  %(message)s')
 
-        fileHandler = logging.FileHandler('{0}'.format(log_file_name))
-        fileHandler.setFormatter(logFormatter)
-        self.rootLogger.addHandler(fileHandler)
+        file_handler = logging.Handler('{0}'.format(log_file_name))
+        file_handler.setFormatter(log_formatter)
+        self.root_logger.addHandler(file_handler)
 
-        consoleHandler = logging.StreamHandler()
-        consoleHandler.setFormatter(logFormatter)
-        self.rootLogger.addHandler(consoleHandler)
+        console_handler = logging.StreamHandler()
+        console_handler.setFormatter(log_formatter)
+        self.root_logger.addHandler(console_handler)
 
-        self.rootLogger.setLevel(logging.DEBUG)
+        # Set lowest-severity log message logger will handle.
+        if level == 'debug':
+            self.root_logger.setLevel(logging.DEBUG)
+        elif level == 'warning':
+            self.root_logger.setLevel(logging.WARNING)
+        elif level == 'critical':
+            self.root_logger.setLevel(logging.CRITICAL)
+        else:
+            self.root_logger.setLevel(logging.INFO)
 
         # Disable debug messages from the following modules.
-        disable_debug_modules = ['matplotlib',
-                                 'matplotlib.font',
-                                 'matplotlib.pyplot',
-                                 'matplotlib.font_manager',
-                                 'PIL']
+        disable_debug_modules = [
+            'matplotlib',
+            'matplotlib.font',
+            'matplotlib.pyplot',
+            'matplotlib.font_manager',
+            'PIL'
+        ]
         for module in disable_debug_modules:
             logger = logging.getLogger(module)
             logger.setLevel(logging.INFO)
 
     def log(self, string:str, level:str='info') -> None:
+        """Log message per level."""
         if level == 'debug':
-            self.rootLogger.debug(string)
+            self.root_logger.debug(string)
         elif level == 'warning':
-            self.rootLogger.warning(string)
+            self.root_logger.warning(string)
         elif level == 'critical':
-            self.rootLogger.critical(string)
+            self.root_logger.critical(string)
         else:
-            self.rootLogger.info(string)
+            self.root_logger.info(string)
