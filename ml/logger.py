@@ -21,7 +21,7 @@ class Logger():
 
         log_formatter = logging.Formatter('%(asctime)s [%(levelname)-5.5s]  %(message)s')
 
-        file_handler = logging.Handler('{0}'.format(log_file_name))
+        file_handler = logging.FileHandler('{0}'.format(log_file_name))
         file_handler.setFormatter(log_formatter)
         self.root_logger.addHandler(file_handler)
 
