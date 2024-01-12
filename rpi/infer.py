@@ -48,7 +48,7 @@ WINDOW_LENGTH = 599
 MODEL_ARCH = 'cnn'
 QUANT_MODE = 'w8'
 
-logger = Logger(level='debug')
+logger = Logger(level='info')
 
 def get_scaling(app:str) -> tuple[float, float]:
     """Get appliance mean and std for normalization and de-normalization."""
