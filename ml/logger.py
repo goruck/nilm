@@ -8,7 +8,9 @@ import time
 
 class Logger():
     """Logger class for NILM project."""
-    def __init__(self, level:str='info', log_file_name:str=None, append:bool=False) -> None:
+    def __init__(
+            self, lowest_level:str='info', log_file_name:str=None, append:bool=False
+        ) -> None:
         """Inits logger."""
         if log_file_name is None:
             log_file_name = '{}.log'.format(time.strftime("%Y-%m-%d-%H:%M:%S").replace(':','-'))
@@ -30,11 +32,11 @@ class Logger():
         self.root_logger.addHandler(console_handler)
 
         # Set lowest-severity log message logger will handle.
-        if level == 'debug':
+        if lowest_level == 'debug':
             self.root_logger.setLevel(logging.DEBUG)
-        elif level == 'warning':
+        elif lowest_level == 'warning':
             self.root_logger.setLevel(logging.WARNING)
-        elif level == 'critical':
+        elif lowest_level == 'critical':
             self.root_logger.setLevel(logging.CRITICAL)
         else:
             self.root_logger.setLevel(logging.INFO)
