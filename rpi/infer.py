@@ -1,6 +1,14 @@
 """
 Read data from arduino and perform appliance power inference.
 
+A single inference takes about 4.4 ms on this machine from cold start.
+This is much faster than sample period (default 8 s) so running
+inference in same thread with data capture should not cause dropped data.
+Note that separate models are used for each appliance and so cold start
+latency will be incurred for each prediction. The models should be combined
+so cold start latency is incurred only on the first prediction. This will be
+done at some point in the future.
+
 Copyright (c) 2022~2024 Lindo St. Angel.
 """
 
@@ -233,13 +241,6 @@ if __name__ == '__main__':
                                 f'Running inference on windowed data...'
                             )
                             # Run inference when enough samples are captured to fill a window.
-                            # A single inference takes about 100 ms on this machine from cold start.
-                            # This is much faster than sample period (default 8 s) so running
-                            # inference in same thread with data capture should not cause dropped data.
-                            # Note that separate models are used for each appliance and so cold start
-                            # latency will be incurred for each prediction. The models should be combined
-                            # so cold start latency is incurred only on the first prediction. This will be
-                            # done at some point in the future.
                             start = time()
                             predictions = {
                                 appliance : infer(
