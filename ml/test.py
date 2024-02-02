@@ -1,6 +1,6 @@
 """Test a neural network to perform energy disaggregation.
 
-Copyright (c) 2022, 2023 Lindo St. Angel
+Copyright (c) 2022~2024 Lindo St. Angel
 """
 
 import os
@@ -43,7 +43,7 @@ def get_arguments():
         default='/home/lindo/Develop/nilm/ml/models',
         help='directory to save test results')
     parser.add_argument('--plot', action='store_true',
-        help='ff set, plot the predicted appliance against ground truth')
+        help='if set, plot the predicted appliance against ground truth')
     parser.add_argument('--crop',
         type=int,
         default=None,
@@ -58,21 +58,25 @@ def get_arguments():
 if __name__ == '__main__':
     args = get_arguments()
     appliance_name = args.appliance_name
-    logger = Logger(os.path.join(args.save_dir,
-                                 appliance_name,
-                                 f'{appliance_name}_test_{args.model_arch}.log'))
+    logger = Logger(
+        log_file_name = os.path.join(
+            args.save_dir, appliance_name, f'{appliance_name}_test_{args.model_arch}.log'
+        )
+    )
     logger.log(f'Machine name: {socket.gethostname()}')
     logger.log('Arguments: ')
     logger.log(args)
 
     test_filename = common.find_test_filename(
-        args.datadir, appliance_name, 'test')
+        args.datadir, appliance_name, 'test'
+    )
     logger.log('File for test: ' + test_filename)
     test_file_path = os.path.join(args.datadir, appliance_name, test_filename)
     logger.log('Loading from: ' + test_file_path)
 
-    test_set_x, test_set_y, test_set_y_status = common.load_dataset(test_file_path,
-                                                                    args.crop)
+    test_set_x, test_set_y, test_set_y_status = common.load_dataset(
+        test_file_path, args.crop
+    )
     logger.log(f'There are {test_set_x.size/10**6:.3f}M test samples.')
 
     window_length = common.params_appliance[appliance_name]['window_length']
