@@ -46,9 +46,18 @@ class NILMTestMetrics():
             ValueError if target and prediction datasets are not same size.
         """
         if target.shape != prediction.shape:
-            raise ValueError('Target and prediction must be same shape.')
-        if target.shape != target_status.shape or prediction.shape != prediction_status.shape:
-            raise ValueError('Status shapes must match data shapes.')
+            raise ValueError(
+                f'Target {target.shape} and prediction {prediction.shape} must be same shape.'
+            )
+        if target.shape != target_status.shape:
+            raise ValueError(
+                f'Target shape {target.shape} must match target status shape {target_status.shape}.'
+            )
+        if prediction.shape != prediction_status.shape:
+            raise ValueError(
+                f'Prediction shape {prediction.shape} must match '
+                f'prediction status shape {prediction_status.shape}.'
+            )
 
         self.target = target
         self.target_status = target_status
