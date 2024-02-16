@@ -1,11 +1,11 @@
 """
-Predict appliance type and power using novel data from my home.
+Predict and analyze appliance type and power using novel data from my home.
 
 Actual mains power is captured in a csv file by real-time telemetry code
 running on a Raspberry Pi that also performs load disaggregation inference
 using TFLite models converted from the trained TensorFlow floating point
 models. These TensorFlow models are used here to also perform load disaggregation
-and the results can be plotted against the TFLite inferences. Ground truth power
+and the results can be compared against the TFLite inferences. Ground truth power
 consumption for the appliances are captured by another telemetry program
 which can be used to evaluate both the TensorFlow and TFLite inference results.
 
@@ -262,34 +262,33 @@ def get_realtime_predictions(file_name, crop=None, zone='US/Pacific') -> pd.Data
 def compute_metrics(
         ground_truth:np.ndarray,
         ground_truth_status:np.ndarray,
-        prediction:np.ndarray,
-        prediction_status:np.ndarray,
-        logger,
-        sample_period=common.SAMPLE_PERIOD
+        pred:np.ndarray,
+        pred_status:np.ndarray,
+        log,
     ) -> None:
     """Assess performance of prediction vs ground truth."""
     metrics = NILMTestMetrics(
         target=ground_truth,
         target_status=ground_truth_status,
-        prediction=prediction,
-        prediction_status=prediction_status,
-        sample_period=sample_period
+        prediction=pred,
+        prediction_status=pred_status,
+        sample_period=common.SAMPLE_PERIOD
     )
-    logger.log(f'True positives: {metrics.get_tp()}')
-    logger.log(f'True negatives: {metrics.get_tn()}')
-    logger.log(f'False positives: {metrics.get_fp()}')
-    logger.log(f'False negatives: {metrics.get_fn()}')
-    logger.log(f'Accuracy: {metrics.get_accuracy()}')
-    logger.log(f'MCC: {metrics.get_mcc()}')
-    logger.log(f'F1: {metrics.get_f1()}')
-    logger.log(f'MAE: {metrics.get_abs_error()["mean"]} (W)')
-    logger.log(f'NDE: {metrics.get_nde()}')
-    logger.log(f'SAE: {metrics.get_sae()}')
-    epd_gt = metrics.get_epd(ground_truth * ground_truth_status, sample_period)
-    logger.log(f'Ground truth EPD: {epd_gt} (Wh)')
-    epd_pred = metrics.get_epd(prediction * prediction_status, sample_period)
-    logger.log(f'Predicted EPD: {epd_pred} (Wh)')
-    logger.log(f'EPD Relative Error: {100.0 * (epd_pred - epd_gt) / epd_gt} (%)')
+    log.log(f'True positives: {metrics.get_tp()}')
+    log.log(f'True negatives: {metrics.get_tn()}')
+    log.log(f'False positives: {metrics.get_fp()}')
+    log.log(f'False negatives: {metrics.get_fn()}')
+    log.log(f'Accuracy: {metrics.get_accuracy()}')
+    log.log(f'MCC: {metrics.get_mcc()}')
+    log.log(f'F1: {metrics.get_f1()}')
+    log.log(f'MAE: {metrics.get_abs_error()["mean"]} (W)')
+    log.log(f'NDE: {metrics.get_nde()}')
+    log.log(f'SAE: {metrics.get_sae()}')
+    epd_gt = metrics.get_epd(ground_truth * ground_truth_status, common.SAMPLE_PERIOD)
+    log.log(f'Ground truth EPD: {epd_gt} (Wh)')
+    epd_pred = metrics.get_epd(pred * pred_status, common.SAMPLE_PERIOD)
+    log.log(f'Predicted EPD: {epd_pred} (Wh)')
+    log.log(f'EPD Relative Error: {100.0 * (epd_pred - epd_gt) / epd_gt} (%)')
 
 if __name__ == '__main__':
     args = get_arguments()
@@ -363,9 +362,9 @@ if __name__ == '__main__':
         compute_metrics(
             ground_truth=gt_appliance_powers[:,i][:predicted_dataset_size],
             ground_truth_status=gt_status[:,i][:predicted_dataset_size],
-            prediction=predicted_powers[a],
-            prediction_status=prediction_status[i],
-            logger=logger
+            pred=predicted_powers[a],
+            pred_status=prediction_status[i],
+            log=logger
         )
     logger.log('Evaluating performance metrics of real-time predictions vs ground truth.')
     for i, a in enumerate(args.appliances):
@@ -373,9 +372,9 @@ if __name__ == '__main__':
         compute_metrics(
             ground_truth=gt_appliance_powers[:,i],
             ground_truth_status=gt_status[:,i],
-            prediction=rt_appliance_powers[:,i],
-            prediction_status=rt_preds_status[:,i],
-            logger=logger
+            pred=rt_appliance_powers[:,i],
+            pred_status=rt_preds_status[:,i],
+            log=logger
         )
 
     ###
