@@ -1,6 +1,14 @@
 """
 Predict appliance type and power using novel data from my home.
 
+Actual mains power is captured in a csv file by real-time telemetry code
+running on a Raspberry Pi that also performs load disaggregation inference
+using TFLite models converted from the trained TensorFlow floating point
+models. These TensorFlow models are used here to also perform load disaggregation
+and the results can be plotted against the TFLite inferences. Ground truth power
+consumption for the appliances are captured by another telemetry program
+which can be used to evaluate both the TensorFlow and TFLite inference results.
+
 Copyright (c) 2022~2024 Lindo St. Angel
 """
 
@@ -104,11 +112,6 @@ def get_arguments():
         help='if set, show real-time predictions on plot'
     )
     parser.add_argument(
-        '--threshold_rt_preds',
-        action='store_true',
-        help='if set, apply power on thresholds to real-time predictions on plot'
-    )
-    parser.add_argument(
         '--show_gt',
         action='store_true',
         help='if set, show appliance ground truth plots'
@@ -202,7 +205,7 @@ def get_real_power(file_name, crop=None, zone='US/Pacific') -> pd.DataFrame:
     dataframe = dataframe.drop(columns=['W1', 'W2'])
     # Adjustment for prediction timing.
     # Adjustment is done by moving samples later in time by a value equal
-    # to the window center since the code places the prediction
+    # to the window center since the predict function places the prediction
     # at the beginning of a window of samples.
     window_center = int(0.5 * (WINDOW_LENGTH - 1.0))
     return dataframe.shift(periods=window_center, fill_value=0)
@@ -217,19 +220,15 @@ def get_ground_truth(file_name, crop=None, zone='US/Pacific') -> pd.DataFrame:
         parse_dates=['date'],
         date_format='ISO8601'
     )
-
     # Localize datetimes.
     dataframe = dataframe.tz_convert(tz=zone)
     # Convert NaN's into zero's
     dataframe = dataframe.fillna(0)
-
     # Make columns of appliance data into rows.
     # Note apower is active power which is same as real power.
     dataframe = pd.pivot(dataframe, columns='appliance', values='apower')
-
     # Make column names consistent with convention.
     dataframe.rename(columns={'washing machine': 'washingmachine'}, inplace=True)
-
     # Downsample to match global sample rate.
     # Although the appliance ground truth power was sampled at 1 data point every 8 seconds,
     # each appliance was read consecutively by the logging program with about 1 second
@@ -238,20 +237,17 @@ def get_ground_truth(file_name, crop=None, zone='US/Pacific') -> pd.DataFrame:
     resample_period = f'{common.SAMPLE_PERIOD}s'
     return dataframe.resample(resample_period).max()
 
-def get_realtime_predictions(
-        file_name, crop=None, apply_threshold=False, zone='US/Pacific'
-    ) -> pd.DataFrame:
+def get_realtime_predictions(file_name, crop=None, zone='US/Pacific') -> pd.DataFrame:
     """Load appliance power predictions that were preformed in real-time with datetimes."""
     # Load real-time prediction dataset.
     dataframe = pd.read_csv(
         file_name,
-        index_col=0,
+        index_col=0, # make datetime the index
         nrows=crop,
         usecols=['DT']+DEFAULT_APPLIANCES,
         parse_dates=['DT'],
         date_format='ISO8601'
     )
-
     # Localize datetimes.
     dataframe = dataframe.tz_convert(tz=zone)
     # Convert NaN's into zero's
@@ -261,12 +257,39 @@ def get_realtime_predictions(
     # to the window center since the real-time code places the prediction
     # at the end of a window of samples.
     window_center = int(0.5 * (WINDOW_LENGTH - 1.0))
-    dataframe = dataframe.shift(periods=-window_center, fill_value=0)
+    return dataframe.shift(periods=-window_center, fill_value=0)
 
-    if apply_threshold:
-        dataframe[dataframe < 0] = 0
-
-    return dataframe
+def compute_metrics(
+        ground_truth:np.ndarray,
+        ground_truth_status:np.ndarray,
+        prediction:np.ndarray,
+        prediction_status:np.ndarray,
+        logger,
+        sample_period=common.SAMPLE_PERIOD
+    ) -> None:
+    """Assess performance of prediction vs ground truth."""
+    metrics = NILMTestMetrics(
+        target=ground_truth,
+        target_status=ground_truth_status,
+        prediction=prediction,
+        prediction_status=prediction_status,
+        sample_period=sample_period
+    )
+    logger.log(f'True positives: {metrics.get_tp()}')
+    logger.log(f'True negatives: {metrics.get_tn()}')
+    logger.log(f'False positives: {metrics.get_fp()}')
+    logger.log(f'False negatives: {metrics.get_fn()}')
+    logger.log(f'Accuracy: {metrics.get_accuracy()}')
+    logger.log(f'MCC: {metrics.get_mcc()}')
+    logger.log(f'F1: {metrics.get_f1()}')
+    logger.log(f'MAE: {metrics.get_abs_error()["mean"]} (W)')
+    logger.log(f'NDE: {metrics.get_nde()}')
+    logger.log(f'SAE: {metrics.get_sae()}')
+    epd_gt = metrics.get_epd(ground_truth * ground_truth_status, sample_period)
+    logger.log(f'Ground truth EPD: {epd_gt} (Wh)')
+    epd_pred = metrics.get_epd(prediction * prediction_status, sample_period)
+    logger.log(f'Predicted EPD: {epd_pred} (Wh)')
+    logger.log(f'EPD Relative Error: {100.0 * (epd_pred - epd_gt) / epd_gt} (%)')
 
 if __name__ == '__main__':
     args = get_arguments()
@@ -285,19 +308,24 @@ if __name__ == '__main__':
         else 'Using default standardization.'
     )
 
-    # Get mains real power samples and datetimes.
+    # Get mains real power samples.
     rt_filename = os.path.join(args.datadir, args.panel, args.rt_preds_filename)
     rp_df = get_real_power(rt_filename, crop=args.crop)
     logger.log(f'There are {rp_df.size/10**6:.3f}M real power samples.')
 
     # Get ground truth dataset.
-    if args.show_gt:
-        gt_filename = os.path.join(args.datadir, args.panel, args.gt_filename)
-        gt = get_ground_truth(gt_filename)
-        # Merge mains dataset with ground truth dataset.
-        rp_df = pd.merge_asof(rp_df, gt, left_index=True, right_index=True)
+    gt_filename = os.path.join(args.datadir, args.panel, args.gt_filename)
+    gt = get_ground_truth(gt_filename)
+    # Merge mains dataset with ground truth dataset.
+    rp_df = pd.merge_asof(rp_df, gt, left_index=True, right_index=True)
+    gt_appliance_powers = np.array(rp_df[args.appliances], dtype=np.float32)
+    gt_status = np.array(
+        [common.compute_status(gt_appliance_powers[:,i], a) for i, a in enumerate(args.appliances)]
+    ).transpose()
+    # Apply status.
+    rp_df[args.appliances] *= gt_status
 
-    # Get a np.float32 version of the mains aka aggregate real power.
+    # Get a np array version of the mains aka aggregate real power.
     aggregate = np.array(rp_df['real_power'], dtype=np.float32)
 
     logger.log('Making power predictions.')
@@ -307,28 +335,48 @@ if __name__ == '__main__':
         ) for appliance in args.appliances
     }
 
-    logger.log('Applying appliance on-off status to predictions.')
-    for appliance in args.appliances:
-        status = np.array(common.compute_status(predicted_powers[appliance], appliance))
-        predicted_powers[appliance] *= status
+    # Apply status to predictions.
+    prediction_status = np.array(
+        [common.compute_status(predicted_powers[a], a) for a in args.appliances]
+    )
+    for i, k in enumerate(predicted_powers):
+        predicted_powers[k] *= prediction_status[i]
 
-    # Calculate metrics.
-    logger.log('*** Metric Summary ***')
-    aggregate_epd = NILMTestMetrics.get_epd(aggregate, common.SAMPLE_PERIOD)
-    logger.log(f'Aggregate energy: {aggregate_epd/1000:.3f} kWh per day')
-    for appliance in args.appliances:
-        epd = NILMTestMetrics.get_epd(predicted_powers[appliance], common.SAMPLE_PERIOD)
-        logger.log(f'{appliance} energy: {epd/1000:.3f} kWh per day')
+    # Get real-time prediction dataset and apply status.
+    rt_preds = get_realtime_predictions(rt_filename, args.crop)
+    rt_appliance_powers = np.array(rt_preds, dtype=np.float32)
+    rt_preds_status = np.array(
+        [common.compute_status(rt_appliance_powers[:,i], a) for i, a in enumerate(args.appliances)]
+    ).transpose()
+    rt_preds *= rt_preds_status
 
-    # Get real-time prediction dataset.
-    if args.show_rt_preds:
-        rt_preds = get_realtime_predictions(rt_filename, args.crop, args.threshold_rt_preds)
-
-    # Predicted dataset size is used to crop datasets used in plotting since test_provider
+    # Predicted dataset size is used to crop datasets since test_provider
     # defaults to outputting complete batches so there will be more mains
     # samples than predictions.
     # See `allow_partial_batches' parameter in window_generator.
     predicted_dataset_size = predicted_powers[DEFAULT_APPLIANCES[0]].size
+
+    # Compute metrics for predictions.
+    logger.log('Evaluating performance metrics of predictions vs ground truth.')
+    for i, a in enumerate(args.appliances):
+        logger.log(f'\nMetrics for {a}:')
+        compute_metrics(
+            ground_truth=gt_appliance_powers[:,i][:predicted_dataset_size],
+            ground_truth_status=gt_status[:,i][:predicted_dataset_size],
+            prediction=predicted_powers[a],
+            prediction_status=prediction_status[i],
+            logger=logger
+        )
+    logger.log('Evaluating performance metrics of real-time predictions vs ground truth.')
+    for i, a in enumerate(args.appliances):
+        logger.log(f'\nMetrics for {a}:')
+        compute_metrics(
+            ground_truth=gt_appliance_powers[:,i],
+            ground_truth_status=gt_status[:,i],
+            prediction=rt_appliance_powers[:,i],
+            prediction_status=rt_preds_status[:,i],
+            logger=logger
+        )
 
     ###
     ### Save and show appliance powers each in a single row of subplots.
@@ -363,8 +411,8 @@ if __name__ == '__main__':
             ax[row].legend(loc='upper right')
         if args.show_gt:
             ax[row].plot(
-                rp_df[appliance],
-                label='ground_truth', color='blue'
+                rp_df[appliance], color='blue',
+                linewidth=1.5, label='ground_truth'
             )
             ax[row].legend(loc='upper right', fontsize='x-small')
         row+=1
