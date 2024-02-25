@@ -15,6 +15,8 @@ Copyright (c) 2022~2024 Lindo St. Angel
 import os
 import argparse
 import socket
+import glob
+import sys
 from collections import OrderedDict
 
 import numpy as np
@@ -29,11 +31,19 @@ from logger import Logger
 from window_generator import WindowGenerator
 from nilm_metric import NILMTestMetrics
 
-WINDOW_LENGTH = 599 # input sample window length for all appliances
+# Input sample window length for all appliances
+WINDOW_LENGTH = 599
 
-DEFAULT_APPLIANCES = [
-        'kettle', 'fridge', 'microwave', 'washingmachine', 'dishwasher'
-    ]
+# Names of all appliances that can be monitored.
+DEFAULT_APPLIANCES = ['kettle', 'fridge', 'microwave', 'washingmachine', 'dishwasher']
+
+# csv file name prefix of mains power and appliance predictions.
+# These files are in the 'default_dataset_dir' identified below.
+RT_DATA_FILE_PREFIX = 'samples'
+
+# csv fine name of ground truth appliance power readings.
+# These files are in the 'default_dataset_dir' identified below.
+GT_DATA_FILE_PREFIX = 'appliance_energy_data_'
 
 def get_arguments():
     """Get command line arguments."""
@@ -41,8 +51,6 @@ def get_arguments():
     default_results_dir = '/home/lindo/Develop/nilm/ml/results'
     default_dataset_dir = '/home/lindo/Develop/nilm-datasets/my-house'
     default_panel_location = 'house'
-    default_rt_preds_filename = 'samples_02_20_23.csv'
-    default_gt_filename= 'appliance_energy_data_022023.csv'
 
     parser = argparse.ArgumentParser(
         description='Predict appliance type and power using novel data from my home.'
@@ -61,21 +69,10 @@ def get_arguments():
         help='novel dataset(s) directory'
     )
     parser.add_argument(
-        '--rt_preds_filename',
-        type=str,
-        default=default_rt_preds_filename,
-        help='real-time prediction dataset filename'
-    )
-    parser.add_argument(
         '--panel',
         type=str,
         default=default_panel_location,
         help='sub-panel location'
-    )
-    parser.add_argument(
-        '--gt_filename',
-        type=str, default=default_gt_filename,
-        help='ground truth dataset filename'
     )
     parser.add_argument(
         '--model_dir',
@@ -119,7 +116,6 @@ def get_arguments():
     parser.set_defaults(show_gt=False)
     parser.set_defaults(plot=False)
     parser.set_defaults(show_rt_preds=False)
-    parser.set_defaults(threshold_rt_preds=False)
 
     return parser.parse_args()
 
@@ -307,45 +303,68 @@ if __name__ == '__main__':
         else 'Using default standardization.'
     )
 
-    # Get mains real power samples.
-    rt_filename = os.path.join(args.datadir, args.panel, args.rt_preds_filename)
-    rp_df = get_real_power(rt_filename, crop=args.crop)
+    # Get all mains real power samples.
+    all_rt_files = glob.glob(
+        os.path.join(args.datadir, args.panel) + f'/{RT_DATA_FILE_PREFIX}*.csv'
+    )
+    rp_df_from_each_file = (get_real_power(f, crop=args.crop) for f in all_rt_files)
+    rp_df = pd.concat(rp_df_from_each_file)
+    rp_df.sort_index(inplace=True)
     logger.log(f'There are {rp_df.size/10**6:.3f}M real power samples.')
 
-    # Get ground truth dataset.
-    gt_filename = os.path.join(args.datadir, args.panel, args.gt_filename)
-    gt = get_ground_truth(gt_filename)
+    # Get all ground truth datasets.
+    all_gt_files = glob.glob(
+        os.path.join(args.datadir, args.panel) + f'/{GT_DATA_FILE_PREFIX}*.csv'
+    )
+    gt_df_from_each_file = (get_ground_truth(f, crop=args.crop) for f in all_gt_files)
+    gt_df = pd.concat(gt_df_from_each_file)
+    gt_df.sort_index(inplace=True)
+
     # Merge mains dataset with ground truth dataset.
-    rp_df = pd.merge_asof(rp_df, gt, left_index=True, right_index=True)
-    gt_appliance_powers = np.array(rp_df[args.appliances], dtype=np.float32)
+    rp_df = pd.merge_asof(rp_df, gt_df, left_index=True, right_index=True)
+
+    # Determine what appliances are actually in the datasets.
+    appliances_in_rp_df = list(set(rp_df.columns.to_list()).intersection(args.appliances))
+    if not appliances_in_rp_df:
+        logger.log('No appliances were found in datasets.')
+        sys.exit()
+    logger.log(f'Found {appliances_in_rp_df} in datasets.')
+
+    # Compute and apply status to appliance powers in the merged mains and ground truth df.
+    gt_appliance_powers = np.array(rp_df[appliances_in_rp_df], dtype=np.float32)
     gt_status = np.array(
-        [common.compute_status(gt_appliance_powers[:,i], a) for i, a in enumerate(args.appliances)]
+        [common.compute_status(
+            gt_appliance_powers[:,i], a
+        ) for i, a in enumerate(appliances_in_rp_df)]
     ).transpose()
-    # Apply status.
-    rp_df[args.appliances] *= gt_status
+    rp_df[appliances_in_rp_df] *= gt_status
 
-    # Get a np array version of the mains aka aggregate real power.
+    # Get the mains (aka aggregate) real power and perform inference with it.
     aggregate = np.array(rp_df['real_power'], dtype=np.float32)
-
     logger.log('Making power predictions.')
     predicted_powers = {
         appliance: predict(
             appliance, aggregate, args.model_dir, args.model_arch
-        ) for appliance in args.appliances
+        ) for appliance in appliances_in_rp_df
     }
 
     # Apply status to predictions.
     prediction_status = np.array(
-        [common.compute_status(predicted_powers[a], a) for a in args.appliances]
+        [common.compute_status(predicted_powers[a], a) for a in appliances_in_rp_df]
     )
     for i, k in enumerate(predicted_powers):
         predicted_powers[k] *= prediction_status[i]
 
     # Get real-time prediction dataset and apply status.
-    rt_preds = get_realtime_predictions(rt_filename, args.crop)
+    rt_preds_df_from_each_file = (get_realtime_predictions(f, crop=args.crop) for f in all_rt_files)
+    rt_preds = pd.concat(rt_preds_df_from_each_file)
+    rt_preds = rt_preds[appliances_in_rp_df]
+    rt_preds.sort_index(inplace=True)
     rt_appliance_powers = np.array(rt_preds, dtype=np.float32)
     rt_preds_status = np.array(
-        [common.compute_status(rt_appliance_powers[:,i], a) for i, a in enumerate(args.appliances)]
+        [common.compute_status(
+            rt_appliance_powers[:,i], a
+        ) for i, a in enumerate(appliances_in_rp_df)]
     ).transpose()
     rt_preds *= rt_preds_status
 
@@ -357,7 +376,7 @@ if __name__ == '__main__':
 
     # Compute metrics for predictions.
     logger.log('Evaluating performance metrics of predictions vs ground truth.')
-    for i, a in enumerate(args.appliances):
+    for i, a in enumerate(appliances_in_rp_df):
         logger.log(f'\nMetrics for {a}:')
         compute_metrics(
             ground_truth=gt_appliance_powers[:,i][:predicted_dataset_size],
@@ -367,7 +386,7 @@ if __name__ == '__main__':
             log=logger
         )
     logger.log('Evaluating performance metrics of real-time predictions vs ground truth.')
-    for i, a in enumerate(args.appliances):
+    for i, a in enumerate(appliances_in_rp_df):
         logger.log(f'\nMetrics for {a}:')
         compute_metrics(
             ground_truth=gt_appliance_powers[:,i],
@@ -382,7 +401,7 @@ if __name__ == '__main__':
     ###
     # Find max value in predictions for setting plot limits.
     max_pred = np.ceil(np.max(list(predicted_powers.values())))
-    nrows = len(args.appliances) + 1
+    nrows = len(appliances_in_rp_df) + 1
     fig, ax = plt.subplots(nrows=nrows, ncols=1, constrained_layout=False)
     ax[0].set_ylabel('Watts')
     ax[0].set_title('aggregate')
@@ -393,7 +412,7 @@ if __name__ == '__main__':
     ax[0].xaxis.set_major_formatter(AutoDateFormatter(locator=locator))
     fig.autofmt_xdate()
     row = 1
-    for appliance in args.appliances:
+    for appliance in appliances_in_rp_df:
         ax[row].set_ylabel('Watts')
         ax[row].set_title(appliance)
         ax[row].set_ylim(0, max_pred)
@@ -463,7 +482,7 @@ if __name__ == '__main__':
     ax.xaxis.set_major_formatter(AutoDateFormatter(locator=locator))
     fig.autofmt_xdate()
     # Plot appliance powers.
-    for i, appliance in enumerate(args.appliances):
+    for i, appliance in enumerate(appliances_in_rp_df):
         ax.plot(
             rp_df.index[:predicted_dataset_size],
             predicted_powers[appliance],
