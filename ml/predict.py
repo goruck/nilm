@@ -326,7 +326,7 @@ if __name__ == '__main__':
     # Since mains was sampled asynchronously wrt ground truth, used asof merge.
     rp_df = pd.merge_asof(rp_df, gt_df, left_index=True, right_index=True)
     # Cover case where there is no ground truth for some appliances.
-    all_appliance_counter = Counter(args.appliances)
+    all_appliance_counter = Counter(DEFAULT_APPLIANCES)
     gt_appliance_counter = Counter(gt_df.columns.to_list())
     if all_appliance_counter != gt_appliance_counter:
         missing_appliances = list(all_appliance_counter - gt_appliance_counter)
@@ -360,6 +360,7 @@ if __name__ == '__main__':
     rt_preds_df_from_each_file = (get_realtime_predictions(f, crop=args.crop) for f in all_rt_files)
     rt_preds = pd.concat(rt_preds_df_from_each_file)
     rt_preds.sort_index(inplace=True)
+    rt_preds = rt_preds[args.appliances] # cover case where subset of appliances are specified
     rt_appliance_powers = np.array(rt_preds, dtype=np.float32)
     rt_preds_status = np.array(
         [common.compute_status(rt_appliance_powers[:,i], a) for i, a in enumerate(args.appliances)]
@@ -369,7 +370,7 @@ if __name__ == '__main__':
     # defaults to outputting complete batches so there will be more mains
     # samples than predictions.
     # See `allow_partial_batches' parameter in window_generator.
-    predicted_dataset_size = predicted_powers[DEFAULT_APPLIANCES[0]].size
+    predicted_dataset_size = predicted_powers[args.appliances[0]].size
 
     # Compute metrics for predictions.
     logger.log('Evaluating performance metrics of predictions vs ground truth.')
