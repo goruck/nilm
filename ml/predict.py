@@ -16,7 +16,6 @@ import os
 import argparse
 import socket
 import glob
-import sys
 from collections import OrderedDict
 from collections import Counter
 
@@ -32,8 +31,11 @@ from logger import Logger
 from window_generator import WindowGenerator
 from nilm_metric import NILMTestMetrics
 
-# Input sample window length for all appliances
-WINDOW_LENGTH = 599
+# Inference input sample window length for all appliances
+WINDOW_LENGTH = 599 # units: samples
+
+# Center of window where inference result is placed.
+WINDOW_CENTER = int(0.5 * (WINDOW_LENGTH - 1.0)) # units: samples
 
 # Names of all appliances that can be monitored.
 DEFAULT_APPLIANCES = ['kettle', 'fridge', 'microwave', 'washingmachine', 'dishwasher']
@@ -42,7 +44,7 @@ DEFAULT_APPLIANCES = ['kettle', 'fridge', 'microwave', 'washingmachine', 'dishwa
 # These files are in the 'default_dataset_dir' identified below.
 RT_DATA_FILE_PREFIX = 'samples'
 
-# csv fine name of ground truth appliance power readings.
+# csv file name of ground truth appliance power readings.
 # These files are in the 'default_dataset_dir' identified below.
 GT_DATA_FILE_PREFIX = 'appliance_energy_data_'
 
@@ -199,13 +201,7 @@ def get_real_power(file_name, crop=None, zone='US/Pacific') -> pd.DataFrame:
     real_power = dataframe['W1'] + dataframe['W2']
     dataframe.insert(loc=0, column='real_power', value=real_power)
     # Remove W1 and W2 since they are no longer needed.
-    dataframe = dataframe.drop(columns=['W1', 'W2'])
-    # Adjustment for prediction timing.
-    # Adjustment is done by moving samples later in time by a value equal
-    # to the window center since the predict function places the prediction
-    # at the beginning of a window of samples.
-    window_center = int(0.5 * (WINDOW_LENGTH - 1.0))
-    return dataframe.shift(periods=window_center, fill_value=0)
+    return dataframe.drop(columns=['W1', 'W2'])
 
 def get_ground_truth(file_name, crop=None, zone='US/Pacific') -> pd.DataFrame:
     """Load ground truth dataset and return appliance active power with datetimes."""
@@ -253,8 +249,7 @@ def get_realtime_predictions(file_name, crop=None, zone='US/Pacific') -> pd.Data
     # Adjustment is done by moving samples earlier in time by a value equal
     # to the window center since the real-time code places the prediction
     # at the end of a window of samples.
-    window_center = int(0.5 * (WINDOW_LENGTH - 1.0))
-    return dataframe.shift(periods=-window_center, fill_value=0)
+    return dataframe.shift(periods=-WINDOW_CENTER, fill_value=0)
 
 def compute_metrics(
         ground_truth:np.ndarray,
@@ -313,6 +308,7 @@ if __name__ == '__main__':
     rp_df = pd.concat(rp_df_from_each_file)
     rp_df.sort_index(inplace=True)
     logger.log(f'There are {rp_df.size/10**6:.3f}M real power samples.')
+
     # Get all ground truth datasets.
     all_gt_files = glob.glob(
         os.path.join(args.datadir, args.panel) + f'/{GT_DATA_FILE_PREFIX}*.csv'
@@ -324,24 +320,24 @@ if __name__ == '__main__':
 
     # Merge mains dataset with ground truth dataset.
     # Since mains was sampled asynchronously wrt ground truth, used asof merge.
-    rp_df = pd.merge_asof(rp_df, gt_df, left_index=True, right_index=True)
+    # This will align ground truth datetimes with real power datetimes.
+    gt_df = pd.merge_asof(rp_df, gt_df, left_index=True, right_index=True)
     # Cover case where there is no ground truth for some appliances.
     all_appliance_counter = Counter(DEFAULT_APPLIANCES)
     gt_appliance_counter = Counter(gt_df.columns.to_list())
     if all_appliance_counter != gt_appliance_counter:
         missing_appliances = list(all_appliance_counter - gt_appliance_counter)
         logger.log(f'Adding missing ground truth appliances: {missing_appliances}.')
-        rp_df.loc[:, missing_appliances] = np.nan
+        gt_df.loc[:, missing_appliances] = np.nan
 
-    # Compute and apply status to appliance powers in the merged mains and ground truth df.
-    gt_appliance_powers = np.array(rp_df[args.appliances], dtype=np.float32)
+    # Compute and apply status to ground truth dataframe.
     gt_status = np.array(
-        [common.compute_status(gt_appliance_powers[:,i], a) for i, a in enumerate(args.appliances)]
+        [common.compute_status(np.array(gt_df.loc[:,a]), a) for a in args.appliances]
     ).transpose()
-    rp_df[args.appliances] *= gt_status
+    gt_df[args.appliances] *= gt_status
 
     # Get the mains (aka aggregate) real power and perform inference with it.
-    aggregate = np.array(rp_df['real_power'], dtype=np.float32)
+    aggregate = np.array(rp_df, dtype=np.float32)
     logger.log('Making power predictions.')
     predicted_powers = {
         appliance: predict(
@@ -349,48 +345,56 @@ if __name__ == '__main__':
         ) for appliance in args.appliances
     }
 
-    # Apply status to predictions.
-    prediction_status = np.array(
-        [common.compute_status(predicted_powers[a], a) for a in args.appliances]
-    )
-    for i, k in enumerate(predicted_powers):
-        predicted_powers[k] *= prediction_status[i]
-
-    # Get real-time prediction dataset and apply status.
-    rt_preds_df_from_each_file = (get_realtime_predictions(f, crop=args.crop) for f in all_rt_files)
-    rt_preds = pd.concat(rt_preds_df_from_each_file)
-    rt_preds.sort_index(inplace=True)
-    rt_preds = rt_preds[args.appliances] # cover case where subset of appliances are specified
-    rt_appliance_powers = np.array(rt_preds, dtype=np.float32)
-    rt_preds_status = np.array(
-        [common.compute_status(rt_appliance_powers[:,i], a) for i, a in enumerate(args.appliances)]
-    ).transpose()
-    rt_preds *= rt_preds_status
     # Predicted dataset size is used to crop datasets since test_provider
     # defaults to outputting complete batches so there will be more mains
     # samples than predictions.
     # See `allow_partial_batches' parameter in window_generator.
     predicted_dataset_size = predicted_powers[args.appliances[0]].size
 
+    # Create a dataframe containing the predicted power.
+    # Add back datetime index and adjustment for prediction timing.
+    # Adjustment is done by moving samples later in time by a value equal
+    # to the window center since the predict function places the prediction
+    # at the beginning of a window of samples.
+    pp_df = pd.DataFrame(predicted_powers)
+    pp_df.set_index(rp_df.index[:predicted_dataset_size], inplace=True)
+    pp_df = pp_df.shift(periods=WINDOW_CENTER, fill_value=0)
+
+    # Compute and apply status to predictions.
+    pp_status = np.array(
+        [common.compute_status(np.array(pp_df.loc[:,a]), a) for a in args.appliances]
+    ).transpose()
+    pp_df *= pp_status
+
+    # Get real-time prediction dataset and apply status.
+    rt_df_from_each_file = (get_realtime_predictions(f, crop=args.crop) for f in all_rt_files)
+    rt_df = pd.concat(rt_df_from_each_file)
+    rt_df.sort_index(inplace=True)
+    rt_df = rt_df[args.appliances] # cover case where subset of appliances are specified
+    rt_status = np.array(
+        [common.compute_status(np.array(rt_df.loc[:,a]), a) for a in args.appliances]
+    ).transpose()
+    rt_df *= rt_status
+
     # Compute metrics for predictions.
     logger.log('Evaluating performance metrics of predictions vs ground truth.')
     for i, a in enumerate(args.appliances):
         logger.log(f'\nMetrics for {a}:')
         compute_metrics(
-            ground_truth=gt_appliance_powers[:,i][:predicted_dataset_size],
+            ground_truth=np.array(gt_df.loc[:,a])[:predicted_dataset_size],
             ground_truth_status=gt_status[:,i][:predicted_dataset_size],
-            pred=predicted_powers[a],
-            pred_status=prediction_status[i],
+            pred=np.array(pp_df.loc[:,a]),
+            pred_status=pp_status[:,i],
             log=logger
         )
     logger.log('Evaluating performance metrics of real-time predictions vs ground truth.')
     for i, a in enumerate(args.appliances):
         logger.log(f'\nMetrics for {a}:')
         compute_metrics(
-            ground_truth=gt_appliance_powers[:,i],
+            ground_truth=np.array(gt_df.loc[:,a]),
             ground_truth_status=gt_status[:,i],
-            pred=rt_appliance_powers[:,i],
-            pred_status=rt_preds_status[:,i],
+            pred=np.array(rt_df.loc[:,a]),
+            pred_status=rt_status[:,i],
             log=logger
         )
 
@@ -400,10 +404,11 @@ if __name__ == '__main__':
     # Find max value in predictions for setting plot limits.
     max_pred = np.ceil(np.max(list(predicted_powers.values())))
     nrows = len(args.appliances) + 1
-    fig, ax = plt.subplots(nrows=nrows, ncols=1, constrained_layout=False)
+    fig, ax = plt.subplots(nrows=nrows, ncols=1)
     ax[0].set_ylabel('Watts')
+    # Plot mains power.
     ax[0].set_title('aggregate')
-    ax[0].plot(rp_df['real_power'][:predicted_dataset_size], color='orange', linewidth=1.8)
+    ax[0].plot(rp_df[:predicted_dataset_size], color='orange', linewidth=1.8)
     # Set friendly looking date and times on x-axis.
     locator = AutoDateLocator()
     ax[0].xaxis.set_major_locator(locator=locator)
@@ -415,20 +420,16 @@ if __name__ == '__main__':
         ax[row].set_title(appliance)
         ax[row].set_ylim(0, max_pred)
         ax[row].plot(
-            rp_df.index[:predicted_dataset_size],
-            predicted_powers[appliance],
-            color='red', linewidth=1.5, label='prediction'
+            pp_df[appliance], color='red', linewidth=1.5, label='prediction'
         )
         if args.show_rt_preds:
             ax[row].plot(
-                rt_preds[appliance], color='green',
-                linewidth=1.5, label='real-time prediction'
+                rt_df[appliance], color='green', linewidth=1.5, label='real-time prediction'
             )
             ax[row].legend(loc='upper right')
         if args.show_gt:
             ax[row].plot(
-                rp_df[appliance], color='blue',
-                linewidth=1.5, label='ground_truth'
+                gt_df[appliance], color='blue', linewidth=1.5, label='ground_truth'
             )
             ax[row].legend(loc='upper right', fontsize='x-small')
         row+=1
@@ -471,7 +472,7 @@ if __name__ == '__main__':
     ax.set_xlabel('Date-Time')
     # Plot mains power.
     ax.plot(
-        rp_df['real_power'][:predicted_dataset_size],
+        rp_df[:predicted_dataset_size],
         color=color_names[0], linewidth=1.8, linestyle=line_styles[0], label='Aggregate'
     )
     # Set friendly looking date and times on x-axis.
@@ -482,9 +483,8 @@ if __name__ == '__main__':
     # Plot appliance powers.
     for i, appliance in enumerate(args.appliances):
         ax.plot(
-            rp_df.index[:predicted_dataset_size],
-            predicted_powers[appliance],
-            color=color_names[i+1], linewidth=1.5, linestyle=line_styles[i+1], label=appliance
+            pp_df[appliance], color=color_names[i+1],
+            linewidth=1.5, linestyle=line_styles[i+1], label=appliance
         )
     ax.legend(loc='upper right', fontsize='x-small')
     # Save and optionally show plot.
