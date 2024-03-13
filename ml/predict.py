@@ -9,6 +9,10 @@ and the results can be compared against the TFLite inferences. Ground truth powe
 consumption for the appliances are captured by another telemetry program
 which can be used to evaluate both the TensorFlow and TFLite inference results.
 
+See rpi/infer.py for real-time mains power telemetry and inference code.
+
+See https://github.com/goruck/simple-energy-logger real-time ground truth telemetry code.
+
 Copyright (c) 2022~2024 Lindo St. Angel
 """
 
@@ -16,13 +20,10 @@ import os
 import argparse
 import socket
 import glob
-from collections import OrderedDict
-from collections import Counter
 
 import numpy as np
 import tensorflow as tf
 import matplotlib.pyplot as plt
-import matplotlib.colors as mcolors
 from matplotlib.dates import AutoDateLocator, AutoDateFormatter
 import pandas as pd
 
@@ -194,17 +195,29 @@ def get_real_power(file_name, crop=None, zone='US/Pacific') -> pd.DataFrame:
     )
     # Localize datetimes.
     dataframe = dataframe.tz_convert(tz=zone)
-    # Convert NaN's into zero's
-    dataframe = dataframe.fillna(0)
     # Compute total real power and insert into dataframe.
     # W1 and W2 are the real power in each phase.
     real_power = dataframe['W1'] + dataframe['W2']
     dataframe.insert(loc=0, column='real_power', value=real_power)
     # Remove W1 and W2 since they are no longer needed.
-    return dataframe.drop(columns=['W1', 'W2'])
+    dataframe = dataframe.drop(columns=['W1', 'W2'])
+    return dataframe.fillna(0)
 
 def get_ground_truth(file_name, crop=None, zone='US/Pacific') -> pd.DataFrame:
-    """Load ground truth dataset and return appliance active power with datetimes."""
+    """Load ground truth dataset and return appliance active power with datetimes.
+
+    This reads a ground truth csv file, as a dataframe, localizes it, converts it
+    from a row format to column format, corrects for inconsistent appliance naming,
+    adds missing default appliances and downsamples to match mains sample rate.
+
+    If the dataset has fewer appliances than what is defined in DEFAULT_APPLIANCES,
+    the missing appliance(s) will be added with all power values set to NaN.
+
+    Args:
+        file_name: Full path to ground truth dataset in csv format with datetimes.
+        crop: Get only this number of rows from dataset.
+        zone: Localize datetimes in dataset to this time zone.
+    """
     dataframe = pd.read_csv(
         file_name,
         index_col=0,
@@ -215,20 +228,21 @@ def get_ground_truth(file_name, crop=None, zone='US/Pacific') -> pd.DataFrame:
     )
     # Localize datetimes.
     dataframe = dataframe.tz_convert(tz=zone)
-    # Convert NaN's into zero's
-    dataframe = dataframe.fillna(0)
-    # Make columns of appliance data into rows.
-    # Note apower is active power which is same as real power.
-    dataframe = pd.pivot(dataframe, columns='appliance', values='apower')
-    # Make column names consistent with convention.
-    dataframe.rename(columns={'washing machine': 'washingmachine'}, inplace=True)
+    def row_to_column(x:str) -> pd.DataFrame:
+        """Convert rows of appliance data to columns."""
+        force_consistent_names = 'washing machine' if x == 'washingmachine' else x
+        df = dataframe.loc[dataframe['appliance'] == force_consistent_names]
+        df = df.drop(columns=['appliance'])
+        return df.rename(columns={'apower': x})
+    all_columns = [row_to_column(a) for a in DEFAULT_APPLIANCES]
+    dataframe = pd.concat(all_columns).sort_index()
     # Downsample to match global sample rate.
     # Although the appliance ground truth power was sampled at 1 data point every 8 seconds,
     # each appliance was read consecutively by the logging program with about 1 second
     # between reads. Therefore the dataset has groups of appliance readings clustered
     # around 8 second intervals that this downsampling corrects for.
     resample_period = f'{common.SAMPLE_PERIOD}s'
-    return dataframe.resample(resample_period).max()
+    return dataframe.resample(resample_period, origin='start').max()
 
 def get_realtime_predictions(file_name, crop=None, zone='US/Pacific') -> pd.DataFrame:
     """Load appliance power predictions that were preformed in real-time with datetimes."""
@@ -243,13 +257,12 @@ def get_realtime_predictions(file_name, crop=None, zone='US/Pacific') -> pd.Data
     )
     # Localize datetimes.
     dataframe = dataframe.tz_convert(tz=zone)
-    # Convert NaN's into zero's
-    dataframe = dataframe.fillna(0)
     # Adjustment for real-time prediction timing.
     # Adjustment is done by moving samples earlier in time by a value equal
     # to the window center since the real-time code places the prediction
     # at the end of a window of samples.
-    return dataframe.shift(periods=-WINDOW_CENTER, fill_value=0)
+    dataframe = dataframe.shift(periods=-WINDOW_CENTER, fill_value=0)
+    return dataframe.fillna(0)
 
 def compute_metrics(
         ground_truth:np.ndarray,
@@ -319,22 +332,14 @@ if __name__ == '__main__':
     gt_df.sort_index(inplace=True)
 
     # Merge mains dataset with ground truth dataset.
-    # Since mains was sampled asynchronously wrt ground truth, used asof merge.
+    # Since mains was sampled asynchronously wrt ground truth, use asof merge.
     # This will align ground truth datetimes with real power datetimes.
-    gt_df = pd.merge_asof(rp_df, gt_df, left_index=True, right_index=True)
-    # Cover case where there is no ground truth for some appliances.
-    all_appliance_counter = Counter(DEFAULT_APPLIANCES)
-    gt_appliance_counter = Counter(gt_df.columns.to_list())
-    if all_appliance_counter != gt_appliance_counter:
-        missing_appliances = list(all_appliance_counter - gt_appliance_counter)
-        logger.log(f'Adding missing ground truth appliances: {missing_appliances}.')
-        gt_df.loc[:, missing_appliances] = np.nan
+    gt_df = pd.merge_asof(rp_df, gt_df, left_index=True, right_index=True, direction='nearest')
 
-    # Compute and apply status to ground truth dataframe.
+    # Compute ground truth status.
     gt_status = np.array(
         [common.compute_status(np.array(gt_df.loc[:,a]), a) for a in args.appliances]
     ).transpose()
-    gt_df[args.appliances] *= gt_status
 
     # Get the mains (aka aggregate) real power and perform inference with it.
     aggregate = np.array(rp_df, dtype=np.float32)
@@ -377,11 +382,15 @@ if __name__ == '__main__':
     rt_df *= rt_status
 
     # Compute metrics for predictions.
+    # NaNa's in the ground truth data are converted to zeros but this leads
+    # to inaccuracy in metrics computations. The correct way is to only compute
+    # metrics on non-NaN ground truth data. TODO:fix.
     logger.log('Evaluating performance metrics of predictions vs ground truth.')
     for i, a in enumerate(args.appliances):
         logger.log(f'\nMetrics for {a}:')
         compute_metrics(
-            ground_truth=np.array(gt_df.loc[:,a])[:predicted_dataset_size],
+            # Crop ground truth data to match number of predictions.
+            ground_truth=np.nan_to_num(gt_df.loc[:,a])[:predicted_dataset_size],
             ground_truth_status=gt_status[:,i][:predicted_dataset_size],
             pred=np.array(pp_df.loc[:,a]),
             pred_status=pp_status[:,i],
@@ -391,7 +400,7 @@ if __name__ == '__main__':
     for i, a in enumerate(args.appliances):
         logger.log(f'\nMetrics for {a}:')
         compute_metrics(
-            ground_truth=np.array(gt_df.loc[:,a]),
+            ground_truth=np.nan_to_num(gt_df.loc[:,a]),
             ground_truth_status=gt_status[:,i],
             pred=np.array(rt_df.loc[:,a]),
             pred_status=rt_status[:,i],
@@ -408,7 +417,7 @@ if __name__ == '__main__':
     ax[0].set_ylabel('Watts')
     # Plot mains power.
     ax[0].set_title('aggregate')
-    ax[0].plot(rp_df[:predicted_dataset_size], color='orange', linewidth=1.8)
+    ax[0].plot(rp_df, color='orange', linewidth=1.8)
     # Set friendly looking date and times on x-axis.
     locator = AutoDateLocator()
     ax[0].xaxis.set_major_locator(locator=locator)
@@ -446,46 +455,19 @@ if __name__ == '__main__':
     ###
     ### Show mains power and appliance power predictions on one plot.
     ###
-    linestyles = OrderedDict(
-        [('solid',               (0, ())),
-        ('loosely dotted',      (0, (1, 10))),
-        ('dotted',              (0, (1, 5))),
-        ('densely dotted',      (0, (1, 1))),
-
-        ('loosely dashed',      (0, (5, 10))),
-        ('dashed',              (0, (5, 5))),
-        ('densely dashed',      (0, (5, 1))),
-
-        ('loosely dashdotted',  (0, (3, 10, 1, 10))),
-        ('dashdotted',          (0, (3, 5, 1, 5))),
-        ('densely dashdotted',  (0, (3, 1, 1, 1))),
-
-        ('loosely dashdotdotted', (0, (3, 10, 1, 10, 1, 10))),
-        ('dashdotdotted',         (0, (3, 5, 1, 5, 1, 5))),
-        ('densely dashdotdotted', (0, (3, 1, 1, 1, 1, 1)))]
-    )
-    color_names = list(mcolors.TABLEAU_COLORS)
-    line_styles = list(linestyles.values())
     fig, ax = plt.subplots()
     fig.suptitle(f'Prediction results for {args.panel}', fontsize=16, fontweight='bold')
     ax.set_ylabel('Watts')
     ax.set_xlabel('Date-Time')
     # Plot mains power.
-    ax.plot(
-        rp_df[:predicted_dataset_size],
-        color=color_names[0], linewidth=1.8, linestyle=line_styles[0], label='Aggregate'
-    )
+    ax.plot(rp_df, label='aggregate')
     # Set friendly looking date and times on x-axis.
     locator = AutoDateLocator()
     ax.xaxis.set_major_locator(locator=locator)
     ax.xaxis.set_major_formatter(AutoDateFormatter(locator=locator))
     fig.autofmt_xdate()
     # Plot appliance powers.
-    for i, appliance in enumerate(args.appliances):
-        ax.plot(
-            pp_df[appliance], color=color_names[i+1],
-            linewidth=1.5, linestyle=line_styles[i+1], label=appliance
-        )
+    ax.plot(pp_df, label=pp_df.columns.to_list())
     ax.legend(loc='upper right', fontsize='x-small')
     # Save and optionally show plot.
     plot_savepath = os.path.join(
