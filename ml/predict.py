@@ -217,6 +217,9 @@ def get_ground_truth(file_name, crop=None, zone='US/Pacific') -> pd.DataFrame:
         file_name: Full path to ground truth dataset in csv format with datetimes.
         crop: Get only this number of rows from dataset.
         zone: Localize datetimes in dataset to this time zone.
+
+    Returns:
+        Dataframe of appliance ground truth power with datetime index.
     """
     dataframe = pd.read_csv(
         file_name,
@@ -265,35 +268,75 @@ def get_realtime_predictions(file_name, crop=None, zone='US/Pacific') -> pd.Data
     return dataframe.fillna(0)
 
 def compute_metrics(
-        ground_truth:np.ndarray,
+        ground_truth:pd.DataFrame,
         ground_truth_status:np.ndarray,
-        pred:np.ndarray,
-        pred_status:np.ndarray,
-        log,
-    ) -> None:
-    """Assess performance of prediction vs ground truth."""
+        pred:pd.DataFrame,
+        pred_status:np.ndarray
+    ) -> str:
+    """Assess performance of prediction vs ground truth.
+
+    Args:
+        ground_truth: Appliance ground truth power.
+        ground_truth_status: Appliance ground truth on-off status.
+        pred: Appliance predicted power.
+        pred_status: Appliance predicted on-off status.
+
+    Returns:
+        String containing appliance performance metrics vs ground truth.
+
+    Raises:
+        ValueError if there are fewer predictions than ground truth samples.
+    """
+    gt_len, p_len = len(ground_truth.index), len(pred.index)
+
+    # There should never be more predictions than ground truth samples because
+    # the latter is based on the number of real power samples which are used to
+    # make predictions. There can be, however, NaNs in the ground truth samples.
+    if p_len > gt_len:
+        raise ValueError('Cannot have more predictions than ground truth samples.')
+
+    # Adjust ground truth sample size to match number of predictions.
+    # This is to cover the case where the number of predictions are less
+    # than the number of ground truth samples because by default partial
+    # batch sizes are not allowed when making predictions.
+    if gt_len > p_len:
+        ground_truth.drop(ground_truth.tail(gt_len - p_len).index, inplace=True)
+        ground_truth_status = ground_truth_status[:p_len]
+
+    # Filter out NaN rows in datasets based on NaN values in the ground truth data.
+    # NaN values can arise from appliances that were not monitored or drop-outs.
+    gt_not_na_rows = np.array(ground_truth.notna())
+    ground_truth = ground_truth[gt_not_na_rows]
+    ground_truth_status = ground_truth_status[gt_not_na_rows]
+    pred = pred[gt_not_na_rows]
+    pred_status = pred_status[gt_not_na_rows]
+
     metrics = NILMTestMetrics(
-        target=ground_truth,
+        target=np.array(ground_truth),
         target_status=ground_truth_status,
-        prediction=pred,
+        prediction=np.array(pred),
         prediction_status=pred_status,
         sample_period=common.SAMPLE_PERIOD
     )
-    log.log(f'True positives: {metrics.get_tp()}')
-    log.log(f'True negatives: {metrics.get_tn()}')
-    log.log(f'False positives: {metrics.get_fp()}')
-    log.log(f'False negatives: {metrics.get_fn()}')
-    log.log(f'Accuracy: {metrics.get_accuracy()}')
-    log.log(f'MCC: {metrics.get_mcc()}')
-    log.log(f'F1: {metrics.get_f1()}')
-    log.log(f'MAE: {metrics.get_abs_error()["mean"]} (W)')
-    log.log(f'NDE: {metrics.get_nde()}')
-    log.log(f'SAE: {metrics.get_sae()}')
+
     epd_gt = metrics.get_epd(ground_truth * ground_truth_status, common.SAMPLE_PERIOD)
-    log.log(f'Ground truth EPD: {epd_gt} (Wh)')
     epd_pred = metrics.get_epd(pred * pred_status, common.SAMPLE_PERIOD)
-    log.log(f'Predicted EPD: {epd_pred} (Wh)')
-    log.log(f'EPD Relative Error: {100.0 * (epd_pred - epd_gt) / epd_gt} (%)')
+
+    return (
+        f'True positives: {metrics.get_tp()}\n'
+        f'True negatives: {metrics.get_tn()}\n'
+        f'False positives: {metrics.get_fp()}\n'
+        f'False negatives: {metrics.get_fn()}\n'
+        f'Accuracy: {metrics.get_accuracy()}\n'
+        f'MCC: {metrics.get_mcc()}\n'
+        f'F1: {metrics.get_f1()}\n'
+        f'MAE: {metrics.get_abs_error()["mean"]} (W)\n'
+        f'NDE: {metrics.get_nde()}\n'
+        f'SAE: {metrics.get_sae()}\n'
+        f'Ground truth EPD: {epd_gt} (Wh)\n'
+        f'Predicted EPD: {epd_pred} (Wh)\n'
+        f'EPD Relative Error: {100.0 * (epd_pred - epd_gt) / epd_gt} (%)'
+    )
 
 if __name__ == '__main__':
     args = get_arguments()
@@ -350,13 +393,11 @@ if __name__ == '__main__':
         ) for appliance in args.appliances
     }
 
-    # Predicted dataset size is used to crop datasets since test_provider
-    # defaults to outputting complete batches so there will be more mains
-    # samples than predictions.
-    # See `allow_partial_batches' parameter in window_generator.
-    predicted_dataset_size = predicted_powers[args.appliances[0]].size
-
     # Create a dataframe containing the predicted power.
+    # Predicted dataset size is used to crop dataset since test_provider
+    # defaults to outputting complete batches, so there will be more mains
+    # samples than predictions. See `allow_partial_batches' in window_generator.
+    predicted_dataset_size = predicted_powers[args.appliances[0]].size
     # Add back datetime index and adjustment for prediction timing.
     # Adjustment is done by moving samples later in time by a value equal
     # to the window center since the predict function places the prediction
@@ -382,30 +423,26 @@ if __name__ == '__main__':
     rt_df *= rt_status
 
     # Compute metrics for predictions.
-    # NaNa's in the ground truth data are converted to zeros but this leads
-    # to inaccuracy in metrics computations. The correct way is to only compute
-    # metrics on non-NaN ground truth data. TODO:fix.
-    logger.log('Evaluating performance metrics of predictions vs ground truth.')
+    logger.log('\n***Performance metrics of predictions vs ground truth***')
     for i, a in enumerate(args.appliances):
-        logger.log(f'\nMetrics for {a}:')
-        compute_metrics(
-            # Crop ground truth data to match number of predictions.
-            ground_truth=np.nan_to_num(gt_df.loc[:,a])[:predicted_dataset_size],
-            ground_truth_status=gt_status[:,i][:predicted_dataset_size],
-            pred=np.array(pp_df.loc[:,a]),
-            pred_status=pp_status[:,i],
-            log=logger
-        )
-    logger.log('Evaluating performance metrics of real-time predictions vs ground truth.')
-    for i, a in enumerate(args.appliances):
-        logger.log(f'\nMetrics for {a}:')
-        compute_metrics(
-            ground_truth=np.nan_to_num(gt_df.loc[:,a]),
+        logger.log(f'\nPredictions vs Ground Truth Metrics for {a}:')
+        result = compute_metrics(
+            ground_truth=gt_df.loc[:,a],
             ground_truth_status=gt_status[:,i],
-            pred=np.array(rt_df.loc[:,a]),
-            pred_status=rt_status[:,i],
-            log=logger
+            pred=pp_df.loc[:,a],
+            pred_status=pp_status[:,i]
         )
+        logger.log(result)
+    logger.log('\n***Performance metrics of real-time predictions vs ground truth***')
+    for i, a in enumerate(args.appliances):
+        logger.log(f'\nRT Predictions vs Ground Truth Metrics for {a}:')
+        result = compute_metrics(
+            ground_truth=gt_df.loc[:,a],
+            ground_truth_status=gt_status[:,i],
+            pred=rt_df.loc[:,a],
+            pred_status=rt_status[:,i]
+        )
+        logger.log(result)
 
     ###
     ### Save and show appliance powers each in a single row of subplots.
