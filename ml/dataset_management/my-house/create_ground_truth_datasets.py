@@ -242,9 +242,11 @@ if __name__ == '__main__':
             df.insert(2, 'status', status)
             num_on = len(df[df['status']==1])
             num_off = len(df[df['status']==0])
-            logger.log(f'Number of samples with on status: {num_on}')
-            logger.log(f'Number of samples with off status: {num_off}')
-            if num_on + num_off != df.iloc[:, 2].size:
+            num_total = df.iloc[:, 2].size
+            logger.log(f'Number of samples with on status: {num_on}.')
+            logger.log(f'Number of samples with off status: {num_off}.')
+            logger.log(f'Number of total samples: {num_total}.')
+            if num_on + num_off != num_total:
                 assert RuntimeError('Total of on and off activations must equal number of samples.')
 
             if args.plot:
