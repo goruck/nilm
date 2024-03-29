@@ -211,7 +211,7 @@ if __name__ == '__main__':
     train_df = gt_df[:num_train]
     val_df = gt_df[num_train: num_train + num_val]
     test_df = gt_df[num_train + num_val: num_train + num_val + num_test]
-    datasets = {'train': train_df, 'val': val_df, 'test': test_df}
+    datasets = {'training': train_df, 'validation': val_df, 'test': test_df}
 
     for k, v in datasets.items():
         logger.log(f'Working on dataset: {k}.')
@@ -282,15 +282,15 @@ if __name__ == '__main__':
             else:
                 agg_mean = common.params_appliance[appliance]['train_agg_mean']
                 agg_std = common.params_appliance[appliance]['train_agg_std']
-            logger.log(f'Standardizing aggregate with mean = {agg_mean} and std = {agg_std}.')
+            logger.log(f'Standardizing aggregate with mean {agg_mean} (W) and std {agg_std} (W).')
             df.loc[:, 'aggregate'] = (df.loc[:, 'aggregate'] - agg_mean) / agg_std
 
             # Scale appliance dataset.
             if common.USE_APPLIANCE_NORMALIZATION:
                 # Normalize appliance dataset to [0, max_on_power].
-                app_min = 0
+                app_min = 0.0
                 app_max = max_on_power
-                logger.log(f'Normalizing appliance with min = {app_min} and max = {app_max}.')
+                logger.log(f'Normalizing appliance with min {app_min} (W) and max {app_max} (W).')
                 df.loc[:, appliance] = (df.loc[:, appliance] - app_min) / (app_max - app_min)
             else:
                 # Standardize appliance dataset.
@@ -304,7 +304,9 @@ if __name__ == '__main__':
                     'Using alt standardization.' if common.USE_ALT_STANDARDIZATION 
                     else 'Using default standardization.'
                 )
-                logger.log(f'Standardizing appliance with mean = {app_mean} and std = {app_std}.')
+                logger.log(
+                    f'Standardizing appliance with mean {app_mean} (W) and std {app_std} (W).'
+                )
                 df.loc[:, appliance] = (df.loc[:, appliance] - app_mean) / app_std
 
             # Save dataset as a csv file.
