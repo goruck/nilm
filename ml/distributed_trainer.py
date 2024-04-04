@@ -1,11 +1,10 @@
 """Class for distributed GPU training.
 
-Copyright (c) 2023 Lindo St. Angel
+Copyright (c) 2023~2024 Lindo St. Angel
 """
 
 import tensorflow as tf
 
-import define_models
 from window_generator import WindowGenerator
 from numpy import save
 
@@ -54,7 +53,7 @@ class DistributedTrainer():
             train_dataset,
             val_dataset,
             batch_size:int,
-            model_arch:str,
+            model_fn,
             window_length:int,
             checkpoint_filepath:str,
             logger,
@@ -68,8 +67,8 @@ class DistributedTrainer():
             train_dataset: Training set, tuple of (samples, targets, status).
             val_dataset: Validation set, tuple of (samples, targets, status).
             batch_size: Per replica training batch size.
-            model_arch: Name of model architecture to train.
             window_length: Input sequence window size.
+            model_fn: Function to be called that creates model.
             resume_training: True restarts training from last checkpoint.
             checkpoint_filepath: Filepath to checkpoints.
             logger: Logging object.
@@ -136,18 +135,7 @@ class DistributedTrainer():
 
         # Define objects that are distributed across replicas.
         with self._strategy.scope():
-            # Define model to be trained.
-            if model_arch == 'transformer':
-                self._model = define_models.transformer(window_length)
-            elif model_arch == 'cnn':
-                self._model = define_models.cnn()
-            elif model_arch == 'fcn':
-                self._model = define_models.fcn(window_length)
-            elif model_arch == 'resnet':
-                self._model = define_models.resnet(window_length)
-            else:
-                logger.log('Model architecture not found.')
-                raise SystemExit(1)
+            self._model = model_fn()
 
             # Define loss objects.
             self._mse_loss_obj = tf.keras.losses.MeanSquaredError(
