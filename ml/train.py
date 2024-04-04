@@ -15,6 +15,7 @@ import matplotlib.pyplot as plt
 from logger import Logger
 import common
 from distributed_trainer import DistributedTrainer
+import define_models
 
 def smooth_curve(points, factor=0.8):
     """Smooth a series of points given a smoothing factor."""
@@ -206,13 +207,27 @@ if __name__ == '__main__':
     c0 = common.params_appliance[appliance_name]['c0']
     logger.log(f'L1 loss multiplier: {c0}')
 
+    # Define model to be trained.
+    def instantiate_model():
+        """Create model for training."""
+        if args.model_arch == 'transformer':
+            return define_models.transformer(window_length)
+        if args.model_arch == 'cnn':
+            return define_models.cnn()
+        if args.model_arch == 'fcn':
+            return define_models.fcn(window_length)
+        if args.model_arch == 'resnet':
+            return define_models.resnet(window_length)
+        logger.log('Model architecture not found.')
+        raise SystemExit(1)
+
     trainer = DistributedTrainer(
         do_not_use_distributed_training=args.do_not_use_distributed_training,
         resume_training=args.resume_training,
         train_dataset=train_dataset,
         val_dataset=val_dataset,
         batch_size=args.batchsize,
-        model_arch=args.model_arch,
+        model_fn=instantiate_model,
         window_length=window_length,
         checkpoint_filepath=checkpoint_filepath,
         logger=logger
