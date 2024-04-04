@@ -36,16 +36,18 @@ params_appliance = {
         # Appliance considered inactive below this power draw (W).
         # From Zhenrui Yue, et. al., "BERT4NILM: A Bidirectional Transformer Model
         # for Non-Intrusive Load Monitoring".
-        'on_power_threshold': 2000.0,
+        'on_power_threshold': 2000.0,#1500.0 for home,
         # Appliance max power draw (W).
         # From Zhenrui Yue, et. al., "BERT4NILM: A Bidirectional Transformer Model
         # for Non-Intrusive Load Monitoring".
         'max_on_power': 3100,#3998.0,
-        # Appliance power draw considered invalid longer than this value (s).
+        # If appliance power draw exceeds 'on_power_threshold' for at least this
+        # value, it will be be considered to be active ('on' status) (s).
         # From Zhenrui Yue, et. al., "BERT4NILM: A Bidirectional Transformer Model
         # for Non-Intrusive Load Monitoring".
         'min_on_duration': 12.0,
-        # Appliance power draw considered invalid if shorter than this value (s).
+        # For purposes of determining if an appliance is inactive ('off' status),
+        # ignore changes in appliance power if less than or equal to this value (s).
         # From Zhenrui Yue, et. al., "BERT4NILM: A Bidirectional Transformer Model
         # for Non-Intrusive Load Monitoring".
         'min_off_duration': 0.0,
@@ -124,7 +126,7 @@ params_appliance = {
     },
     'washingmachine': {
         'window_length': 599,
-        'on_power_threshold': 20.0,
+        'on_power_threshold': 10.0,
         'max_on_power': 2500.0,
         'min_on_duration': 1800.0,
         'min_off_duration': 160.0,
