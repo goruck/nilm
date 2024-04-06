@@ -36,11 +36,11 @@ params_appliance = {
         # Appliance considered inactive below this power draw (W).
         # From Zhenrui Yue, et. al., "BERT4NILM: A Bidirectional Transformer Model
         # for Non-Intrusive Load Monitoring".
-        'on_power_threshold': 2000.0,#1500.0 for home,
+        'on_power_threshold': 1500.0, # was 2000 but too high for kettle in my house
         # Appliance max power draw (W).
         # From Zhenrui Yue, et. al., "BERT4NILM: A Bidirectional Transformer Model
         # for Non-Intrusive Load Monitoring".
-        'max_on_power': 3100,#3998.0,
+        'max_on_power': 3100.0,#3998.0,
         # If appliance power draw exceeds 'on_power_threshold' for at least this
         # value, it will be be considered to be active ('on' status) (s).
         # From Zhenrui Yue, et. al., "BERT4NILM: A Bidirectional Transformer Model
