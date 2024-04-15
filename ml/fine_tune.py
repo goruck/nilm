@@ -199,17 +199,19 @@ if __name__ == '__main__':
     c0 = common.params_appliance[appliance_name]['c0']
     logger.log(f'L1 loss multiplier: {c0}')
 
-    def fine_tune_model():
+    def fine_tune_model(num_classifier_layers=3):
         """Create a model for fine tuning."""
         base_model = tf.keras.models.load_model(restore_model_filepath)
-        base_model.trainable = False # freeze all layers in base model
-        base_model = base_model.layers[:-2] # remove last two output layers
-        output_layers = [
+        # Freeze all layers in base model
+        base_model.trainable = False
+        # Remove base model's classifier layers which leaves a feature extractor.
+        feature_extractor = base_model.layers[:-num_classifier_layers]
+        classifier = [
             tf.keras.layers.Dense(512, activation='relu', name='dense_out1'),
             tf.keras.layers.Dense(1, activation='linear', name='dense_out2')
         ]
         # Return the base model with new, trainable output layers.
-        return tf.keras.Sequential(base_model+output_layers, name='fine_tune')
+        return tf.keras.Sequential(feature_extractor+classifier, name='fine_tune')
 
     trainer = DistributedTrainer(
         do_not_use_distributed_training=False,
