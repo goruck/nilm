@@ -4,7 +4,7 @@ Convert Keras models trained for energy disaggregation to tflite.
 Generates a quantized tflite model that can be complied for the edge tpu
 or used for on-device inference on a Raspberry Pi or other edge compute.
 
-Copyright (c) 2022~2023 Lindo St. Angel.
+Copyright (c) 2022~2024 Lindo St. Angel.
 """
 
 import os
@@ -141,7 +141,7 @@ def get_arguments():
         '--model_arch',
         type=str,
         default='cnn',
-        choices=['cnn', 'transformer'],
+        choices=['cnn', 'cnn_fine_tune', 'transformer'],
         help='Network architecture to use'
     )
     parser.add_argument(
@@ -237,7 +237,7 @@ if __name__ == '__main__':
         f'{appliance_name}_{args.model_arch}_convert_{args.quant_mode}_fixed.log' if args.fix_model
         else f'{appliance_name}_{args.model_arch}_convert_{args.quant_mode}.log'
     )
-    logger = Logger(log_path)
+    logger = Logger(log_file_name=log_path)
     logger.log(f'Machine name: {socket.gethostname()}')
     logger.log('Arguments: ')
     logger.log(args)
