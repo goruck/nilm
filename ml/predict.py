@@ -99,7 +99,7 @@ def get_arguments():
     parser.add_argument(
         '--model_arch',
         type=str,
-        default='cnn',
+        default=['cnn', 'cnn_fine_tune', 'transformer'],
         help='model architecture used for predictions'
     )
     parser.add_argument(
