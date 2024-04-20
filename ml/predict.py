@@ -196,7 +196,7 @@ def get_real_power(file_name, not_before, zone='US/Pacific') -> pd.DataFrame:
     # Localize datetimes.
     dataframe = dataframe.tz_convert(tz=zone)
     # Filter datetimes earlier than threshold.
-    dataframe = dataframe[dataframe.index > not_before]
+    dataframe = dataframe[dataframe.index >= not_before]
     # Compute total real power and insert into dataframe.
     # W1 and W2 are the real power in each phase.
     real_power = dataframe['W1'] + dataframe['W2']
@@ -235,7 +235,7 @@ def get_ground_truth(file_name, not_before, zone='US/Pacific') -> pd.DataFrame:
     dataframe = dataframe.tz_convert(tz=zone)
 
     # Filter datetimes earlier than threshold.
-    dataframe = dataframe[dataframe.index > not_before]
+    dataframe = dataframe[dataframe.index >= not_before]
 
     # Row to column format transformation.
     def row_to_column(x:str) -> pd.DataFrame:
@@ -268,7 +268,7 @@ def get_realtime_predictions(file_name, not_before, zone='US/Pacific') -> pd.Dat
     # Localize datetimes.
     dataframe = dataframe.tz_convert(tz=zone)
     # Filter datetimes earlier than threshold.
-    dataframe = dataframe[dataframe.index > not_before]
+    dataframe = dataframe[dataframe.index >= not_before]
     # Adjustment for real-time prediction timing.
     # Adjustment is done by moving samples earlier in time by a value equal
     # to the window center since the real-time code places the prediction
