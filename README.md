@@ -768,15 +768,21 @@ The Float32 model fine-tuned with local data predictions vs ground truth are sho
 
 | Appliance       | $F1\uparrow$ | $MCC\uparrow$ | $ACC\uparrow$ | $MAE$ $(W)$ $\downarrow$ | $SAE\downarrow$ | $NDE\downarrow$ | $EpD_e$ ($\%$) |
 |-----------------|--------------|---------------|---------------|---------------------------|-----------------|-----------------|----------------|
-| kettle          | 0.9448       | 0.9448        | 0.9998        | 0.398                     | 0.0234          | 0.0993          | 2.34           |
-| fridge          | 0.9567       | 0.9252        | 0.9633        | 9.366                     | 0.0726          | 0.1314          | -7.26          |
-| microwave       | 0.8350       | 0.8367        | 0.9984        | 1.975                     | 0.1266          | 0.2002          | -12.66         |
-| washingmachine | 0.9171       | 0.9155        | 0.9909        | 2.676                     | 0.1209          | 0.2475          | -12.09         |
-| dishwasher      | 0.7939       | 0.7989        | 0.9820        | 5.178                     | 0.0608          | 0.1508          | -6.08          |
+| kettle          | 0.5923       | 0.6387        | 0.9955        | 8.231                     | 0.5765          | 0.5894          | -57.65         |
+| microwave       | 0.5433       | 0.5402        | 0.9906        | 10.600                    | 0.5551          | 0.6345          | -55.51         |
+| fridge          | 0.8446       | 0.6864        | 0.8428        | 25.241                    | 0.2129          | 0.3431          | -21.29         |
+| dishwasher      | 0.6190       | 0.6226        | 0.9072        | 23.672                    | 0.2293          | 0.3399          | -22.93         |
+| washingmachine  | 0.7071       | 0.7227        | 0.9573        | 4.030                     | 0.2721          | 0.3442          | 27.21          |
 
 The corresponding quantized model real-time predictions vs ground truth are shown in the table below.
 
-TBA
+| Appliance       | $F1\uparrow$ | $MCC\uparrow$ | $ACC\uparrow$ | $MAE$ $(W)$ $\downarrow$ | $SAE\downarrow$ | $NDE\downarrow$ | $EpD_e$ ($\%$) |
+|-----------------|--------------|---------------|---------------|---------------------------|-----------------|-----------------|----------------|
+| kettle          | 0.5845       | 0.6345        | 0.9955        | 8.199                     | 0.5918          | 0.5954          | -59.18         |
+| microwave       | 0.5221       | 0.5196        | 0.9904        | 10.722                    | 0.5781          | 0.6574          | -57.81         |
+| fridge          | 0.8351       | 0.6758        | 0.8367        | 26.137                    | 0.2477          | 0.3603          | -24.27         |
+| dishwasher      | 0.6188       | 0.6230        | 0.9083        | 23.506                    | 0.2313          | 0.3414          | -23.13         |
+| washingmachine  | 0.7103       | 0.7257        | 0.9585        | 3.910                     | 0.2454          | 0.3409          | 24.54          |
 
 You can see that fine-tuning the model with local data greatly improves its performance.
 
