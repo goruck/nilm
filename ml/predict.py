@@ -20,6 +20,7 @@ import os
 import argparse
 import socket
 import glob
+from datetime import datetime
 
 import numpy as np
 import tensorflow as tf
@@ -93,7 +94,7 @@ def get_arguments():
     )
     parser.add_argument(
         '--not_before',
-        type=str,
+        type=datetime.fromisoformat,
         default=default_not_before,
         help='do not use data before this date (ISO 8601 format)'
     )
@@ -184,7 +185,11 @@ def denormalize(predictions:np.ndarray, appliance_name:str) -> np.ndarray:
 
     return predictions
 
-def get_real_power(file_name, not_before, zone='US/Pacific') -> pd.DataFrame:
+def get_real_power(
+        file_name:str,
+        not_before:datetime,
+        zone:str='US/Pacific'
+    ) -> pd.DataFrame:
     """Load real-time dataset and return total real power with datetimes."""
     dataframe = pd.read_csv(
         file_name,
@@ -196,7 +201,7 @@ def get_real_power(file_name, not_before, zone='US/Pacific') -> pd.DataFrame:
     # Localize datetimes.
     dataframe = dataframe.tz_convert(tz=zone)
     # Filter datetimes earlier than threshold.
-    dataframe = dataframe[dataframe.index >= not_before]
+    dataframe = dataframe[dataframe.index >= not_before.isoformat()]
     # Compute total real power and insert into dataframe.
     # W1 and W2 are the real power in each phase.
     real_power = dataframe['W1'] + dataframe['W2']
@@ -205,7 +210,11 @@ def get_real_power(file_name, not_before, zone='US/Pacific') -> pd.DataFrame:
     dataframe = dataframe.drop(columns=['W1', 'W2'])
     return dataframe.fillna(0)
 
-def get_ground_truth(file_name, not_before, zone='US/Pacific') -> pd.DataFrame:
+def get_ground_truth(
+        file_name:str,
+        not_before:datetime,
+        zone:str='US/Pacific'
+    ) -> pd.DataFrame:
     """Load ground truth dataset and return appliance active power with datetimes.
 
     This reads a ground truth csv file as a dataframe, localizes it, converts it
@@ -235,7 +244,7 @@ def get_ground_truth(file_name, not_before, zone='US/Pacific') -> pd.DataFrame:
     dataframe = dataframe.tz_convert(tz=zone)
 
     # Filter datetimes earlier than threshold.
-    dataframe = dataframe[dataframe.index >= not_before]
+    dataframe = dataframe[dataframe.index >= not_before.isoformat()]
 
     # Row to column format transformation.
     def row_to_column(x:str) -> pd.DataFrame:
@@ -255,7 +264,10 @@ def get_ground_truth(file_name, not_before, zone='US/Pacific') -> pd.DataFrame:
     resample_period = f'{common.SAMPLE_PERIOD}s'
     return dataframe.resample(resample_period, origin='start').max()
 
-def get_realtime_predictions(file_name, not_before, zone='US/Pacific') -> pd.DataFrame:
+def get_realtime_predictions(
+        file_name:str,
+        not_before:datetime,
+        zone='US/Pacific') -> pd.DataFrame:
     """Load appliance power predictions that were preformed in real-time with datetimes."""
     # Load real-time prediction dataset.
     dataframe = pd.read_csv(
@@ -268,7 +280,7 @@ def get_realtime_predictions(file_name, not_before, zone='US/Pacific') -> pd.Dat
     # Localize datetimes.
     dataframe = dataframe.tz_convert(tz=zone)
     # Filter datetimes earlier than threshold.
-    dataframe = dataframe[dataframe.index >= not_before]
+    dataframe = dataframe[dataframe.index >= not_before.isoformat()]
     # Adjustment for real-time prediction timing.
     # Adjustment is done by moving samples earlier in time by a value equal
     # to the window center since the real-time code places the prediction
