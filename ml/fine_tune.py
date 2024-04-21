@@ -207,8 +207,11 @@ if __name__ == '__main__':
         # Remove base model's classifier layers which leaves a feature extractor.
         feature_extractor = base_model.layers[:-num_classifier_layers]
         classifier = [
-            tf.keras.layers.Dense(512, activation='relu', name='dense_out1'),
-            tf.keras.layers.Dense(1, activation='linear', name='dense_out2')
+            tf.keras.layers.Dense(1024, activation='relu', name='dense1'),
+            tf.keras.layers.Dropout(0.3),
+            tf.keras.layers.Dense(512, activation='relu', name='dense2'),
+            tf.keras.layers.Dropout(0.3),
+            tf.keras.layers.Dense(1, activation='linear', name='dense3')
         ]
         # Return the base model with new, trainable output layers.
         return tf.keras.Sequential(feature_extractor+classifier, name='fine_tune')
