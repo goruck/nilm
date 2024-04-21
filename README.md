@@ -768,11 +768,11 @@ The Float32 model fine-tuned with local data predictions vs ground truth are sho
 
 | Appliance       | $F1\uparrow$ | $MCC\uparrow$ | $ACC\uparrow$ | $MAE$ $(W)$ $\downarrow$ | $SAE\downarrow$ | $NDE\downarrow$ | $EpD_e$ ($\%$) |
 |-----------------|--------------|---------------|---------------|---------------------------|-----------------|-----------------|----------------|
-| kettle          | 0.5923       | 0.6387        | 0.9955        | 8.231                     | 0.5765          | 0.5894          | -57.65         |
-| microwave       | 0.5433       | 0.5402        | 0.9906        | 10.600                    | 0.5551          | 0.6345          | -55.51         |
-| fridge          | 0.8446       | 0.6864        | 0.8428        | 25.241                    | 0.2129          | 0.3431          | -21.29         |
-| dishwasher      | 0.6190       | 0.6226        | 0.9072        | 23.672                    | 0.2293          | 0.3399          | -22.93         |
-| washingmachine  | 0.7071       | 0.7227        | 0.9573        | 4.030                     | 0.2721          | 0.3442          | 27.21          |
+| kettle          | 0.6205       | 0.6672        | 0.9958        | 7.808                     | 0.5716          | 0.5555          | -57.16         |
+| microwave       | 0.4989       | 0.5129        | 0.9912        | 10.508                     | 0.6543          | 0.6795          | -65.43         |
+| fridge          | 0.8286       | 0.6665        | 0.8312        | 24.705                     | 0.2502          | 0.3717          | -25.02         |
+| dishwasher      | 0.7607       | 0.7491        | 0.9544        | 21.911                     | 0.4602          | 0.3957          | -46.02         |
+| washingmachine  | 0.9155       | 0.9138        | 0.9905        | 3.288                      | 0.1156          | 0.3535          | -11.56         |
 
 The corresponding quantized model real-time predictions vs ground truth are shown in the table below.
 
