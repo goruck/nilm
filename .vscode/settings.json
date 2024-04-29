@@ -1,0 +1,8 @@
+{
+    "python.analysis.extraPaths": [
+        "./ml"
+    ],
+    "cSpell.words": [
+        "transistion"
+    ]
+}
