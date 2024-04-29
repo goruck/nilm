@@ -1,23 +1,28 @@
 """
 Captures Arduino data from the serial port to std output.
 
-Copyright (c) 2022 Lindo St. Angel
+Copyright (c) 2022~2024 Lindo St. Angel
 """
-import serial, time, sys
+import time
+import sys
+
+import serial
 
 def get_arduino_data(port) -> list:
-    # Get bytes from Arduino.
+    """ Get bytes from Arduino.
+
+    Elements are:
+       rms voltage,
+       rms voltage assumed value flag,
+       rms current, real power, apparent power for phase 0,
+       agc gain state for phase 0,
+       rms current, real power, apparent power for phase 1,
+       agc gain state for phase 1.
+    """
     ser_bytes = port.readline()
     # Decode them as utf-8.
     decoded_bytes = ser_bytes.decode('utf-8').rstrip()
-    # Split into individual elements and convert to float.
-    # Elements are:
-    #   rms voltage,
-    #   rms current, real power, apparent power for phase 0,
-    #   rms current, real power, apparent power for phase 1
-    #sample = [float(d) for d in decoded_bytes.split(',')]
-    sample = [d for d in decoded_bytes.split(',')]
-    return sample
+    return list(decoded_bytes.split(','))
 
 if __name__ == '__main__':
     print('Running. Press CTRL-C to exit.')
