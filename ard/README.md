@@ -6,6 +6,8 @@ The sketch uses the `EmonLibCM` library to continuously measure in the backgroun
 
 The voltage, current and phase calibration values were arrived at per the steps described on the Open Energy Monitor website and the emonLibCM User Documentation.
 
+Follow the instructions found at `EmonLibCM`'s github to install v2.4.0 in your Arduino library folder. You will also need to install the OneWire library which you can do using the Arduino Library manager or manually install it via a `git clone` or a Zip file to the Arduino library folder. The Arduino is usually found at `~/Arduino`.
+
 ## References
 
 * [EmonLibCM](https://github.com/openenergymonitor/EmonLibCM)
