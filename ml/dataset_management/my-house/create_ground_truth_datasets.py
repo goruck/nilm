@@ -43,8 +43,8 @@ GT_DATA_FILE_PREFIX = 'appliance_energy_data_'
 # Define fractions of source dataset to create train, val and test datasets.
 # Must add up to 1.0.
 TRAIN_FRACTION = 0.8
-VAL_FRACTION = 0.1
-TEST_FRACTION = 0.1
+VAL_FRACTION = 0.2
+TEST_FRACTION = 0.0
 
 def get_arguments():
     """Get command line arguments."""
