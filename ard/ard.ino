@@ -1,16 +1,19 @@
 //  Main NILM Arduino sketch.
 //
-//  Continually sends the following over the serial port:
+//  Continually sends the following over the serial port as utf-8 strings:
 //    RMS line voltage (one phase only)
+//    Assumed RMS line voltage flag, if flag = 1 indicates true.
 //    RMS current (both phases)
 //    Calculated real power (both phases)
-//    Calculated apparent power (both phases).
+//    Calculated apparent power (both phases)
+//    Automatic gain control state (both phases). Low = 0; Mid = 1; High = 2.
 //
 //  Automatic gain control of the analog front end is done every sample period.
 //
-//  Copyright (c) 2022 Lindo St. Angel
+//  Copyright (c) 2022~2024 Lindo St. Angel
 
 #include <Arduino.h>
+#include <stdio.h>
 #include "emonLibCM.h"
 
 // Define MCU GPIOs for gain control bits.
@@ -171,7 +174,7 @@ GainState GetGainSettings(GainTuple gain_control)
 // is done to ensure the ADC input is not overloaded. This would cause
 // incorrect readings, potentially preventing agc loop closure. The current
 // channels are recalibrated each time the gain is adjusted. 
-void AutomaticGainControl(AgcParams *AgcData)
+GainState AutomaticGainControl(AgcParams *AgcData)
 {
   double v_adc;
   double amp_cal_low, amp_cal_mid, amp_cal_high, phase_cal;
@@ -248,11 +251,12 @@ void AutomaticGainControl(AgcParams *AgcData)
     else
     {/* already at high gain, do nothing */}
   }
+  return GetGainSettings(gain_control); // return updated gain setting
 }
 
 void setup()
 {
-  constexpr double kAssumedVrms= 120.0;  // Assumed line voltage when none is detected
+  constexpr double kAssumedVrms= 120.0;  // Assumed rms line voltage when none is detected
   constexpr unsigned int kLineFreq = 60; // AC line frequency in Hz
   constexpr float kDataLogPeriod = 8.0;  // Interval in seconds over which data is reported
 
@@ -284,13 +288,20 @@ void loop()
 {
   AgcParams AgcData;
   AgcParams *AgcDataPtr = &AgcData;
-  double i_rms, v_rms;
+  double i_rms, v_rms, mains_v_rms;
   double apparent_power;
+  GainState new_gain_state;
+  const char* new_gain_state_str;
+  short int v_rms_assumed_flag;
 
   if (EmonLibCM_Ready())
   {
-    v_rms = EmonLibCM_getVrms();
+    // CHeck for external AC present, if not used assumed AC value.
+    mains_v_rms = EmonLibCM_getVrms();
+    v_rms = (mains_v_rms < 1.0) ? EmonLibCM_getAssumedVrms() : mains_v_rms;
     Serial.print(v_rms);Serial.print(",");
+    v_rms_assumed_flag = (mains_v_rms < 1.0) ? 1 : 0;
+    Serial.print(v_rms_assumed_flag);Serial.print(",");
 
     for (size_t i = 0; i < kNumAdcIChan; i++)
     {
@@ -299,15 +310,18 @@ void loop()
      
       Serial.print(i_rms,3);Serial.print(",");
       Serial.print(EmonLibCM_getRealPower(i));Serial.print(",");
-      Serial.print(apparent_power);
-      if (i < kNumAdcIChan - 1) Serial.print(",");
+      Serial.print(apparent_power);Serial.print(",");
 
       // Run automatic gain control of analog front end.
       AgcDataPtr->channel = i;
       AgcDataPtr->v_rms = v_rms;
       AgcDataPtr->i_rms = i_rms;
       AgcDataPtr->apparent_power = apparent_power;
-      AutomaticGainControl(AgcDataPtr);
+      new_gain_state = AutomaticGainControl(AgcDataPtr);
+      Serial.print(new_gain_state);
+
+      // Print comma between sets of ADC data (normally two sets).
+      if (i < kNumAdcIChan - 1) Serial.print(",");
     }
 
     Serial.println(); // Outputs one sample.
