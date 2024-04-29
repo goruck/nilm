@@ -45,15 +45,18 @@ APPLIANCES = [
 CSV_ROW_NAMES = [
     'DT','TS', # datetime, unix timestamp(UTC)
     'V', # rms main voltage
+    'VF', # rms mains voltage assumed flag
     'I1','W1','VA1', # mains phase 1 rms current, real power, apparent power
+    'AGC1', # phase 1 agc gain state
     'I2','W2','VA2', # mains phase 2 rms current, real power, apparent power
+    'AGC2', # phase 1 agc gain state
 ] + APPLIANCES # predicted appliance powers
 
 # Number of power mains samples to run inference on.
 WINDOW_LENGTH = 599
 
 # Model architecture and mode used to quantize it.
-MODEL_ARCH = 'cnn'
+MODEL_ARCH = 'cnn_fine_tune'
 QUANT_MODE = 'w8'
 
 logger = Logger(lowest_level='info')
@@ -142,17 +145,24 @@ def infer(app:str, data:np.ndarray, model_path:str) -> np.ndarray:
     return pred
 
 def get_arduino_data(port) -> list:
-    """Get voltage and power from Arduino and timestamp."""
+    """ Get bytes from Arduino and add datetime and time stamp.
+
+    Elements returned as list are:
+        0 - UTC datetime
+        1 - timestamp
+        2 - rms voltage
+        3 - rms voltage assumed value flag
+        4:6 - rms current, real power, apparent power for phase 1
+        7 - agc gain state for phase 1,
+        8:10 - rms current, real power, apparent power for phase 2
+        11 - agc gain state for phase 2.
+    """
     # Get bytes from Arduino.
     ser_bytes = port.readline()
     # Decode them as utf-8.
     decoded_bytes = ser_bytes.decode('utf-8').rstrip()
-    # Split into individual elements and convert to float.
-    # Elements are:
-    #   rms voltage,
-    #   rms current, real power, apparent power for phase 0,
-    #   rms current, real power, apparent power for phase 1
-    data = [float(d) for d in decoded_bytes.split(',')]
+    # Split each decoded value and convert to float.
+    data = [float(v) for v in decoded_bytes.split(',')]
     # Insert UTC datetime.
     data.insert(0, datetime.now(pytz.utc))
     # Insert timestamp.
@@ -228,7 +238,7 @@ if __name__ == '__main__':
                         # Get mains power data from Arduino.
                         sample = get_arduino_data(ser)
                         # Sum real powers and add to mains window.
-                        total_power = sample[4] + sample[7]
+                        total_power = sample[5] + sample[9]
                         logger.log(f'Total real power: {total_power:.3f} Watts.', level='debug')
                         # Add sample to window.
                         mains_power = np.append(mains_power, total_power)
