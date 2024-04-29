@@ -1,0 +1,9 @@
+{
+    "port": "/dev/ttyACM0",
+    "board": "arduino:avr:mega",
+    "programmer": "avrisp",
+    "sketch": "ard/ard.ino",
+    "intelliSenseGen": "global",
+    "buildPreferences": [],
+    "configuration": "cpu=atmega2560"
+}
