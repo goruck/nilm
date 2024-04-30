@@ -45,7 +45,7 @@ APPLIANCES = [
 CSV_ROW_NAMES = [
     'DT','TS', # datetime, unix timestamp(UTC)
     'V', # rms main voltage
-    'VF', # rms mains voltage assumed flag
+    'VF', # AC present voltage flag
     'I1','W1','VA1', # mains phase 1 rms current, real power, apparent power
     'AGC1', # phase 1 agc gain state
     'I2','W2','VA2', # mains phase 2 rms current, real power, apparent power
