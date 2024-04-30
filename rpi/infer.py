@@ -151,7 +151,7 @@ def get_arduino_data(port) -> list:
         0 - UTC datetime
         1 - timestamp
         2 - rms voltage
-        3 - rms voltage assumed value flag
+        3 - AC voltage present flag
         4:6 - rms current, real power, apparent power for phase 1
         7 - agc gain state for phase 1,
         8:10 - rms current, real power, apparent power for phase 2

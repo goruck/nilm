@@ -13,7 +13,7 @@ def get_arduino_data(port) -> list:
 
     Elements are:
        rms voltage,
-       rms voltage assumed value flag,
+       AC voltage present flag,
        rms current, real power, apparent power for phase 0,
        agc gain state for phase 0,
        rms current, real power, apparent power for phase 1,
