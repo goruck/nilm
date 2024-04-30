@@ -50,34 +50,31 @@ constexpr double kI2AmpCalMid = 14.0;
 constexpr double kI2AmpCalHigh = 2.29;
 constexpr double kI2PhCal = 4.2;
 
-// Define current transformer gain control bit tuple
-typedef struct gain_tuple
-{
+// Gain control structure for current transformers.
+struct GainTuple {
   int g1;
   int g0; // LSB
-} GainTuple;
+};
 
-// Create a gain control tuple for each current transformer
-GainTuple constexpr kCt1GainCtrl = {.g1 = kCt1G1, .g0 = kCt1G0};
-GainTuple constexpr kCt2GainCtrl = {.g1 = kCt2G1, .g0 = kCt2G0};
+// Gain control tuples for current transformers.
+constexpr GainTuple kCt1GainCtrl = {kCt1G1, kCt1G0};
+constexpr GainTuple kCt2GainCtrl = {kCt2G1, kCt2G0};
 
 // Analog front end gain states.
-typedef enum gain_state
-{
+enum GainState {
   kLow,
   kMid,
   kHigh,
   kInvalid
-} GainState;
+};
 
-// AGC inputs.
-typedef struct agc_params
-{
+// Structure for AGC parameters.
+struct AgcParams {
   byte channel;
   double v_rms;
   double i_rms;
   double apparent_power;
-} AgcParams;
+};
 
 // Set analog gain to low.
 inline void SetLowGain(GainTuple gain_control)
@@ -256,9 +253,9 @@ GainState AutomaticGainControl(AgcParams *AgcData)
 
 void setup()
 {
-  constexpr double kAssumedVrms= 120.0;  // Assumed rms line voltage when none is detected
-  constexpr unsigned int kLineFreq = 60; // AC line frequency in Hz
-  constexpr float kDataLogPeriod = 8.0;  // Interval in seconds over which data is reported
+  constexpr double kAssumedVrms = 120.0;  // Assumed rms line voltage when none is detected
+  constexpr unsigned int kLineFreq = 60;  // AC line frequency in Hz
+  constexpr float kDataLogPeriod = 8.0;   // Interval in seconds over which data is reported
 
   // Set GPIOs as outputs to control analog front end gain.
   pinMode(kCt1G0, OUTPUT);
@@ -291,17 +288,17 @@ void loop()
   double i_rms, v_rms, mains_v_rms;
   double apparent_power;
   GainState new_gain_state;
-  const char* new_gain_state_str;
-  short int v_rms_assumed_flag;
+  bool ac_present; // 1 indicates mains AC present
+  constexpr double kACDetectThreshold = 12.0; // use assumed AC if mains less than this
 
   if (EmonLibCM_Ready())
   {
-    // CHeck for external AC present, if not used assumed AC value.
+    // CHeck if external AC is present, if not used assumed AC value.
     mains_v_rms = EmonLibCM_getVrms();
-    v_rms = (mains_v_rms < 1.0) ? EmonLibCM_getAssumedVrms() : mains_v_rms;
+    v_rms = (mains_v_rms > kACDetectThreshold) ? mains_v_rms : EmonLibCM_getAssumedVrms();
     Serial.print(v_rms);Serial.print(",");
-    v_rms_assumed_flag = (mains_v_rms < 1.0) ? 1 : 0;
-    Serial.print(v_rms_assumed_flag);Serial.print(",");
+    ac_present = mains_v_rms > kACDetectThreshold;
+    Serial.print(ac_present);Serial.print(",");
 
     for (size_t i = 0; i < kNumAdcIChan; i++)
     {
