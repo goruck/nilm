@@ -306,9 +306,9 @@ void loop()
   {
     // CHeck if external AC is present, if not used assumed AC value.
     mains_v_rms = EmonLibCM_getVrms();
-    v_rms = (mains_v_rms > kACDetectThreshold) ? mains_v_rms : EmonLibCM_getAssumedVrms();
-    Serial.print(v_rms);Serial.print(",");
     ac_present = mains_v_rms > kACDetectThreshold;
+    v_rms = ac_present ? mains_v_rms : EmonLibCM_getAssumedVrms();
+    Serial.print(v_rms);Serial.print(",");
     Serial.print(ac_present);Serial.print(",");
 
     for (size_t i = 0; i < kNumAdcIChan; i++)
