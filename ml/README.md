@@ -2,6 +2,8 @@
 
 This folder contains most of the machine learning related code for training and testing the models. See main README for a general overview and the below for a brief description for each item in this folder.
 
+NB: If using TensorFlow 2.16+, then run the scripts in this folder after exporting the environment variable TF_USE_LEGACY_KERAS=1 since TF 2.16+ uses Keras 3 by default and this code was developed using Keras 2. See https://keras.io/keras_3/.
+
 **dataset_management/** - Folder that contains various scripts for generating and visualizing REDD, REFIT, UKDALE and locally captured datasets. The generated data includes training, validation and test sets for training and testing the seq2point deep learning models.
 
 **images/** - Folder that contains various visualizations and test results as image files.
@@ -26,9 +28,11 @@ This folder contains most of the machine learning related code for training and 
 
 `quantize.py` - Deprecated and replaced by `convert_keras_to_tflite.py`.
 
-`train_keras.py` - Script used for training the models from scratch with options to prune and for quantize aware training.
+`train_keras.py` - Script used for training the models from scratch with options to prune and for quantize aware training. Depreciated by `train.py`.
 
-`train_distributed.py` - Script used for training the models from scratch or resumption of training using distributed GPU compute. Mainly supersedes `train.py`.
+`train.py` - Script used for training the models from scratch or resumption of training using distributed GPU compute. Supersedes `train_keras.py`.
+
+`fine_tune.py` - Script used for fine tuning models using locally captured data.
 
 `test.py` - Script used for testing the trained models on data disjoint from test and validation data.
 
@@ -36,7 +40,7 @@ This folder contains most of the machine learning related code for training and 
 
 `transformer_model.py` - Defines NILM transformer-based model using Keras subclassed layers and models.
 
-`distributed_trainer.py` - Class for `test.py`,
+`distributed_trainer.py` - Distributed trainer Class used in `train.py` and `fine_tune.py`.
 
 `window_generator` - Class for window generator used by many modules in this project.
 
