@@ -1,0 +1,167 @@
+2024-04-30 05:57:59,410 [INFO ]  Machine name: titan
+2024-04-30 05:57:59,410 [INFO ]  Arguments: 
+2024-04-30 05:57:59,410 [INFO ]  Namespace(appliances=['kettle', 'fridge', 'microwave', 'washingmachine', 'dishwasher'], datadir='/home/lindo/Develop/nilm-datasets/my-house', panel='house', model_dir='/home/lindo/Develop/nilm/ml/models', results_dir='/home/lindo/Develop/nilm/ml/results', not_before=datetime.datetime(2024, 4, 15, 0, 0), model_arch='cnn_fine_tune', plot=True, show_rt_preds=False, show_gt=True)
+2024-04-30 05:57:59,411 [INFO ]  Using alt standardization.
+2024-04-30 05:57:59,411 [INFO ]  Found mains real power files: ['/home/lindo/Develop/nilm-datasets/my-house/house/samples_03_28_24.csv', '/home/lindo/Develop/nilm-datasets/my-house/house/samples_02_14_24.csv', '/home/lindo/Develop/nilm-datasets/my-house/house/samples_02_28_24.csv', '/home/lindo/Develop/nilm-datasets/my-house/house/samples_02_25_24.csv', '/home/lindo/Develop/nilm-datasets/my-house/house/samples_04_20_24.csv', '/home/lindo/Develop/nilm-datasets/my-house/house/samples_03_08_24.csv', '/home/lindo/Develop/nilm-datasets/my-house/house/samples_03_18_24.csv', '/home/lindo/Develop/nilm-datasets/my-house/house/samples_04_15_24a.csv', '/home/lindo/Develop/nilm-datasets/my-house/house/samples_04_22_24.csv', '/home/lindo/Develop/nilm-datasets/my-house/house/samples_04_22_24_pm.csv', '/home/lindo/Develop/nilm-datasets/my-house/house/samples_02_15_24.csv', '/home/lindo/Develop/nilm-datasets/my-house/house/samples_04_15_24.csv', '/home/lindo/Develop/nilm-datasets/my-house/house/samples_04_29_24.csv', '/home/lindo/Develop/nilm-datasets/my-house/house/samples_04_06_24.csv'].
+2024-04-30 05:58:03,434 [INFO ]  There are 0.086M real power samples.
+2024-04-30 05:58:03,435 [INFO ]  Found ground truth files: ['/home/lindo/Develop/nilm-datasets/my-house/house/appliance_energy_data_032824.csv', '/home/lindo/Develop/nilm-datasets/my-house/house/appliance_energy_data_021624.csv', '/home/lindo/Develop/nilm-datasets/my-house/house/appliance_energy_data_021424.csv', '/home/lindo/Develop/nilm-datasets/my-house/house/appliance_energy_data_022824.csv', '/home/lindo/Develop/nilm-datasets/my-house/house/appliance_energy_data_042924.csv', '/home/lindo/Develop/nilm-datasets/my-house/house/appliance_energy_data_041124.csv', '/home/lindo/Develop/nilm-datasets/my-house/house/appliance_energy_data_042224.csv', '/home/lindo/Develop/nilm-datasets/my-house/house/appliance_energy_data_041524.csv', '/home/lindo/Develop/nilm-datasets/my-house/house/appliance_energy_data_030824.csv', '/home/lindo/Develop/nilm-datasets/my-house/house/appliance_energy_data_022524.csv', '/home/lindo/Develop/nilm-datasets/my-house/house/appliance_energy_data_042224pm.csv', '/home/lindo/Develop/nilm-datasets/my-house/house/appliance_energy_data_042024.csv', '/home/lindo/Develop/nilm-datasets/my-house/house/appliance_energy_data_031924.csv', '/home/lindo/Develop/nilm-datasets/my-house/house/appliance_energy_data_021124.csv', '/home/lindo/Develop/nilm-datasets/my-house/house/appliance_energy_data_021224.csv'].
+2024-04-30 05:58:24,352 [INFO ]  Making power predictions.
+2024-04-30 05:58:25,416 [WARNI]  No training configuration found in save file, so the model was *not* compiled. Compile it manually.
+2024-04-30 05:58:26,463 [WARNI]  No training configuration found in save file, so the model was *not* compiled. Compile it manually.
+2024-04-30 05:58:27,077 [WARNI]  No training configuration found in save file, so the model was *not* compiled. Compile it manually.
+2024-04-30 05:58:27,844 [WARNI]  No training configuration found in save file, so the model was *not* compiled. Compile it manually.
+2024-04-30 05:58:28,472 [WARNI]  No training configuration found in save file, so the model was *not* compiled. Compile it manually.
+2024-04-30 05:58:32,867 [INFO ]  
+***Performance metrics of predictions vs ground truth***
+2024-04-30 05:58:32,867 [INFO ]  
+Predictions vs Ground Truth Metrics for kettle:
+2024-04-30 05:58:32,901 [INFO ]  True positives: 208
+True negatives: 84472
+False positives: 3
+False negatives: 267
+Accuracy: 0.9968216597998822
+MCC: 0.6559375789087684
+F1: 0.6064139941690961
+MAE: 5.8901510536413895 (W)
+NDE: 0.568782177479058
+SAE: 0.5838032550483006
+Ground truth EPD: 236.18881695114771 (Wh)
+Predicted EPD: 98.30101680906049 (Wh)
+EPD Relative Error: -58.38032550483005 (%)
+2024-04-30 05:58:32,901 [INFO ]  
+Predictions vs Ground Truth Metrics for fridge:
+2024-04-30 05:58:32,930 [INFO ]  True positives: 32544
+True negatives: 37817
+False positives: 5652
+False negatives: 8953
+Accuracy: 0.8281077136737047
+MCC: 0.6574052893593197
+F1: 0.8167342175598862
+MAE: 24.64871893983028 (W)
+NDE: 0.405297494390213
+SAE: 0.2474906382143263
+Ground truth EPD: 1290.4025421933482 (Wh)
+Predicted EPD: 971.1658359686793 (Wh)
+EPD Relative Error: -24.739311632325958 (%)
+2024-04-30 05:58:32,930 [INFO ]  
+Predictions vs Ground Truth Metrics for microwave:
+2024-04-30 05:58:32,956 [INFO ]  True positives: 348
+True negatives: 83977
+False positives: 136
+False negatives: 472
+Accuracy: 0.9928414161751027
+MCC: 0.5491944963722079
+F1: 0.5337423312883436
+MAE: 8.814734313412579 (W)
+NDE: 0.6415673022111599
+SAE: 0.6212731550595701
+Ground truth EPD: 280.79084454805553 (Wh)
+Predicted EPD: 106.34303064384379 (Wh)
+EPD Relative Error: -62.127315505957 (%)
+2024-04-30 05:58:32,956 [INFO ]  
+Predictions vs Ground Truth Metrics for washingmachine:
+2024-04-30 05:58:32,982 [INFO ]  True positives: 5692
+True negatives: 75864
+False positives: 629
+False negatives: 2770
+Accuracy: 0.9599905832499559
+MCC: 0.758227138668679
+F1: 0.7700737333423526
+MAE: 11.337884313865233 (W)
+NDE: 0.6054760167261284
+SAE: 0.6208650952274942
+Ground truth EPD: 353.9775269260196 (Wh)
+Predicted EPD: 134.20523596270363 (Wh)
+EPD Relative Error: -62.086509522749395 (%)
+2024-04-30 05:58:32,982 [INFO ]  
+Predictions vs Ground Truth Metrics for dishwasher:
+2024-04-30 05:58:33,008 [INFO ]  True positives: 4571
+True negatives: 76049
+False positives: 3833
+False negatives: 474
+Accuracy: 0.9492858572656516
+MCC: 0.6792581576323066
+F1: 0.6797531414975091
+MAE: 21.439802065107965 (W)
+NDE: 0.5501238326432284
+SAE: 0.42917634235487223
+Ground truth EPD: 686.2883747218199 (Wh)
+Predicted EPD: 391.7496402580393 (Wh)
+EPD Relative Error: -42.91763423548722 (%)
+2024-04-30 05:58:33,008 [INFO ]  
+***Performance metrics of real-time predictions vs ground truth***
+2024-04-30 05:58:33,008 [INFO ]  
+RT Predictions vs Ground Truth Metrics for kettle:
+2024-04-30 05:58:33,031 [INFO ]  True positives: 195
+True negatives: 85971
+False positives: 7
+False negatives: 280
+Accuracy: 0.996680277144807
+MCC: 0.6284020354453909
+F1: 0.5760709010339735
+MAE: 6.073453605533118 (W)
+NDE: 0.6019730944726203
+SAE: 0.5991228380077309
+Ground truth EPD: 232.08263449504355 (Wh)
+Predicted EPD: 93.03662786406217 (Wh)
+EPD Relative Error: -59.91228380077308 (%)
+2024-04-30 05:58:33,031 [INFO ]  
+RT Predictions vs Ground Truth Metrics for fridge:
+2024-04-30 05:58:33,059 [INFO ]  True positives: 33989
+True negatives: 37431
+False positives: 6306
+False negatives: 8743
+Accuracy: 0.8259607489389261
+MCC: 0.6526855592374505
+F1: 0.8187457092271189
+MAE: 26.960716092019208 (W)
+NDE: 0.39690664105155316
+SAE: 0.24373487889419657
+Ground truth EPD: 1305.3176144051627 (Wh)
+Predicted EPD: 988.7440682185439 (Wh)
+EPD Relative Error: -24.252606621790076 (%)
+2024-04-30 05:58:33,059 [INFO ]  
+RT Predictions vs Ground Truth Metrics for microwave:
+2024-04-30 05:58:33,082 [INFO ]  True positives: 367
+True negatives: 85252
+False positives: 232
+False negatives: 585
+Accuracy: 0.9905479198482114
+MCC: 0.48158291983438273
+F1: 0.47324306898774987
+MAE: 10.580272779707792 (W)
+NDE: 0.692424413628495
+SAE: 0.6406163412321582
+Ground truth EPD: 310.8340413716507 (Wh)
+Predicted EPD: 111.70867505773857 (Wh)
+EPD Relative Error: -64.06163412321581 (%)
+2024-04-30 05:58:33,082 [INFO ]  
+RT Predictions vs Ground Truth Metrics for washingmachine:
+2024-04-30 05:58:33,107 [INFO ]  True positives: 7842
+True negatives: 74932
+False positives: 3064
+False negatives: 620
+Accuracy: 0.9573897152374563
+MCC: 0.7942541113336872
+F1: 0.8097893432465924
+MAE: 10.838701317832484 (W)
+NDE: 0.5479331246671066
+SAE: 0.45026844713104647
+Ground truth EPD: 347.8239237548867 (Wh)
+Predicted EPD: 191.20978573074646 (Wh)
+EPD Relative Error: -45.02684471310462 (%)
+2024-04-30 05:58:33,107 [INFO ]  
+RT Predictions vs Ground Truth Metrics for dishwasher:
+2024-04-30 05:58:33,131 [INFO ]  True positives: 4685
+True negatives: 74109
+False positives: 7276
+False negatives: 360
+Accuracy: 0.9116510470901308
+MCC: 0.5697934283483592
+F1: 0.5509820063506997
+MAE: 22.925530666638746 (W)
+NDE: 0.4978719839745528
+SAE: 0.18002560211742066
+Ground truth EPD: 674.353960430406 (Wh)
+Predicted EPD: 552.952982663655 (Wh)
+EPD Relative Error: -18.00256021174205 (%)
