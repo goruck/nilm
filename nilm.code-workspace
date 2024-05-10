@@ -1,0 +1,18 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "../nilm-datasets"
+		}
+	],
+	"settings": {
+		"python.autoComplete.extraPaths": [
+			"/home/lindo/Develop/nilm/ml"
+		],
+		"python.analysis.extraPaths": [
+			"/home/lindo/Develop/nilm/ml"
+		]
+	}
+}
