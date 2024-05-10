@@ -1,0 +1,88 @@
+2024-04-21 05:50:34,935 [INFO ]  Machine name: titan
+2024-04-21 05:50:34,935 [INFO ]  Arguments: 
+2024-04-21 05:50:34,935 [INFO ]  Namespace(appliance_name='dishwasher', model_arch='cnn', datadir='./dataset_management/my-house', save_dir='/home/lindo/Develop/nilm/ml/models', batchsize=512, n_epoch=50, crop_train_dataset=None, crop_val_dataset=None, plot_display=True)
+2024-04-21 05:50:34,935 [INFO ]  Window length: 599
+2024-04-21 05:50:34,935 [INFO ]  Training dataset: ./dataset_management/my-house/dishwasher/dishwasher_training_house.csv
+2024-04-21 05:50:34,935 [INFO ]  Validation dataset: ./dataset_management/my-house/dishwasher/dishwasher_validation_house.csv
+2024-04-21 05:50:34,935 [INFO ]  Restoring model from: /home/lindo/Develop/nilm/ml/models/dishwasher/savemodel_cnn
+2024-04-21 05:50:34,935 [INFO ]  Checkpoint file path: /home/lindo/Develop/nilm/ml/models/dishwasher/checkpoints_cnn_fine_tune
+2024-04-21 05:50:34,935 [INFO ]  SaveModel file path: /home/lindo/Develop/nilm/ml/models/dishwasher/savemodel_cnn_fine_tune
+2024-04-21 05:50:34,935 [INFO ]  Training history file path: /home/lindo/Develop/nilm/ml/models/dishwasher/history_cnn_fine_tune
+2024-04-21 05:50:35,040 [INFO ]  There are 0.290M training samples.
+2024-04-21 05:50:35,041 [INFO ]  There are 0.103M validation samples.
+2024-04-21 05:50:35,041 [INFO ]  Normalized on power threshold: 0.004
+2024-04-21 05:50:35,041 [INFO ]  L1 loss multiplier: 1.0
+2024-04-21 05:50:35,041 [INFO ]  Using MirroredStrategy with devices ('/job:localhost/replica:0/task:0/device:GPU:0', '/job:localhost/replica:0/task:0/device:GPU:1')
+2024-04-21 05:50:35,323 [INFO ]  Number of replicas: 2.
+2024-04-21 05:50:35,323 [INFO ]  Global batch size: 1024.
+2024-04-21 05:50:35,373 [INFO ]  Learning rate: 0.0001
+2024-04-21 05:50:35,750 [WARNI]  No training configuration found in save file, so the model was *not* compiled. Compile it manually.
+2024-04-21 05:50:36,552 [INFO ]  Collective all_reduce tensors: 6 all_reduces, num_devices = 2, group_size = 2, implementation = CommunicationImplementation.NCCL, num_packs = 1
+2024-04-21 05:50:36,845 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+2024-04-21 05:50:37,250 [INFO ]  Collective all_reduce tensors: 6 all_reduces, num_devices = 2, group_size = 2, implementation = CommunicationImplementation.NCCL, num_packs = 1
+2024-04-21 05:50:37,342 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+2024-04-21 05:50:39,116 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+2024-04-21 05:50:39,121 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+2024-04-21 05:50:39,124 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+2024-04-21 05:50:39,125 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+2024-04-21 05:50:39,148 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+2024-04-21 05:50:39,149 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+2024-04-21 05:50:39,151 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+2024-04-21 05:50:39,152 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+2024-04-21 05:50:46,053 [INFO ]  Running test loop after epoch: 1.
+2024-04-21 05:50:47,516 [INFO ]  Current val loss of 0.3819 < than val loss of inf, saving model to /home/lindo/Develop/nilm/ml/models/dishwasher/savemodel_cnn_fine_tune.
+2024-04-21 05:50:47,516 [WARNI]  Compiled the loaded model, but the compiled metrics have yet to be built. `model.compile_metrics` will be empty until you train or evaluate the model.
+2024-04-21 05:50:48,346 [INFO ]  Assets written to: /home/lindo/Develop/nilm/ml/models/dishwasher/savemodel_cnn_fine_tune/assets
+2024-04-21 05:50:48,365 [INFO ]  epoch: 1 loss: 0.327 mse: 0.002852 mae: 0.03829 val_loss: 0.3819 val_mse: 0.002667 val_mae: 0.02295
+2024-04-21 05:50:48,618 [INFO ]  Reshuffling training dataset.
+2024-04-21 05:50:55,490 [INFO ]  Running test loop after epoch: 2.
+2024-04-21 05:50:56,491 [INFO ]  epoch: 2 loss: 0.1702 mse: 0.0007929 mae: 0.01835 val_loss: 0.3926 val_mse: 0.002374 val_mae: 0.01509
+2024-04-21 05:50:56,753 [INFO ]  Reshuffling training dataset.
+2024-04-21 05:51:03,728 [INFO ]  Running test loop after epoch: 3.
+2024-04-21 05:51:04,702 [INFO ]  epoch: 3 loss: 0.1447 mse: 0.00041 mae: 0.01228 val_loss: 0.3898 val_mse: 0.001997 val_mae: 0.009766
+2024-04-21 05:51:04,973 [INFO ]  Reshuffling training dataset.
+2024-04-21 05:51:11,962 [INFO ]  Running test loop after epoch: 4.
+2024-04-21 05:51:12,923 [INFO ]  epoch: 4 loss: 0.1359 mse: 0.0003062 mae: 0.009965 val_loss: 0.3914 val_mse: 0.002073 val_mae: 0.00891
+2024-04-21 05:51:13,193 [INFO ]  Reshuffling training dataset.
+2024-04-21 05:51:20,025 [INFO ]  Running test loop after epoch: 5.
+2024-04-21 05:51:20,974 [INFO ]  Current val loss of 0.3726 < than val loss of 0.3819, saving model to /home/lindo/Develop/nilm/ml/models/dishwasher/savemodel_cnn_fine_tune.
+2024-04-21 05:51:20,975 [WARNI]  Compiled the loaded model, but the compiled metrics have yet to be built. `model.compile_metrics` will be empty until you train or evaluate the model.
+2024-04-21 05:51:21,579 [INFO ]  Assets written to: /home/lindo/Develop/nilm/ml/models/dishwasher/savemodel_cnn_fine_tune/assets
+2024-04-21 05:51:21,596 [INFO ]  epoch: 5 loss: 0.1318 mse: 0.0002568 mae: 0.008576 val_loss: 0.3726 val_mse: 0.002025 val_mae: 0.007525
+2024-04-21 05:51:21,852 [INFO ]  Reshuffling training dataset.
+2024-04-21 05:51:28,786 [INFO ]  Running test loop after epoch: 6.
+2024-04-21 05:51:29,785 [INFO ]  epoch: 6 loss: 0.128 mse: 0.0002253 mae: 0.007594 val_loss: 0.3978 val_mse: 0.002101 val_mae: 0.007951
+2024-04-21 05:51:30,056 [INFO ]  Reshuffling training dataset.
+2024-04-21 05:51:36,911 [INFO ]  Running test loop after epoch: 7.
+2024-04-21 05:51:37,886 [INFO ]  Current val loss of 0.3685 < than val loss of 0.3726, saving model to /home/lindo/Develop/nilm/ml/models/dishwasher/savemodel_cnn_fine_tune.
+2024-04-21 05:51:37,886 [WARNI]  Compiled the loaded model, but the compiled metrics have yet to be built. `model.compile_metrics` will be empty until you train or evaluate the model.
+2024-04-21 05:51:38,641 [INFO ]  Assets written to: /home/lindo/Develop/nilm/ml/models/dishwasher/savemodel_cnn_fine_tune/assets
+2024-04-21 05:51:38,662 [INFO ]  epoch: 7 loss: 0.128 mse: 0.000188 mae: 0.006722 val_loss: 0.3685 val_mse: 0.001973 val_mae: 0.007193
+2024-04-21 05:51:38,919 [INFO ]  Reshuffling training dataset.
+2024-04-21 05:51:45,893 [INFO ]  Running test loop after epoch: 8.
+2024-04-21 05:51:46,862 [INFO ]  epoch: 8 loss: 0.1237 mse: 0.0001696 mae: 0.006128 val_loss: 0.3774 val_mse: 0.001983 val_mae: 0.007234
+2024-04-21 05:51:47,139 [INFO ]  Reshuffling training dataset.
+2024-04-21 05:51:54,089 [INFO ]  Running test loop after epoch: 9.
+2024-04-21 05:51:55,044 [INFO ]  Current val loss of 0.3601 < than val loss of 0.3685, saving model to /home/lindo/Develop/nilm/ml/models/dishwasher/savemodel_cnn_fine_tune.
+2024-04-21 05:51:55,045 [WARNI]  Compiled the loaded model, but the compiled metrics have yet to be built. `model.compile_metrics` will be empty until you train or evaluate the model.
+2024-04-21 05:51:55,653 [INFO ]  Assets written to: /home/lindo/Develop/nilm/ml/models/dishwasher/savemodel_cnn_fine_tune/assets
+2024-04-21 05:51:55,672 [INFO ]  epoch: 9 loss: 0.1206 mse: 0.000148 mae: 0.005645 val_loss: 0.3601 val_mse: 0.001943 val_mae: 0.007844
+2024-04-21 05:51:55,932 [INFO ]  Reshuffling training dataset.
+2024-04-21 05:52:02,936 [INFO ]  Running test loop after epoch: 10.
+2024-04-21 05:52:03,887 [INFO ]  epoch: 10 loss: 0.1183 mse: 0.0001358 mae: 0.005263 val_loss: 0.3834 val_mse: 0.00192 val_mae: 0.00687
+2024-04-21 05:52:04,166 [INFO ]  Reshuffling training dataset.
+2024-04-21 05:52:11,152 [INFO ]  Running test loop after epoch: 11.
+2024-04-21 05:52:12,105 [INFO ]  epoch: 11 loss: 0.1192 mse: 0.0001231 mae: 0.004917 val_loss: 0.4034 val_mse: 0.001889 val_mae: 0.006795
+2024-04-21 05:52:12,380 [INFO ]  Reshuffling training dataset.
+2024-04-21 05:52:19,311 [INFO ]  Running test loop after epoch: 12.
+2024-04-21 05:52:20,267 [INFO ]  epoch: 12 loss: 0.1174 mse: 0.00013 mae: 0.004959 val_loss: 0.3935 val_mse: 0.001948 val_mae: 0.006855
+2024-04-21 05:52:20,541 [INFO ]  Reshuffling training dataset.
+2024-04-21 05:52:27,411 [INFO ]  Running test loop after epoch: 13.
+2024-04-21 05:52:28,385 [INFO ]  epoch: 13 loss: 0.1168 mse: 0.0001124 mae: 0.004734 val_loss: 0.4052 val_mse: 0.001926 val_mae: 0.007074
+2024-04-21 05:52:28,672 [INFO ]  Reshuffling training dataset.
+2024-04-21 05:52:35,581 [INFO ]  Running test loop after epoch: 14.
+2024-04-21 05:52:36,557 [INFO ]  epoch: 14 loss: 0.1155 mse: 0.0001129 mae: 0.004561 val_loss: 0.3889 val_mse: 0.001918 val_mae: 0.006865
+2024-04-21 05:52:36,843 [INFO ]  Reshuffling training dataset.
+2024-04-21 05:52:43,844 [INFO ]  Running test loop after epoch: 15.
+2024-04-21 05:52:44,856 [INFO ]  epoch: 15 loss: 0.1136 mse: 9.84e-05 mae: 0.004571 val_loss: 0.3895 val_mse: 0.001939 val_mae: 0.006576
+2024-04-21 05:52:45,131 [INFO ]  Early termination of training.

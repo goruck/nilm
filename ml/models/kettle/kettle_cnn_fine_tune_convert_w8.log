@@ -1,0 +1,10 @@
+2024-04-29 05:42:00,071 [INFO ]  Machine name: titan
+2024-04-29 05:42:00,071 [INFO ]  Arguments: 
+2024-04-29 05:42:00,071 [INFO ]  Namespace(appliance_name='kettle', model_arch='cnn_fine_tune', datadir='/home/lindo/Develop/nilm/ml/dataset_management/refit', save_dir='/home/lindo/Develop/nilm/ml/models', crop=None, evaluate=False, num_eval=432000, test_type='test', prune=False, quant_mode='w8', debug_model=False, fix_model=False, use_tpu=False)
+2024-04-29 05:42:00,071 [INFO ]  Savemodel file path: /home/lindo/Develop/nilm/ml/models/kettle/savemodel_cnn_fine_tune
+2024-04-29 05:42:01,028 [WARNI]  No training configuration found in save file, so the model was *not* compiled. Compile it manually.
+2024-04-29 05:42:01,030 [INFO ]  dataset: /home/lindo/Develop/nilm/ml/dataset_management/refit/kettle/kettle_test_H2.csv
+2024-04-29 05:42:02,035 [INFO ]  Loaded 5.734M samples from dataset.
+2024-04-29 05:42:02,041 [INFO ]  Converting model to tflite using w8 quantization.
+2024-04-29 05:42:02,778 [INFO ]  Assets written to: /tmp/tmpd0dzirey/assets
+2024-04-29 05:42:04,809 [INFO ]  Quantized tflite model saved to /home/lindo/Develop/nilm/ml/models/kettle/kettle_cnn_fine_tune_w8.tflite.

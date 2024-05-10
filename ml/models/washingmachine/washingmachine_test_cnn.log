@@ -1,37 +1,37 @@
-2023-12-12 04:18:02,701 [INFO ]  Machine name: titan
-2023-12-12 04:18:02,701 [INFO ]  Arguments: 
-2023-12-12 04:18:02,701 [INFO ]  Namespace(appliance_name='washingmachine', datadir='./dataset_management/refit', trained_model_dir='./models', model_arch='cnn', save_dir='/home/lindo/Develop/nilm/ml/models', plot=True, crop=None, batch_size=1024)
-2023-12-12 04:18:02,701 [INFO ]  File for test: washingmachine_test_H8.csv
-2023-12-12 04:18:02,701 [INFO ]  Loading from: ./dataset_management/refit/washingmachine/washingmachine_test_H8.csv
-2023-12-12 04:18:03,593 [INFO ]  There are 6.118M test samples.
-2023-12-12 04:18:03,593 [INFO ]  Window length: 599 (samples)
-2023-12-12 04:18:03,593 [INFO ]  Sample period: 8 (s)
-2023-12-12 04:18:03,593 [INFO ]  Appliance max power: 2500.0 (W)
-2023-12-12 04:18:03,593 [INFO ]  Appliance on threshold: 20.0 (W)
-2023-12-12 04:18:03,593 [INFO ]  Train aggregate mean: 517.5859340919116 (W)
-2023-12-12 04:18:03,593 [INFO ]  Train aggregate std: 827.1565574135092 (W)
-2023-12-12 04:18:03,593 [INFO ]  Train appliance mean: 22.22078550102201 (W)
-2023-12-12 04:18:03,593 [INFO ]  Train appliance std: 189.70389890256996 (W)
-2023-12-12 04:18:03,593 [INFO ]  Test appliance mean: 29.433812118685246 (W)
-2023-12-12 04:18:03,593 [INFO ]  Test aggregate mean: 685.6151694157477 (W)
-2023-12-12 04:18:03,593 [INFO ]  Alternative appliance mean: 400.0 (W)
-2023-12-12 04:18:03,593 [INFO ]  Alternative appliance std: 700.0 (W)
-2023-12-12 04:18:03,593 [INFO ]  Alternative aggregate mean: 522.0 (W)
-2023-12-12 04:18:03,593 [INFO ]  Alternative aggregate std: 814.0 (W)
-2023-12-12 04:18:03,593 [INFO ]  Using alt standardization.
-2023-12-12 04:18:04,584 [INFO ]  Loading saved model from ./models/washingmachine/savemodel_cnn.
-2023-12-12 04:18:18,288 [INFO ]  De-normalizing predictions with mean = 0 and std = 2500.0.
-2023-12-12 04:18:18,565 [INFO ]  True positives: 179633
-2023-12-12 04:18:18,589 [INFO ]  True negatives: 5874732
-2023-12-12 04:18:18,604 [INFO ]  False positives: 41761
-2023-12-12 04:18:18,623 [INFO ]  False negatives: 21250
-2023-12-12 04:18:18,658 [INFO ]  Accuracy: 0.9896996686160864
-2023-12-12 04:18:18,727 [INFO ]  MCC: 0.8465333118811815
-2023-12-12 04:18:18,788 [INFO ]  F1: 0.850782780023539
-2023-12-12 04:18:19,164 [INFO ]  MAE: 14.457347372371292 (W)
-2023-12-12 04:18:19,195 [INFO ]  NDE: 0.3689126869241319
-2023-12-12 04:18:19,220 [INFO ]  SAE: 0.31736505115561525
-2023-12-12 04:18:19,287 [INFO ]  Ground truth EPD: 691.3031705097386 (Wh)
-2023-12-12 04:18:19,339 [INFO ]  Predicted EPD: 471.90751345142144 (Wh)
-2023-12-12 04:18:19,339 [INFO ]  EPD Relative Error: -31.73653274243539 (%)
-2023-12-12 04:18:19,339 [INFO ]  Saving mains, ground truth and predictions to /home/lindo/Develop/nilm/ml/models/washingmachine.
+2024-02-05 04:48:39,433 [INFO ]  Machine name: titan
+2024-02-05 04:48:39,433 [INFO ]  Arguments: 
+2024-02-05 04:48:39,433 [INFO ]  Namespace(appliance_name='washingmachine', datadir='./dataset_management/refit', trained_model_dir='./models', model_arch='cnn', save_dir='/home/lindo/Develop/nilm/ml/models', plot=True, crop=None, batch_size=1024)
+2024-02-05 04:48:39,433 [INFO ]  File for test: washingmachine_test_H8.csv
+2024-02-05 04:48:39,433 [INFO ]  Loading from: ./dataset_management/refit/washingmachine/washingmachine_test_H8.csv
+2024-02-05 04:48:40,425 [INFO ]  There are 6.118M test samples.
+2024-02-05 04:48:40,426 [INFO ]  Window length: 599 (samples)
+2024-02-05 04:48:40,426 [INFO ]  Sample period: 8 (s)
+2024-02-05 04:48:40,426 [INFO ]  Appliance max power: 2500.0 (W)
+2024-02-05 04:48:40,426 [INFO ]  Appliance on threshold: 20.0 (W)
+2024-02-05 04:48:40,426 [INFO ]  Train aggregate mean: 517.5859340919116 (W)
+2024-02-05 04:48:40,426 [INFO ]  Train aggregate std: 827.1565574135092 (W)
+2024-02-05 04:48:40,426 [INFO ]  Train appliance mean: 22.22078550102201 (W)
+2024-02-05 04:48:40,426 [INFO ]  Train appliance std: 189.70389890256996 (W)
+2024-02-05 04:48:40,426 [INFO ]  Test appliance mean: 29.433812118685246 (W)
+2024-02-05 04:48:40,426 [INFO ]  Test aggregate mean: 685.6151694157477 (W)
+2024-02-05 04:48:40,426 [INFO ]  Alternative appliance mean: 400.0 (W)
+2024-02-05 04:48:40,426 [INFO ]  Alternative appliance std: 700.0 (W)
+2024-02-05 04:48:40,426 [INFO ]  Alternative aggregate mean: 522.0 (W)
+2024-02-05 04:48:40,426 [INFO ]  Alternative aggregate std: 814.0 (W)
+2024-02-05 04:48:40,426 [INFO ]  Using alt standardization.
+2024-02-05 04:48:41,625 [INFO ]  Loading saved model from ./models/washingmachine/savemodel_cnn.
+2024-02-05 04:48:59,467 [INFO ]  De-normalizing predictions with mean = 0 and std = 2500.0.
+2024-02-05 04:48:59,710 [INFO ]  True positives: 179633
+2024-02-05 04:48:59,733 [INFO ]  True negatives: 5874732
+2024-02-05 04:48:59,749 [INFO ]  False positives: 41761
+2024-02-05 04:48:59,768 [INFO ]  False negatives: 21250
+2024-02-05 04:48:59,802 [INFO ]  Accuracy: 0.9896996686160864
+2024-02-05 04:48:59,870 [INFO ]  MCC: 0.8465333118811815
+2024-02-05 04:48:59,930 [INFO ]  F1: 0.850782780023539
+2024-02-05 04:49:00,312 [INFO ]  MAE: 14.457347372371292 (W)
+2024-02-05 04:49:00,342 [INFO ]  NDE: 0.3689126869241319
+2024-02-05 04:49:00,367 [INFO ]  SAE: 0.31736505115561525
+2024-02-05 04:49:00,431 [INFO ]  Ground truth EPD: 691.3031705097386 (Wh)
+2024-02-05 04:49:00,480 [INFO ]  Predicted EPD: 471.90751345142144 (Wh)
+2024-02-05 04:49:00,480 [INFO ]  EPD Relative Error: -31.73653274243539 (%)
+2024-02-05 04:49:00,481 [INFO ]  Saving mains, ground truth and predictions to /home/lindo/Develop/nilm/ml/models/washingmachine.

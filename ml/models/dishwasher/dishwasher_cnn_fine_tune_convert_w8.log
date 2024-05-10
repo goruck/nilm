@@ -1,0 +1,10 @@
+2024-04-29 05:43:26,353 [INFO ]  Machine name: titan
+2024-04-29 05:43:26,353 [INFO ]  Arguments: 
+2024-04-29 05:43:26,353 [INFO ]  Namespace(appliance_name='dishwasher', model_arch='cnn_fine_tune', datadir='/home/lindo/Develop/nilm/ml/dataset_management/refit', save_dir='/home/lindo/Develop/nilm/ml/models', crop=None, evaluate=False, num_eval=432000, test_type='test', prune=False, quant_mode='w8', debug_model=False, fix_model=False, use_tpu=False)
+2024-04-29 05:43:26,353 [INFO ]  Savemodel file path: /home/lindo/Develop/nilm/ml/models/dishwasher/savemodel_cnn_fine_tune
+2024-04-29 05:43:27,219 [WARNI]  No training configuration found in save file, so the model was *not* compiled. Compile it manually.
+2024-04-29 05:43:27,221 [INFO ]  dataset: /home/lindo/Develop/nilm/ml/dataset_management/refit/dishwasher/dishwasher_test_H20.csv
+2024-04-29 05:43:28,135 [INFO ]  Loaded 5.169M samples from dataset.
+2024-04-29 05:43:28,140 [INFO ]  Converting model to tflite using w8 quantization.
+2024-04-29 05:43:28,869 [INFO ]  Assets written to: /tmp/tmp8uucsxc8/assets
+2024-04-29 05:43:30,875 [INFO ]  Quantized tflite model saved to /home/lindo/Develop/nilm/ml/models/dishwasher/dishwasher_cnn_fine_tune_w8.tflite.

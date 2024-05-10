@@ -1,0 +1,10 @@
+2024-04-29 05:42:41,328 [INFO ]  Machine name: titan
+2024-04-29 05:42:41,329 [INFO ]  Arguments: 
+2024-04-29 05:42:41,329 [INFO ]  Namespace(appliance_name='microwave', model_arch='cnn_fine_tune', datadir='/home/lindo/Develop/nilm/ml/dataset_management/refit', save_dir='/home/lindo/Develop/nilm/ml/models', crop=None, evaluate=False, num_eval=432000, test_type='test', prune=False, quant_mode='w8', debug_model=False, fix_model=False, use_tpu=False)
+2024-04-29 05:42:41,329 [INFO ]  Savemodel file path: /home/lindo/Develop/nilm/ml/models/microwave/savemodel_cnn_fine_tune
+2024-04-29 05:42:42,187 [WARNI]  No training configuration found in save file, so the model was *not* compiled. Compile it manually.
+2024-04-29 05:42:42,189 [INFO ]  dataset: /home/lindo/Develop/nilm/ml/dataset_management/refit/microwave/microwave_test_H4.csv
+2024-04-29 05:42:43,726 [INFO ]  Loaded 6.761M samples from dataset.
+2024-04-29 05:42:43,732 [INFO ]  Converting model to tflite using w8 quantization.
+2024-04-29 05:42:44,459 [INFO ]  Assets written to: /tmp/tmpcqsoeszo/assets
+2024-04-29 05:42:46,471 [INFO ]  Quantized tflite model saved to /home/lindo/Develop/nilm/ml/models/microwave/microwave_cnn_fine_tune_w8.tflite.

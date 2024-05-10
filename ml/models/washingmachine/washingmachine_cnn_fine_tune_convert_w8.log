@@ -1,0 +1,10 @@
+2024-04-29 05:43:46,448 [INFO ]  Machine name: titan
+2024-04-29 05:43:46,448 [INFO ]  Arguments: 
+2024-04-29 05:43:46,448 [INFO ]  Namespace(appliance_name='washingmachine', model_arch='cnn_fine_tune', datadir='/home/lindo/Develop/nilm/ml/dataset_management/refit', save_dir='/home/lindo/Develop/nilm/ml/models', crop=None, evaluate=False, num_eval=432000, test_type='test', prune=False, quant_mode='w8', debug_model=False, fix_model=False, use_tpu=False)
+2024-04-29 05:43:46,448 [INFO ]  Savemodel file path: /home/lindo/Develop/nilm/ml/models/washingmachine/savemodel_cnn_fine_tune
+2024-04-29 05:43:47,321 [WARNI]  No training configuration found in save file, so the model was *not* compiled. Compile it manually.
+2024-04-29 05:43:47,323 [INFO ]  dataset: /home/lindo/Develop/nilm/ml/dataset_management/refit/washingmachine/washingmachine_test_H8.csv
+2024-04-29 05:43:48,375 [INFO ]  Loaded 6.118M samples from dataset.
+2024-04-29 05:43:48,382 [INFO ]  Converting model to tflite using w8 quantization.
+2024-04-29 05:43:49,109 [INFO ]  Assets written to: /tmp/tmpza8pmohv/assets
+2024-04-29 05:43:51,074 [INFO ]  Quantized tflite model saved to /home/lindo/Develop/nilm/ml/models/washingmachine/washingmachine_cnn_fine_tune_w8.tflite.

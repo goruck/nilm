@@ -1,32 +1,9 @@
-2023-12-08 04:07:48,262 [INFO ]  Machine name: titan
-2023-12-08 04:07:48,262 [INFO ]  Arguments: 
-2023-12-08 04:07:48,262 [INFO ]  Namespace(appliance_name='kettle', model_arch='transformer', datadir='/home/lindo/Develop/nilm/ml/dataset_management/refit', save_dir='/home/lindo/Develop/nilm/ml/models', crop=None, evaluate=True, num_eval=43200, test_type='test', prune=False, quant_mode='w8', debug_model=False, fix_model=False, use_tpu=False)
-2023-12-08 04:07:48,262 [INFO ]  Savemodel file path: /home/lindo/Develop/nilm/ml/models/kettle/savemodel_transformer
-2023-12-08 04:07:50,033 [WARNI]  No training configuration found in save file, so the model was *not* compiled. Compile it manually.
-2023-12-08 04:07:50,040 [INFO ]  dataset: /home/lindo/Develop/nilm/ml/dataset_management/refit/kettle/kettle_test_H2.csv
-2023-12-08 04:07:50,887 [INFO ]  Loaded 5.734M samples from dataset.
-2023-12-08 04:07:50,892 [INFO ]  Converting model to tflite using w8 quantization.
-2023-12-08 04:07:51,784 [INFO ]  Assets written to: /tmp/tmp22o8xgy8/assets
-2023-12-08 04:07:53,243 [INFO ]  Quantized tflite model saved to /home/lindo/Develop/nilm/ml/models/kettle/kettle_transformer_w8.tflite.
-2023-12-08 04:07:53,245 [INFO ]  interpreter input details: [{'name': 'serving_default_args_0:0', 'index': 0, 'shape': array([  1, 599,   1], dtype=int32), 'shape_signature': array([ -1, 599,   1], dtype=int32), 'dtype': <class 'numpy.float32'>, 'quantization': (0.0, 0), 'quantization_parameters': {'scales': array([], dtype=float32), 'zero_points': array([], dtype=int32), 'quantized_dimension': 0}, 'sparsity_parameters': {}}]
-2023-12-08 04:07:53,245 [INFO ]  interpreter output details: [{'name': 'StatefulPartitionedCall:0', 'index': 399, 'shape': array([1, 1], dtype=int32), 'shape_signature': array([-1,  1], dtype=int32), 'dtype': <class 'numpy.float32'>, 'quantization': (0.0, 0), 'quantization_parameters': {'scales': array([], dtype=float32), 'zero_points': array([], dtype=int32), 'quantized_dimension': 0}, 'sparsity_parameters': {}}]
-2023-12-08 04:07:53,245 [INFO ]  tflite model floating input: True
-2023-12-08 04:07:53,245 [INFO ]  tflite model floating output: True
-2023-12-08 04:07:53,357 [INFO ]  Running inference on 43200 samples...
-2023-12-08 04:23:31,050 [INFO ]  Inference run complete.
-2023-12-08 04:23:31,050 [INFO ]  Inference rate: 46.071 Hz
-2023-12-08 04:23:31,069 [INFO ]  De-normalizing predictions with mean = 0 and std = 3100.
-2023-12-08 04:23:31,069 [INFO ]  appliance threshold: 2000.0
-2023-12-08 04:23:31,072 [INFO ]  True positives: 272
-2023-12-08 04:23:31,072 [INFO ]  True negatives: 42829
-2023-12-08 04:23:31,073 [INFO ]  False positives: 21
-2023-12-08 04:23:31,073 [INFO ]  False negatives: 78
-2023-12-08 04:23:31,073 [INFO ]  Accuracy: 0.9977083333333333
-2023-12-08 04:23:31,073 [INFO ]  MCC: 0.8482784781465336
-2023-12-08 04:23:31,073 [INFO ]  F1: 0.8460342146189737
-2023-12-08 04:23:31,076 [INFO ]  MAE: 5.117074638649269 (W)
-2023-12-08 04:23:31,076 [INFO ]  NDE: 0.275991217684569
-2023-12-08 04:23:31,076 [INFO ]  SAE: 0.17611424168212084
-2023-12-08 04:23:31,076 [INFO ]  Ground truth EPD: 409.2164559597439 (Wh)
-2023-12-08 04:23:31,077 [INFO ]  Predicted EPD: 337.1476101345486 (Wh)
-2023-12-08 04:23:31,077 [INFO ]  EPD Relative Error: -17.611424168212086 (%)
+2023-12-29 06:38:27,763 [INFO ]  Machine name: titan
+2023-12-29 06:38:27,763 [INFO ]  Arguments: 
+2023-12-29 06:38:27,763 [INFO ]  Namespace(appliance_name='kettle', model_arch='transformer', datadir='/home/lindo/Develop/nilm/ml/dataset_management/refit', save_dir='/home/lindo/Develop/nilm/ml/models', crop=None, evaluate=False, num_eval=432000, test_type='test', prune=False, quant_mode='w8', debug_model=True, fix_model=False, use_tpu=False)
+2023-12-29 06:38:27,763 [INFO ]  Savemodel file path: /home/lindo/Develop/nilm/ml/models/kettle/savemodel_transformer
+2023-12-29 06:38:29,501 [WARNI]  No training configuration found in save file, so the model was *not* compiled. Compile it manually.
+2023-12-29 06:38:29,508 [INFO ]  dataset: /home/lindo/Develop/nilm/ml/dataset_management/refit/kettle/kettle_test_H2.csv
+2023-12-29 06:38:30,402 [INFO ]  Loaded 5.734M samples from dataset.
+2023-12-29 06:38:30,407 [INFO ]  Converting model to tflite using w8 quantization.
+2023-12-29 06:38:30,408 [INFO ]  Debugging model...

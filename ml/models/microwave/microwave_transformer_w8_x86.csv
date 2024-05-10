@@ -1,0 +1,396 @@
+Profiling Info for Benchmark Initialization:
+============================== Run Order ==============================
+node type, first, avg_ms, %, cdf%, mem KB, times called, name
+AllocateTensors, 0.28, 0.28, 100%, 100%, 0, 1, AllocateTensors/0
+
+============================== Top by Computation Time ==============================
+node type, first, avg_ms, %, cdf%, mem KB, times called, name
+AllocateTensors, 0.28, 0.28, 100%, 100%, 0, 1, AllocateTensors/0
+
+Number of nodes executed: 1
+============================== Summary by node type ==============================
+node type, count, avg_ms, avg %, cdf %, mem KB, times called
+AllocateTensors, 1, 0.28, 100%, 100%, 0, 1
+
+Timings (microseconds): count=1 curr=280
+Memory (bytes): count=0
+1 nodes observed
+
+
+Operator-wise Profiling Info for Regular Benchmark Runs:
+============================== Run Order ==============================
+node type, first, avg_ms, %, cdf%, mem KB, times called, name
+EXPAND_DIMS, 0, 0.00028, 0.00126259%, 0.00126259%, 0, 1, [Conv1D/ExpandDims]:0
+CONV_2D, 0.203, 0.16596, 0.748354%, 0.749617%, 0, 1, [BiasAdd;Conv1D/Squeeze;BiasAdd/ReadVariableOp;Conv1D]:1
+SQUARE, 0.052, 0.05252, 0.236826%, 0.986443%, 0, 1, [Square;BiasAdd;Conv1D/Squeeze;BiasAdd/ReadVariableOp]:2
+RESHAPE, 0, 0.0002, 0.000901849%, 0.987344%, 0, 1, [Square;BiasAdd;Conv1D/Squeeze;BiasAdd/ReadVariableOp1]:3
+EXPAND_DIMS, 0.001, 6e-05, 0.000270555%, 0.987615%, 0, 1, [average_pooling1d/ExpandDims]:4
+AVERAGE_POOL_2D, 0.107, 0.10786, 0.486367%, 1.47398%, 0, 1, [average_pooling1d/AvgPool]:5
+ADD, 0.009, 0.00914, 0.0412145%, 1.5152%, 0, 1, [add;average_pooling1d/Squeeze;add/y]:6
+SQRT, 0.03, 0.02686, 0.121118%, 1.63631%, 0, 1, [Sqrt;add;average_pooling1d/Squeeze;add/y]:7
+RESHAPE, 0, 0.00012, 0.000541109%, 1.63686%, 0, 1, [Sqrt;add;average_pooling1d/Squeeze;add/y1]:8
+SHAPE, 0, 0.0001, 0.000450925%, 1.63731%, 0, 1, [Shape]:9
+FILL, 0.01, 0.00926, 0.0417556%, 1.67906%, 0, 1, [BroadcastTo]:10
+MUL, 0.012, 0.01072, 0.0483391%, 1.7274%, 0, 1, [BroadcastTo1]:11
+ADD, 0.019, 0.01876, 0.0845934%, 1.812%, 0, 1, [add]:12
+SHAPE, 0, 0.00012, 0.000541109%, 1.81254%, 0, 1, [layer_normalization/Shape]:13
+STRIDED_SLICE, 0, 8e-05, 0.00036074%, 1.8129%, 0, 1, [layer_normalization/strided_slice]:14
+MUL, 0.001, 0.0001, 0.000450925%, 1.81335%, 0, 1, [layer_normalization/mul_1]:15
+RESHAPE, 0, 4e-05, 0.00018037%, 1.81353%, 0, 1, [layer_normalization/ones/packed]:16
+FILL, 0, 0.00014, 0.000631294%, 1.81416%, 0, 1, [layer_normalization/ones]:17
+FILL, 0, 0.00016, 0.000721479%, 1.81488%, 0, 1, [layer_normalization/zeros]:18
+PACK, 0.001, 0.00054, 0.00243499%, 1.81732%, 0, 1, [layer_normalization/Reshape/shape]:19
+RESHAPE, 0.039, 0.03522, 0.158816%, 1.97613%, 0, 1, [layer_normalization/Reshape]:20
+TRANSPOSE, 0.04, 0.03506, 0.158094%, 2.13423%, 0, 1, [layer_normalization/FusedBatchNormV32]:21
+MEAN, 0.021, 0.02066, 0.093161%, 2.22739%, 0, 1, [layer_normalization/FusedBatchNormV33]:22
+SQUARED_DIFFERENCE, 0.03, 0.02864, 0.129145%, 2.35653%, 0, 1, [layer_normalization/FusedBatchNormV34]:23
+MEAN, 0.02, 0.0194, 0.0874794%, 2.44401%, 0, 1, [layer_normalization/FusedBatchNormV35]:24
+ADD, 0.001, 0.00036, 0.00162333%, 2.44563%, 0, 1, [layer_normalization/FusedBatchNormV36]:25
+RSQRT, 0.001, 0.00088, 0.00396814%, 2.4496%, 0, 1, [layer_normalization/FusedBatchNormV37]:26
+MUL, 0.001, 0.00088, 0.00396814%, 2.45357%, 0, 1, [layer_normalization/FusedBatchNormV38]:27
+MUL, 0.024, 0.02456, 0.110747%, 2.56432%, 0, 1, [layer_normalization/FusedBatchNormV39]:28
+MUL, 0.001, 0.00072, 0.00324666%, 2.56756%, 0, 1, [layer_normalization/FusedBatchNormV310]:29
+SUB, 0.001, 0.00058, 0.00261536%, 2.57018%, 0, 1, [layer_normalization/FusedBatchNormV311]:30
+ADD, 0.028, 0.02878, 0.129776%, 2.69996%, 0, 1, [layer_normalization/FusedBatchNormV312]:31
+TRANSPOSE, 0.029, 0.02772, 0.124996%, 2.82495%, 0, 1, [layer_normalization/FusedBatchNormV313]:32
+RESHAPE, 0.001, 0.0001, 0.000450925%, 2.8254%, 0, 1, [layer_normalization/Reshape_1]:33
+MUL, 0.016, 0.01552, 0.0699835%, 2.89539%, 0, 1, [layer_normalization/mul_3]:34
+ADD, 0.031, 0.03064, 0.138163%, 3.03355%, 0, 1, [layer_normalization/add]:35
+SHAPE, 0, 6e-05, 0.000270555%, 3.03382%, 0, 1, [multi_headed_attention/dense/Tensordot/Shape]:36
+GATHER, 0, 0.0001, 0.000450925%, 3.03427%, 0, 1, [multi_headed_attention/dense/Tensordot/GatherV2;multi_headed_attention/dense/Tensordot/GatherV2/axis]:37
+REDUCE_PROD, 0, 0.00012, 0.000541109%, 3.03481%, 0, 1, [multi_headed_attention/dense/Tensordot/Prod]:38
+CONCATENATION, 0.001, 8e-05, 0.00036074%, 3.03517%, 0, 1, [multi_headed_attention/dense/Tensordot/concat_1]:39
+GATHER, 0, 8e-05, 0.00036074%, 3.03553%, 0, 1, [multi_headed_attention/dense/Tensordot/GatherV2_1;multi_headed_attention/dense/Tensordot/GatherV2/axis]:40
+REDUCE_PROD, 0, 6e-05, 0.000270555%, 3.0358%, 0, 1, [multi_headed_attention/dense/Tensordot/Prod_1]:41
+PACK, 0, 0.00028, 0.00126259%, 3.03707%, 0, 1, [multi_headed_attention/dense/Tensordot/stack]:42
+RESHAPE, 0.009, 0.00876, 0.039501%, 3.07657%, 0, 1, [multi_headed_attention/dense/Tensordot/Reshape]:43
+FULLY_CONNECTED, 0.457, 0.46254, 2.08571%, 5.16227%, 0, 1, [multi_headed_attention/dense/Tensordot/MatMul2]:44
+RESHAPE, 0, 0.00018, 0.000811664%, 5.16309%, 0, 1, [multi_headed_attention/dense/Tensordot]:45
+ADD, 0.005, 0.0054, 0.0243499%, 5.18744%, 0, 1, [multi_headed_attention/dense/BiasAdd]:46
+SHAPE, 0.001, 8e-05, 0.00036074%, 5.1878%, 0, 1, [multi_headed_attention/Shape]:47
+STRIDED_SLICE, 0, 0.00018, 0.000811664%, 5.18861%, 0, 1, [multi_headed_attention/strided_slice]:48
+PACK, 0, 0.0003, 0.00135277%, 5.18996%, 0, 1, [multi_headed_attention/Reshape/shape]:49
+RESHAPE, 0.016, 0.0182, 0.0820683%, 5.27203%, 0, 1, [multi_headed_attention/Reshape]:50
+TRANSPOSE, 0.029, 0.0244, 0.110026%, 5.38205%, 0, 1, [multi_headed_attention/transpose]:51
+FULLY_CONNECTED, 0.454, 0.45748, 2.06289%, 7.44494%, 0, 1, [multi_headed_attention/dense_1/Tensordot/MatMul1]:52
+RESHAPE, 0, 0.00016, 0.000721479%, 7.44567%, 0, 1, [multi_headed_attention/dense_1/Tensordot]:53
+ADD, 0.006, 0.00558, 0.0251616%, 7.47083%, 0, 1, [multi_headed_attention/dense_1/BiasAdd]:54
+SHAPE, 0, 6e-05, 0.000270555%, 7.4711%, 0, 1, [multi_headed_attention/Shape_2]:55
+STRIDED_SLICE, 0, 6e-05, 0.000270555%, 7.47137%, 0, 1, [multi_headed_attention/strided_slice_2]:56
+PACK, 0, 0.00046, 0.00207425%, 7.47344%, 0, 1, [multi_headed_attention/Reshape_1/shape]:57
+RESHAPE, 0.013, 0.00968, 0.0436495%, 7.51709%, 0, 1, [multi_headed_attention/Reshape_1]:58
+TRANSPOSE, 0.03, 0.02834, 0.127792%, 7.64488%, 0, 1, [multi_headed_attention/transpose_1]:59
+BATCH_MATMUL, 0.139, 0.13544, 0.610732%, 8.25562%, 0, 1, [multi_headed_attention/dot_product_attention/MatMul]:60
+MUL, 0.085, 0.08618, 0.388607%, 8.64422%, 0, 1, [multi_headed_attention/dot_product_attention/truediv;multi_headed_attention/dot_product_attention/Sqrt1]:61
+SOFTMAX, 0.131, 0.10204, 0.460123%, 9.10435%, 0, 1, [multi_headed_attention/dot_product_attention/Softmax]:62
+FULLY_CONNECTED, 0.47, 0.45886, 2.06911%, 11.1735%, 0, 1, [multi_headed_attention/dense_2/Tensordot/MatMul1]:63
+RESHAPE, 0, 0.00018, 0.000811664%, 11.1743%, 0, 1, [multi_headed_attention/dense_2/Tensordot]:64
+ADD, 0.005, 0.00532, 0.0239892%, 11.1983%, 0, 1, [multi_headed_attention/dense_2/BiasAdd]:65
+SHAPE, 0, 6e-05, 0.000270555%, 11.1985%, 0, 1, [multi_headed_attention/Shape_4]:66
+STRIDED_SLICE, 0, 0.00016, 0.000721479%, 11.1993%, 0, 1, [multi_headed_attention/strided_slice_4]:67
+PACK, 0, 0.00036, 0.00162333%, 11.2009%, 0, 1, [multi_headed_attention/Reshape_2/shape]:68
+RESHAPE, 0.015, 0.01578, 0.0711559%, 11.272%, 0, 1, [multi_headed_attention/Reshape_2]:69
+TRANSPOSE, 0.033, 0.0333, 0.150158%, 11.4222%, 0, 1, [multi_headed_attention/transpose_2]:70
+BATCH_MATMUL, 0.155, 0.14876, 0.670795%, 12.093%, 0, 1, [multi_headed_attention/dot_product_attention/MatMul_1]:71
+TRANSPOSE, 0.033, 0.03138, 0.1415%, 12.2345%, 0, 1, [multi_headed_attention/transpose_3]:72
+SHAPE, 0, 0.0001, 0.000450925%, 12.2349%, 0, 1, [multi_headed_attention/Shape_6]:73
+STRIDED_SLICE, 0, 0.00018, 0.000811664%, 12.2357%, 0, 1, [multi_headed_attention/strided_slice_6]:74
+PACK, 0.001, 0.00038, 0.00171351%, 12.2375%, 0, 1, [multi_headed_attention/Reshape_3/shape]:75
+RESHAPE, 0.011, 0.0103, 0.0464452%, 12.2839%, 0, 1, [multi_headed_attention/Reshape_3]:76
+SHAPE, 0, 6e-05, 0.000270555%, 12.2842%, 0, 1, [multi_headed_attention/dense_3/Tensordot/Shape]:77
+GATHER, 0, 0.0001, 0.000450925%, 12.2846%, 0, 1, [multi_headed_attention/dense_3/Tensordot/GatherV2;multi_headed_attention/dense/Tensordot/GatherV2/axis]:78
+REDUCE_PROD, 0, 4e-05, 0.00018037%, 12.2848%, 0, 1, [multi_headed_attention/dense_3/Tensordot/Prod]:79
+CONCATENATION, 0, 0.00012, 0.000541109%, 12.2853%, 0, 1, [multi_headed_attention/dense_3/Tensordot/concat_1]:80
+GATHER, 0, 8e-05, 0.00036074%, 12.2857%, 0, 1, [multi_headed_attention/dense_3/Tensordot/GatherV2_1;multi_headed_attention/dense/Tensordot/GatherV2/axis]:81
+REDUCE_PROD, 0, 6e-05, 0.000270555%, 12.286%, 0, 1, [multi_headed_attention/dense_3/Tensordot/Prod_1]:82
+PACK, 0.001, 0.0002, 0.000901849%, 12.2869%, 0, 1, [multi_headed_attention/dense_3/Tensordot/stack]:83
+RESHAPE, 0.006, 0.00572, 0.0257929%, 12.3127%, 0, 1, [multi_headed_attention/dense_3/Tensordot/Reshape;multi_headed_attention/Reshape_3]:84
+FULLY_CONNECTED, 0.52, 0.52236, 2.35545%, 14.6681%, 0, 1, [multi_headed_attention/dense_3/Tensordot/MatMul1]:85
+RESHAPE, 0, 0.0001, 0.000450925%, 14.6686%, 0, 1, [multi_headed_attention/dense_3/Tensordot]:86
+ADD, 0.01, 0.01002, 0.0451826%, 14.7138%, 0, 1, [multi_headed_attention/dense_3/BiasAdd]:87
+ADD, 0.009, 0.00976, 0.0440102%, 14.7578%, 0, 1, [add_normalization_1/add]:88
+SHAPE, 0.001, 4e-05, 0.00018037%, 14.7579%, 0, 1, [add_normalization_1/layer_normalization_1/Shape]:89
+STRIDED_SLICE, 0, 0.0001, 0.000450925%, 14.7584%, 0, 1, [add_normalization_1/layer_normalization_1/strided_slice]:90
+MUL, 0, 6e-05, 0.000270555%, 14.7587%, 0, 1, [add_normalization_1/layer_normalization_1/mul_1]:91
+RESHAPE, 0, 8e-05, 0.00036074%, 14.759%, 0, 1, [add_normalization_1/layer_normalization_1/ones/packed]:92
+FILL, 0, 0.00026, 0.0011724%, 14.7602%, 0, 1, [add_normalization_1/layer_normalization_1/ones]:93
+FILL, 0, 0.0001, 0.000450925%, 14.7607%, 0, 1, [add_normalization_1/layer_normalization_1/zeros]:94
+PACK, 0.001, 0.0005, 0.00225462%, 14.7629%, 0, 1, [add_normalization_1/layer_normalization_1/Reshape/shape]:95
+RESHAPE, 0.031, 0.03084, 0.139065%, 14.902%, 0, 1, [add_normalization_1/layer_normalization_1/Reshape]:96
+TRANSPOSE, 0.04, 0.03374, 0.152142%, 15.0541%, 0, 1, [add_normalization_1/layer_normalization_1/FusedBatchNormV3]:97
+MEAN, 0.02, 0.02014, 0.0908162%, 15.1449%, 0, 1, [add_normalization_1/layer_normalization_1/FusedBatchNormV31]:98
+SQUARED_DIFFERENCE, 0.029, 0.0269, 0.121299%, 15.2662%, 0, 1, [add_normalization_1/layer_normalization_1/FusedBatchNormV32]:99
+MEAN, 0.019, 0.01842, 0.0830603%, 15.3493%, 0, 1, [add_normalization_1/layer_normalization_1/FusedBatchNormV33]:100
+ADD, 0, 0.00026, 0.0011724%, 15.3505%, 0, 1, [add_normalization_1/layer_normalization_1/FusedBatchNormV34]:101
+RSQRT, 0.001, 0.00082, 0.00369758%, 15.3542%, 0, 1, [add_normalization_1/layer_normalization_1/FusedBatchNormV35]:102
+MUL, 0.001, 0.00102, 0.00459943%, 15.3588%, 0, 1, [add_normalization_1/layer_normalization_1/FusedBatchNormV36]:103
+MUL, 0.026, 0.02516, 0.113453%, 15.4722%, 0, 1, [add_normalization_1/layer_normalization_1/FusedBatchNormV37]:104
+MUL, 0.001, 0.00072, 0.00324666%, 15.4755%, 0, 1, [add_normalization_1/layer_normalization_1/FusedBatchNormV38]:105
+SUB, 0, 0.0002, 0.000901849%, 15.4764%, 0, 1, [add_normalization_1/layer_normalization_1/FusedBatchNormV39]:106
+ADD, 0.028, 0.0281, 0.12671%, 15.6031%, 0, 1, [add_normalization_1/layer_normalization_1/FusedBatchNormV310]:107
+TRANSPOSE, 0.028, 0.02638, 0.118954%, 15.722%, 0, 1, [add_normalization_1/layer_normalization_1/FusedBatchNormV311]:108
+RESHAPE, 0, 0.00018, 0.000811664%, 15.7228%, 0, 1, [add_normalization_1/layer_normalization_1/Reshape_1]:109
+MUL, 0.018, 0.01614, 0.0727792%, 15.7956%, 0, 1, [add_normalization_1/layer_normalization_1/mul_3]:110
+ADD, 0.032, 0.03084, 0.139065%, 15.9347%, 0, 1, [add_normalization_1/layer_normalization_1/add]:111
+SHAPE, 0, 0.0001, 0.000450925%, 15.9351%, 0, 1, [positionwise_feed_forward/dense_4/Tensordot/Shape]:112
+GATHER, 0, 8e-05, 0.00036074%, 15.9355%, 0, 1, [positionwise_feed_forward/dense_4/Tensordot/GatherV2;multi_headed_attention/dense/Tensordot/GatherV2/axis]:113
+REDUCE_PROD, 0, 4e-05, 0.00018037%, 15.9357%, 0, 1, [positionwise_feed_forward/dense_4/Tensordot/Prod]:114
+CONCATENATION, 0, 0.0001, 0.000450925%, 15.9361%, 0, 1, [positionwise_feed_forward/dense_4/Tensordot/concat_1]:115
+GATHER, 0, 4e-05, 0.00018037%, 15.9363%, 0, 1, [positionwise_feed_forward/dense_4/Tensordot/GatherV2_1;multi_headed_attention/dense/Tensordot/GatherV2/axis]:116
+REDUCE_PROD, 0, 0.0001, 0.000450925%, 15.9368%, 0, 1, [positionwise_feed_forward/dense_4/Tensordot/Prod_1]:117
+PACK, 0, 0.00044, 0.00198407%, 15.9387%, 0, 1, [positionwise_feed_forward/dense_4/Tensordot/stack]:118
+RESHAPE, 0.011, 0.01104, 0.0497821%, 15.9885%, 0, 1, [positionwise_feed_forward/dense_4/Tensordot/Reshape]:119
+FULLY_CONNECTED, 3.227, 3.22714, 14.552%, 30.5405%, 0, 1, [positionwise_feed_forward/dense_4/Tensordot/MatMul1]:120
+RESHAPE, 0, 0.0001, 0.000450925%, 30.5409%, 0, 1, [positionwise_feed_forward/dense_4/Tensordot]:121
+ADD, 0.038, 0.03802, 0.171442%, 30.7124%, 0, 1, [positionwise_feed_forward/dense_4/BiasAdd]:122
+POW, 0.175, 0.17644, 0.795611%, 31.508%, 0, 1, [positionwise_feed_forward/GELU/Pow]:123
+MUL, 0.016, 0.01656, 0.0746731%, 31.5827%, 0, 1, [positionwise_feed_forward/GELU/mul_1]:124
+ADD, 0.037, 0.0367, 0.165489%, 31.7482%, 0, 1, [positionwise_feed_forward/GELU/add]:125
+MUL, 0.016, 0.0163, 0.0735007%, 31.8217%, 0, 1, [positionwise_feed_forward/GELU/mul_2]:126
+TANH, 0.083, 0.24316, 1.09647%, 32.9181%, 0, 1, [positionwise_feed_forward/GELU/Tanh]:127
+ADD, 0.09, 0.08158, 0.367864%, 33.286%, 0, 1, [positionwise_feed_forward/GELU/add_1]:128
+MUL, 0.113, 0.1019, 0.459492%, 33.7455%, 0, 1, [positionwise_feed_forward/GELU/mul]:129
+MUL, 0.024, 0.02394, 0.107951%, 33.8534%, 0, 1, [positionwise_feed_forward/GELU/mul_3]:130
+SHAPE, 0, 8e-05, 0.00036074%, 33.8538%, 0, 1, [positionwise_feed_forward/dense_5/Tensordot/Shape]:131
+GATHER, 0, 0.00014, 0.000631294%, 33.8544%, 0, 1, [positionwise_feed_forward/dense_5/Tensordot/GatherV2;multi_headed_attention/dense/Tensordot/GatherV2/axis]:132
+REDUCE_PROD, 0, 0.00014, 0.000631294%, 33.8551%, 0, 1, [positionwise_feed_forward/dense_5/Tensordot/Prod]:133
+CONCATENATION, 0.001, 0.00014, 0.000631294%, 33.8557%, 0, 1, [positionwise_feed_forward/dense_5/Tensordot/concat_1]:134
+GATHER, 0, 2e-05, 9.01849e-05%, 33.8558%, 0, 1, [positionwise_feed_forward/dense_5/Tensordot/GatherV2_1;multi_headed_attention/dense/Tensordot/GatherV2/axis]:135
+REDUCE_PROD, 0, 0.00012, 0.000541109%, 33.8563%, 0, 1, [positionwise_feed_forward/dense_5/Tensordot/Prod_1]:136
+PACK, 0, 0.0003, 0.00135277%, 33.8577%, 0, 1, [positionwise_feed_forward/dense_5/Tensordot/stack]:137
+RESHAPE, 0.059, 0.05914, 0.266677%, 34.1243%, 0, 1, [positionwise_feed_forward/dense_5/Tensordot/Reshape]:138
+FULLY_CONNECTED, 3.004, 3.01492, 13.595%, 47.7194%, 0, 1, [positionwise_feed_forward/dense_5/Tensordot/MatMul1]:139
+RESHAPE, 0, 8e-05, 0.00036074%, 47.7197%, 0, 1, [positionwise_feed_forward/dense_5/Tensordot]:140
+ADD, 0.01, 0.00982, 0.0442808%, 47.764%, 0, 1, [positionwise_feed_forward/dense_5/BiasAdd]:141
+ADD, 0.01, 0.01024, 0.0461747%, 47.8102%, 0, 1, [add_normalization_2/add]:142
+SHAPE, 0, 0.00014, 0.000631294%, 47.8108%, 0, 1, [add_normalization_2/layer_normalization_2/Shape]:143
+STRIDED_SLICE, 0, 0.00014, 0.000631294%, 47.8114%, 0, 1, [add_normalization_2/layer_normalization_2/strided_slice]:144
+MUL, 0, 8e-05, 0.00036074%, 47.8118%, 0, 1, [add_normalization_2/layer_normalization_2/mul_1]:145
+RESHAPE, 0, 6e-05, 0.000270555%, 47.8121%, 0, 1, [add_normalization_2/layer_normalization_2/ones/packed]:146
+FILL, 0, 0.00016, 0.000721479%, 47.8128%, 0, 1, [add_normalization_2/layer_normalization_2/ones]:147
+FILL, 0.001, 0.0002, 0.000901849%, 47.8137%, 0, 1, [add_normalization_2/layer_normalization_2/zeros]:148
+PACK, 0, 0.00042, 0.00189388%, 47.8156%, 0, 1, [add_normalization_2/layer_normalization_2/Reshape/shape]:149
+RESHAPE, 0.032, 0.03288, 0.148264%, 47.9639%, 0, 1, [add_normalization_2/layer_normalization_2/Reshape]:150
+TRANSPOSE, 0.376, 0.32862, 1.48183%, 49.4457%, 0, 1, [add_normalization_2/layer_normalization_2/FusedBatchNormV3]:151
+MEAN, 0.02, 0.01954, 0.0881107%, 49.5338%, 0, 1, [add_normalization_2/layer_normalization_2/FusedBatchNormV31]:152
+SQUARED_DIFFERENCE, 0.028, 0.02746, 0.123824%, 49.6576%, 0, 1, [add_normalization_2/layer_normalization_2/FusedBatchNormV32]:153
+MEAN, 0.019, 0.01796, 0.080986%, 49.7386%, 0, 1, [add_normalization_2/layer_normalization_2/FusedBatchNormV33]:154
+ADD, 0, 0.00022, 0.000992034%, 49.7396%, 0, 1, [add_normalization_2/layer_normalization_2/FusedBatchNormV34]:155
+RSQRT, 0.001, 0.00078, 0.00351721%, 49.7431%, 0, 1, [add_normalization_2/layer_normalization_2/FusedBatchNormV35]:156
+MUL, 0.001, 0.00098, 0.00441906%, 49.7475%, 0, 1, [add_normalization_2/layer_normalization_2/FusedBatchNormV36]:157
+MUL, 0.026, 0.02524, 0.113813%, 49.8613%, 0, 1, [add_normalization_2/layer_normalization_2/FusedBatchNormV37]:158
+MUL, 0.001, 0.00068, 0.00306629%, 49.8644%, 0, 1, [add_normalization_2/layer_normalization_2/FusedBatchNormV38]:159
+SUB, 0, 0.0003, 0.00135277%, 49.8658%, 0, 1, [add_normalization_2/layer_normalization_2/FusedBatchNormV39]:160
+ADD, 0.029, 0.02828, 0.127521%, 49.9933%, 0, 1, [add_normalization_2/layer_normalization_2/FusedBatchNormV310]:161
+TRANSPOSE, 0.026, 0.02678, 0.120758%, 50.114%, 0, 1, [add_normalization_2/layer_normalization_2/FusedBatchNormV311]:162
+RESHAPE, 0, 8e-05, 0.00036074%, 50.1144%, 0, 1, [add_normalization_2/layer_normalization_2/Reshape_1]:163
+MUL, 0.017, 0.01618, 0.0729596%, 50.1874%, 0, 1, [add_normalization_2/layer_normalization_2/mul_3]:164
+ADD, 0.032, 0.03088, 0.139245%, 50.3266%, 0, 1, [add_normalization_2/layer_normalization_2/add]:165
+SHAPE, 0, 0.0001, 0.000450925%, 50.3271%, 0, 1, [multi_headed_attention_1/dense_6/Tensordot/Shape]:166
+GATHER, 0, 0.00012, 0.000541109%, 50.3276%, 0, 1, [multi_headed_attention_1/dense_6/Tensordot/GatherV2;multi_headed_attention/dense/Tensordot/GatherV2/axis]:167
+REDUCE_PROD, 0.001, 0.00012, 0.000541109%, 50.3281%, 0, 1, [multi_headed_attention_1/dense_6/Tensordot/Prod]:168
+CONCATENATION, 0, 8e-05, 0.00036074%, 50.3285%, 0, 1, [multi_headed_attention_1/dense_6/Tensordot/concat_1]:169
+GATHER, 0, 0.0001, 0.000450925%, 50.3289%, 0, 1, [multi_headed_attention_1/dense_6/Tensordot/GatherV2_1;multi_headed_attention/dense/Tensordot/GatherV2/axis]:170
+REDUCE_PROD, 0, 4e-05, 0.00018037%, 50.3291%, 0, 1, [multi_headed_attention_1/dense_6/Tensordot/Prod_1]:171
+PACK, 0, 0.00024, 0.00108222%, 50.3302%, 0, 1, [multi_headed_attention_1/dense_6/Tensordot/stack]:172
+RESHAPE, 0.009, 0.00922, 0.0415752%, 50.3718%, 0, 1, [multi_headed_attention_1/dense_6/Tensordot/Reshape]:173
+FULLY_CONNECTED, 0.456, 0.45922, 2.07074%, 52.4425%, 0, 1, [multi_headed_attention_1/dense_6/Tensordot/MatMul1]:174
+RESHAPE, 0, 6e-05, 0.000270555%, 52.4428%, 0, 1, [multi_headed_attention_1/dense_6/Tensordot]:175
+ADD, 0.006, 0.00558, 0.0251616%, 52.468%, 0, 1, [multi_headed_attention_1/dense_6/BiasAdd]:176
+SHAPE, 0, 8e-05, 0.00036074%, 52.4683%, 0, 1, [multi_headed_attention_1/Shape]:177
+STRIDED_SLICE, 0, 0.00014, 0.000631294%, 52.4689%, 0, 1, [multi_headed_attention_1/strided_slice]:178
+PACK, 0.001, 0.00036, 0.00162333%, 52.4706%, 0, 1, [multi_headed_attention_1/Reshape/shape]:179
+RESHAPE, 0.017, 0.01762, 0.0794529%, 52.55%, 0, 1, [multi_headed_attention_1/Reshape]:180
+TRANSPOSE, 0.038, 0.03342, 0.150699%, 52.7007%, 0, 1, [multi_headed_attention_1/transpose]:181
+FULLY_CONNECTED, 0.447, 0.43976, 1.98299%, 54.6837%, 0, 1, [multi_headed_attention_1/dense_7/Tensordot/MatMul1]:182
+RESHAPE, 0, 0.0001, 0.000450925%, 54.6842%, 0, 1, [multi_headed_attention_1/dense_7/Tensordot]:183
+ADD, 0.005, 0.00544, 0.0245303%, 54.7087%, 0, 1, [multi_headed_attention_1/dense_7/BiasAdd]:184
+SHAPE, 0.001, 0.0001, 0.000450925%, 54.7091%, 0, 1, [multi_headed_attention_1/Shape_2]:185
+STRIDED_SLICE, 0, 0.00012, 0.000541109%, 54.7097%, 0, 1, [multi_headed_attention_1/strided_slice_2]:186
+PACK, 0, 0.0003, 0.00135277%, 54.711%, 0, 1, [multi_headed_attention_1/Reshape_1/shape]:187
+RESHAPE, 0.013, 0.01074, 0.0484293%, 54.7595%, 0, 1, [multi_headed_attention_1/Reshape_1]:188
+TRANSPOSE, 0.031, 0.03334, 0.150338%, 54.9098%, 0, 1, [multi_headed_attention_1/transpose_1]:189
+BATCH_MATMUL, 0.144, 0.14346, 0.646896%, 55.5567%, 0, 1, [multi_headed_attention_1/dot_product_attention_1/MatMul]:190
+MUL, 0.087, 0.0858, 0.386893%, 55.9436%, 0, 1, [multi_headed_attention_1/dot_product_attention_1/truediv;multi_headed_attention_1/dot_product_attention_1/Sqrt]:191
+SOFTMAX, 0.131, 0.10188, 0.459402%, 56.403%, 0, 1, [multi_headed_attention_1/dot_product_attention_1/Softmax]:192
+FULLY_CONNECTED, 0.458, 0.45718, 2.06154%, 58.4645%, 0, 1, [multi_headed_attention_1/dense_8/Tensordot/MatMul1]:193
+RESHAPE, 0, 0.00018, 0.000811664%, 58.4653%, 0, 1, [multi_headed_attention_1/dense_8/Tensordot]:194
+ADD, 0.005, 0.00524, 0.0236284%, 58.489%, 0, 1, [multi_headed_attention_1/dense_8/BiasAdd]:195
+SHAPE, 0, 2e-05, 9.01849e-05%, 58.4891%, 0, 1, [multi_headed_attention_1/Shape_4]:196
+STRIDED_SLICE, 0, 0.00018, 0.000811664%, 58.4899%, 0, 1, [multi_headed_attention_1/strided_slice_4]:197
+PACK, 0, 0.00038, 0.00171351%, 58.4916%, 0, 1, [multi_headed_attention_1/Reshape_2/shape]:198
+RESHAPE, 0.014, 0.01482, 0.066827%, 58.5584%, 0, 1, [multi_headed_attention_1/Reshape_2]:199
+TRANSPOSE, 0.032, 0.04074, 0.183707%, 58.7421%, 0, 1, [multi_headed_attention_1/transpose_2]:200
+BATCH_MATMUL, 0.146, 0.15018, 0.677198%, 59.4193%, 0, 1, [multi_headed_attention_1/dot_product_attention_1/MatMul_1]:201
+TRANSPOSE, 0.032, 0.03196, 0.144115%, 59.5634%, 0, 1, [multi_headed_attention_1/transpose_3]:202
+SHAPE, 0, 0.00014, 0.000631294%, 59.5641%, 0, 1, [multi_headed_attention_1/Shape_6]:203
+STRIDED_SLICE, 0, 0.00012, 0.000541109%, 59.5646%, 0, 1, [multi_headed_attention_1/strided_slice_6]:204
+PACK, 0, 0.00028, 0.00126259%, 59.5659%, 0, 1, [multi_headed_attention_1/Reshape_3/shape]:205
+RESHAPE, 0.01, 0.00984, 0.044371%, 59.6102%, 0, 1, [multi_headed_attention_1/Reshape_3]:206
+SHAPE, 0, 4e-05, 0.00018037%, 59.6104%, 0, 1, [multi_headed_attention_1/dense_9/Tensordot/Shape]:207
+GATHER, 0, 4e-05, 0.00018037%, 59.6106%, 0, 1, [multi_headed_attention_1/dense_9/Tensordot/GatherV2;multi_headed_attention/dense/Tensordot/GatherV2/axis]:208
+REDUCE_PROD, 0, 6e-05, 0.000270555%, 59.6109%, 0, 1, [multi_headed_attention_1/dense_9/Tensordot/Prod]:209
+CONCATENATION, 0, 4e-05, 0.00018037%, 59.611%, 0, 1, [multi_headed_attention_1/dense_9/Tensordot/concat_1]:210
+GATHER, 0, 0.0001, 0.000450925%, 59.6115%, 0, 1, [multi_headed_attention_1/dense_9/Tensordot/GatherV2_1;multi_headed_attention/dense/Tensordot/GatherV2/axis]:211
+REDUCE_PROD, 0.001, 0.00014, 0.000631294%, 59.6121%, 0, 1, [multi_headed_attention_1/dense_9/Tensordot/Prod_1]:212
+PACK, 0, 0.0002, 0.000901849%, 59.613%, 0, 1, [multi_headed_attention_1/dense_9/Tensordot/stack]:213
+RESHAPE, 0.005, 0.00486, 0.0219149%, 59.6349%, 0, 1, [multi_headed_attention_1/dense_9/Tensordot/Reshape;multi_headed_attention_1/Reshape_3]:214
+FULLY_CONNECTED, 0.531, 0.5352, 2.41335%, 62.0483%, 0, 1, [multi_headed_attention_1/dense_9/Tensordot/MatMul1]:215
+RESHAPE, 0, 0.0001, 0.000450925%, 62.0487%, 0, 1, [multi_headed_attention_1/dense_9/Tensordot]:216
+ADD, 0.01, 0.0097, 0.0437397%, 62.0925%, 0, 1, [multi_headed_attention_1/dense_9/BiasAdd]:217
+ADD, 0.009, 0.00944, 0.0425673%, 62.1351%, 0, 1, [add_normalization_3/add]:218
+SHAPE, 0, 6e-05, 0.000270555%, 62.1353%, 0, 1, [add_normalization_3/layer_normalization_3/Shape]:219
+STRIDED_SLICE, 0, 0.0001, 0.000450925%, 62.1358%, 0, 1, [add_normalization_3/layer_normalization_3/strided_slice]:220
+MUL, 0, 8e-05, 0.00036074%, 62.1361%, 0, 1, [add_normalization_3/layer_normalization_3/mul_1]:221
+RESHAPE, 0.001, 0.0001, 0.000450925%, 62.1366%, 0, 1, [add_normalization_3/layer_normalization_3/ones/packed]:222
+FILL, 0, 0.0001, 0.000450925%, 62.137%, 0, 1, [add_normalization_3/layer_normalization_3/ones]:223
+FILL, 0, 0.00016, 0.000721479%, 62.1378%, 0, 1, [add_normalization_3/layer_normalization_3/zeros]:224
+PACK, 0, 0.00042, 0.00189388%, 62.1397%, 0, 1, [add_normalization_3/layer_normalization_3/Reshape/shape]:225
+RESHAPE, 0.036, 0.0327, 0.147452%, 62.2871%, 0, 1, [add_normalization_3/layer_normalization_3/Reshape]:226
+TRANSPOSE, 0.042, 0.03386, 0.152683%, 62.4398%, 0, 1, [add_normalization_3/layer_normalization_3/FusedBatchNormV3]:227
+MEAN, 0.023, 0.01996, 0.0900045%, 62.5298%, 0, 1, [add_normalization_3/layer_normalization_3/FusedBatchNormV31]:228
+SQUARED_DIFFERENCE, 0.029, 0.0319, 0.143845%, 62.6736%, 0, 1, [add_normalization_3/layer_normalization_3/FusedBatchNormV32]:229
+MEAN, 0.024, 0.02406, 0.108492%, 62.7821%, 0, 1, [add_normalization_3/layer_normalization_3/FusedBatchNormV33]:230
+ADD, 0.001, 0.0004, 0.0018037%, 62.7839%, 0, 1, [add_normalization_3/layer_normalization_3/FusedBatchNormV34]:231
+RSQRT, 0.001, 0.0008, 0.0036074%, 62.7875%, 0, 1, [add_normalization_3/layer_normalization_3/FusedBatchNormV35]:232
+MUL, 0, 0.00078, 0.00351721%, 62.7911%, 0, 1, [add_normalization_3/layer_normalization_3/FusedBatchNormV36]:233
+MUL, 0.024, 0.02608, 0.117601%, 62.9087%, 0, 1, [add_normalization_3/layer_normalization_3/FusedBatchNormV37]:234
+MUL, 0, 0.00066, 0.0029761%, 62.9116%, 0, 1, [add_normalization_3/layer_normalization_3/FusedBatchNormV38]:235
+SUB, 0, 0.00024, 0.00108222%, 62.9127%, 0, 1, [add_normalization_3/layer_normalization_3/FusedBatchNormV39]:236
+ADD, 0.029, 0.02968, 0.133834%, 63.0466%, 0, 1, [add_normalization_3/layer_normalization_3/FusedBatchNormV310]:237
+TRANSPOSE, 0.024, 0.0269, 0.121299%, 63.1679%, 0, 1, [add_normalization_3/layer_normalization_3/FusedBatchNormV311]:238
+RESHAPE, 0, 0.00012, 0.000541109%, 63.1684%, 0, 1, [add_normalization_3/layer_normalization_3/Reshape_1]:239
+MUL, 0.018, 0.01648, 0.0743124%, 63.2427%, 0, 1, [add_normalization_3/layer_normalization_3/mul_3]:240
+ADD, 0.032, 0.03044, 0.137261%, 63.38%, 0, 1, [add_normalization_3/layer_normalization_3/add]:241
+SHAPE, 0, 4e-05, 0.00018037%, 63.3801%, 0, 1, [positionwise_feed_forward_1/dense_10/Tensordot/Shape]:242
+GATHER, 0, 0.00014, 0.000631294%, 63.3808%, 0, 1, [positionwise_feed_forward_1/dense_10/Tensordot/GatherV2;multi_headed_attention/dense/Tensordot/GatherV2/axis]:243
+REDUCE_PROD, 0, 6e-05, 0.000270555%, 63.3811%, 0, 1, [positionwise_feed_forward_1/dense_10/Tensordot/Prod]:244
+CONCATENATION, 0, 6e-05, 0.000270555%, 63.3813%, 0, 1, [positionwise_feed_forward_1/dense_10/Tensordot/concat_1]:245
+GATHER, 0, 6e-05, 0.000270555%, 63.3816%, 0, 1, [positionwise_feed_forward_1/dense_10/Tensordot/GatherV2_1;multi_headed_attention/dense/Tensordot/GatherV2/axis]:246
+REDUCE_PROD, 0, 2e-05, 9.01849e-05%, 63.3817%, 0, 1, [positionwise_feed_forward_1/dense_10/Tensordot/Prod_1]:247
+PACK, 0.001, 0.0004, 0.0018037%, 63.3835%, 0, 1, [positionwise_feed_forward_1/dense_10/Tensordot/stack]:248
+RESHAPE, 0.009, 0.00904, 0.0407636%, 63.4242%, 0, 1, [positionwise_feed_forward_1/dense_10/Tensordot/Reshape]:249
+FULLY_CONNECTED, 3.26, 3.2486, 14.6487%, 78.073%, 0, 1, [positionwise_feed_forward_1/dense_10/Tensordot/MatMul1]:250
+RESHAPE, 0, 0.00018, 0.000811664%, 78.0738%, 0, 1, [positionwise_feed_forward_1/dense_10/Tensordot]:251
+ADD, 0.037, 0.03738, 0.168556%, 78.2423%, 0, 1, [positionwise_feed_forward_1/dense_10/BiasAdd]:252
+POW, 0.175, 0.17696, 0.797956%, 79.0403%, 0, 1, [positionwise_feed_forward_1/GELU/Pow]:253
+MUL, 0.017, 0.01678, 0.0756651%, 79.116%, 0, 1, [positionwise_feed_forward_1/GELU/mul_1]:254
+ADD, 0.037, 0.03708, 0.167203%, 79.2832%, 0, 1, [positionwise_feed_forward_1/GELU/add]:255
+MUL, 0.016, 0.01622, 0.07314%, 79.3563%, 0, 1, [positionwise_feed_forward_1/GELU/mul_2]:256
+TANH, 0.651, 0.2937, 1.32437%, 80.6807%, 0, 1, [positionwise_feed_forward_1/GELU/Tanh]:257
+ADD, 0.085, 0.079, 0.35623%, 81.0369%, 0, 1, [positionwise_feed_forward_1/GELU/add_1]:258
+MUL, 0.099, 0.098, 0.441906%, 81.4788%, 0, 1, [positionwise_feed_forward_1/GELU/mul]:259
+MUL, 0.032, 0.02422, 0.109214%, 81.588%, 0, 1, [positionwise_feed_forward_1/GELU/mul_3]:260
+SHAPE, 0, 8e-05, 0.00036074%, 81.5884%, 0, 1, [positionwise_feed_forward_1/dense_11/Tensordot/Shape]:261
+GATHER, 0, 4e-05, 0.00018037%, 81.5886%, 0, 1, [positionwise_feed_forward_1/dense_11/Tensordot/GatherV2;multi_headed_attention/dense/Tensordot/GatherV2/axis]:262
+REDUCE_PROD, 0, 0.00016, 0.000721479%, 81.5893%, 0, 1, [positionwise_feed_forward_1/dense_11/Tensordot/Prod]:263
+CONCATENATION, 0, 0.00012, 0.000541109%, 81.5898%, 0, 1, [positionwise_feed_forward_1/dense_11/Tensordot/concat_1]:264
+GATHER, 0, 8e-05, 0.00036074%, 81.5902%, 0, 1, [positionwise_feed_forward_1/dense_11/Tensordot/GatherV2_1;multi_headed_attention/dense/Tensordot/GatherV2/axis]:265
+REDUCE_PROD, 0, 0.0001, 0.000450925%, 81.5906%, 0, 1, [positionwise_feed_forward_1/dense_11/Tensordot/Prod_1]:266
+PACK, 0.001, 0.00024, 0.00108222%, 81.5917%, 0, 1, [positionwise_feed_forward_1/dense_11/Tensordot/stack]:267
+RESHAPE, 0.06, 0.05852, 0.263881%, 81.8556%, 0, 1, [positionwise_feed_forward_1/dense_11/Tensordot/Reshape]:268
+FULLY_CONNECTED, 3.005, 3.01356, 13.5889%, 95.4445%, 0, 1, [positionwise_feed_forward_1/dense_11/Tensordot/MatMul1]:269
+RESHAPE, 0, 0.0001, 0.000450925%, 95.4449%, 0, 1, [positionwise_feed_forward_1/dense_11/Tensordot]:270
+ADD, 0.01, 0.00994, 0.0448219%, 95.4898%, 0, 1, [positionwise_feed_forward_1/dense_11/BiasAdd]:271
+ADD, 0.011, 0.00964, 0.0434691%, 95.5332%, 0, 1, [add_normalization_4/add]:272
+SHAPE, 0, 0.00016, 0.000721479%, 95.534%, 0, 1, [add_normalization_4/layer_normalization_4/Shape]:273
+STRIDED_SLICE, 0, 0.00018, 0.000811664%, 95.5348%, 0, 1, [add_normalization_4/layer_normalization_4/strided_slice]:274
+MUL, 0, 0.0001, 0.000450925%, 95.5352%, 0, 1, [add_normalization_4/layer_normalization_4/mul_1]:275
+RESHAPE, 0, 0.0001, 0.000450925%, 95.5357%, 0, 1, [add_normalization_4/layer_normalization_4/ones/packed]:276
+FILL, 0, 0.0001, 0.000450925%, 95.5361%, 0, 1, [add_normalization_4/layer_normalization_4/ones]:277
+FILL, 0, 8e-05, 0.00036074%, 95.5365%, 0, 1, [add_normalization_4/layer_normalization_4/zeros]:278
+PACK, 0.001, 0.00054, 0.00243499%, 95.5389%, 0, 1, [add_normalization_4/layer_normalization_4/Reshape/shape]:279
+RESHAPE, 0.032, 0.03204, 0.144476%, 95.6834%, 0, 1, [add_normalization_4/layer_normalization_4/Reshape]:280
+TRANSPOSE, 0.641, 0.39832, 1.79612%, 97.4795%, 0, 1, [add_normalization_4/layer_normalization_4/FusedBatchNormV3]:281
+MEAN, 0.019, 0.01944, 0.0876597%, 97.5672%, 0, 1, [add_normalization_4/layer_normalization_4/FusedBatchNormV31]:282
+SQUARED_DIFFERENCE, 0.027, 0.0277, 0.124906%, 97.6921%, 0, 1, [add_normalization_4/layer_normalization_4/FusedBatchNormV32]:283
+MEAN, 0.018, 0.01814, 0.0817977%, 97.7739%, 0, 1, [add_normalization_4/layer_normalization_4/FusedBatchNormV33]:284
+ADD, 0, 0.00024, 0.00108222%, 97.775%, 0, 1, [add_normalization_4/layer_normalization_4/FusedBatchNormV34]:285
+RSQRT, 0, 0.00078, 0.00351721%, 97.7785%, 0, 1, [add_normalization_4/layer_normalization_4/FusedBatchNormV35]:286
+MUL, 0.001, 0.00088, 0.00396814%, 97.7824%, 0, 1, [add_normalization_4/layer_normalization_4/FusedBatchNormV36]:287
+MUL, 0.025, 0.02524, 0.113813%, 97.8963%, 0, 1, [add_normalization_4/layer_normalization_4/FusedBatchNormV37]:288
+MUL, 0.001, 0.00084, 0.00378777%, 97.9%, 0, 1, [add_normalization_4/layer_normalization_4/FusedBatchNormV38]:289
+SUB, 0, 0.00014, 0.000631294%, 97.9007%, 0, 1, [add_normalization_4/layer_normalization_4/FusedBatchNormV39]:290
+ADD, 0.028, 0.02808, 0.12662%, 98.0273%, 0, 1, [add_normalization_4/layer_normalization_4/FusedBatchNormV310]:291
+TRANSPOSE, 0.027, 0.02624, 0.118323%, 98.1456%, 0, 1, [add_normalization_4/layer_normalization_4/FusedBatchNormV311]:292
+RESHAPE, 0, 0.00012, 0.000541109%, 98.1462%, 0, 1, [add_normalization_4/layer_normalization_4/Reshape_1]:293
+MUL, 0.016, 0.01682, 0.0758455%, 98.222%, 0, 1, [add_normalization_4/layer_normalization_4/mul_3]:294
+ADD, 0.031, 0.03084, 0.139065%, 98.3611%, 0, 1, [add_normalization_4/layer_normalization_4/add]:295
+SHAPE, 0, 8e-05, 0.00036074%, 98.3614%, 0, 1, [Shape1]:296
+FILL, 0.068, 0.06012, 0.271096%, 98.6325%, 0, 1, [BroadcastTo2]:297
+MUL, 0.01, 0.00954, 0.0430182%, 98.6755%, 0, 1, [BroadcastTo3]:298
+ADD, 0.01, 0.0095, 0.0428378%, 98.7184%, 0, 1, [add1]:299
+SHAPE, 0, 0.00014, 0.000631294%, 98.719%, 0, 1, [layer_normalization_5/Shape]:300
+STRIDED_SLICE, 0, 6e-05, 0.000270555%, 98.7193%, 0, 1, [layer_normalization_5/strided_slice]:301
+MUL, 0, 0.0001, 0.000450925%, 98.7197%, 0, 1, [layer_normalization_5/mul_1]:302
+RESHAPE, 0, 0.00016, 0.000721479%, 98.7205%, 0, 1, [layer_normalization_5/ones/packed]:303
+FILL, 0, 4e-05, 0.00018037%, 98.7206%, 0, 1, [layer_normalization_5/ones]:304
+FILL, 0, 6e-05, 0.000270555%, 98.7209%, 0, 1, [layer_normalization_5/zeros]:305
+PACK, 0, 0.00038, 0.00171351%, 98.7226%, 0, 1, [layer_normalization_5/Reshape/shape]:306
+RESHAPE, 0.035, 0.03436, 0.154938%, 98.8776%, 0, 1, [layer_normalization_5/Reshape]:307
+TRANSPOSE, 0.039, 0.03402, 0.153405%, 99.031%, 0, 1, [layer_normalization_5/FusedBatchNormV32]:308
+MEAN, 0.022, 0.02086, 0.0940629%, 99.125%, 0, 1, [layer_normalization_5/FusedBatchNormV33]:309
+SQUARED_DIFFERENCE, 0.028, 0.02862, 0.129055%, 99.2541%, 0, 1, [layer_normalization_5/FusedBatchNormV34]:310
+MEAN, 0.018, 0.01832, 0.0826094%, 99.3367%, 0, 1, [layer_normalization_5/FusedBatchNormV35]:311
+ADD, 0, 0.00028, 0.00126259%, 99.338%, 0, 1, [layer_normalization_5/FusedBatchNormV36]:312
+RSQRT, 0.001, 0.00074, 0.00333684%, 99.3413%, 0, 1, [layer_normalization_5/FusedBatchNormV37]:313
+MUL, 0.001, 0.00078, 0.00351721%, 99.3448%, 0, 1, [layer_normalization_5/FusedBatchNormV38]:314
+MUL, 0.025, 0.02462, 0.111018%, 99.4558%, 0, 1, [layer_normalization_5/FusedBatchNormV39]:315
+MUL, 0.001, 0.00084, 0.00378777%, 99.4596%, 0, 1, [layer_normalization_5/FusedBatchNormV310]:316
+SUB, 0, 0.00046, 0.00207425%, 99.4617%, 0, 1, [layer_normalization_5/FusedBatchNormV311]:317
+ADD, 0.029, 0.02804, 0.126439%, 99.5881%, 0, 1, [layer_normalization_5/FusedBatchNormV312]:318
+TRANSPOSE, 0.027, 0.02782, 0.125447%, 99.7136%, 0, 1, [layer_normalization_5/FusedBatchNormV313]:319
+RESHAPE, 0, 0.0001, 0.000450925%, 99.714%, 0, 1, [layer_normalization_5/Reshape_1]:320
+MUL, 0.016, 0.01538, 0.0693522%, 99.7834%, 0, 1, [layer_normalization_5/mul_3]:321
+ADD, 0.031, 0.03098, 0.139696%, 99.9231%, 0, 1, [layer_normalization_5/add]:322
+MEAN, 0.01, 0.00826, 0.0372464%, 99.9603%, 0, 1, [Mean]:323
+FULLY_CONNECTED, 0.005, 0.00444, 0.020021%, 99.9803%, 0, 1, [MatMul;Relu;BiasAdd]:324
+FULLY_CONNECTED, 0.004, 0.00436, 0.0196603%, 100%, 0, 1, [StatefulPartitionedCall:0]:325
+
+============================== Top by Computation Time ==============================
+node type, first, avg_ms, %, cdf%, mem KB, times called, name
+FULLY_CONNECTED, 3.26, 3.2486, 14.6487%, 14.6487%, 0, 1, [positionwise_feed_forward_1/dense_10/Tensordot/MatMul1]:250
+FULLY_CONNECTED, 3.227, 3.22714, 14.552%, 29.2007%, 0, 1, [positionwise_feed_forward/dense_4/Tensordot/MatMul1]:120
+FULLY_CONNECTED, 3.004, 3.01492, 13.595%, 42.7957%, 0, 1, [positionwise_feed_forward/dense_5/Tensordot/MatMul1]:139
+FULLY_CONNECTED, 3.005, 3.01356, 13.5889%, 56.3846%, 0, 1, [positionwise_feed_forward_1/dense_11/Tensordot/MatMul1]:269
+FULLY_CONNECTED, 0.531, 0.5352, 2.41335%, 58.7979%, 0, 1, [multi_headed_attention_1/dense_9/Tensordot/MatMul1]:215
+FULLY_CONNECTED, 0.52, 0.52236, 2.35545%, 61.1534%, 0, 1, [multi_headed_attention/dense_3/Tensordot/MatMul1]:85
+FULLY_CONNECTED, 0.457, 0.46254, 2.08571%, 63.2391%, 0, 1, [multi_headed_attention/dense/Tensordot/MatMul2]:44
+FULLY_CONNECTED, 0.456, 0.45922, 2.07074%, 65.3098%, 0, 1, [multi_headed_attention_1/dense_6/Tensordot/MatMul1]:174
+FULLY_CONNECTED, 0.47, 0.45886, 2.06911%, 67.3789%, 0, 1, [multi_headed_attention/dense_2/Tensordot/MatMul1]:63
+FULLY_CONNECTED, 0.454, 0.45748, 2.06289%, 69.4418%, 0, 1, [multi_headed_attention/dense_1/Tensordot/MatMul1]:52
+
+Number of nodes executed: 326
+============================== Summary by node type ==============================
+node type, count, avg_ms, avg %, cdf %, mem KB, times called
+FULLY_CONNECTED, 14, 16.299, 73.8715%, 73.8715%, 0, 14
+TRANSPOSE, 20, 1.272, 5.76505%, 79.6365%, 0, 20
+ADD, 41, 0.797, 3.61222%, 83.2487%, 0, 41
+MUL, 42, 0.744, 3.37201%, 86.6207%, 0, 42
+BATCH_MATMUL, 4, 0.576, 2.61059%, 89.2313%, 0, 4
+TANH, 2, 0.536, 2.4293%, 91.6606%, 0, 2
+RESHAPE, 48, 0.46, 2.08484%, 93.7455%, 0, 48
+POW, 2, 0.352, 1.59536%, 95.3408%, 0, 2
+MEAN, 13, 0.239, 1.08321%, 96.424%, 0, 13
+SOFTMAX, 2, 0.203, 0.920051%, 97.3441%, 0, 2
+SQUARED_DIFFERENCE, 6, 0.167, 0.756889%, 98.101%, 0, 6
+CONV_2D, 1, 0.165, 0.747824%, 98.8488%, 0, 1
+AVERAGE_POOL_2D, 1, 0.107, 0.484953%, 99.3338%, 0, 1
+FILL, 14, 0.069, 0.312727%, 99.6465%, 0, 14
+SQUARE, 1, 0.052, 0.235678%, 99.8822%, 0, 1
+SQRT, 1, 0.026, 0.117839%, 100%, 0, 1
+SUB, 6, 0, 0%, 100%, 0, 6
+STRIDED_SLICE, 14, 0, 0%, 100%, 0, 14
+SHAPE, 24, 0, 0%, 100%, 0, 24
+RSQRT, 6, 0, 0%, 100%, 0, 6
+REDUCE_PROD, 16, 0, 0%, 100%, 0, 16
+PACK, 22, 0, 0%, 100%, 0, 22
+GATHER, 16, 0, 0%, 100%, 0, 16
+EXPAND_DIMS, 2, 0, 0%, 100%, 0, 2
+CONCATENATION, 8, 0, 0%, 100%, 0, 8
+
+Timings (microseconds): count=50 first=22850 curr=22950 min=21113 max=23130 avg=22176.7 std=481
+Memory (bytes): count=0
+326 nodes observed
+
+

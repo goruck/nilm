@@ -1,93 +1,77 @@
-2023-12-12 06:59:29,332 [INFO ]  *** Training model from scratch ***
-2023-12-12 06:59:29,332 [INFO ]  Machine name: titan
-2023-12-12 06:59:29,332 [INFO ]  Arguments: 
-2023-12-12 06:59:29,332 [INFO ]  Namespace(appliance_name='kettle', model_arch='cnn', datadir='./dataset_management/refit', save_dir='/home/lindo/Develop/nilm/ml/models', batchsize=512, n_epoch=50, crop_train_dataset=None, crop_val_dataset=None, do_not_use_distributed_training=False, resume_training=False, plot_display=True)
-2023-12-12 06:59:29,332 [INFO ]  Window length: 599
-2023-12-12 06:59:29,332 [INFO ]  Training dataset: ./dataset_management/refit/kettle/kettle_training_.csv
-2023-12-12 06:59:29,332 [INFO ]  Validation dataset: ./dataset_management/refit/kettle/kettle_validation_H5.csv
-2023-12-12 06:59:29,332 [INFO ]  Checkpoint file path: /home/lindo/Develop/nilm/ml/models/kettle/checkpoints_cnn
-2023-12-12 06:59:29,332 [INFO ]  SaveModel file path: /home/lindo/Develop/nilm/ml/models/kettle/savemodel_cnn
-2023-12-12 06:59:29,332 [INFO ]  Training history file path: /home/lindo/Develop/nilm/ml/models/kettle/history_cnn
-2023-12-12 06:59:38,899 [INFO ]  There are 60.429M training samples.
-2023-12-12 06:59:38,899 [INFO ]  There are 7.431M validation samples.
-2023-12-12 06:59:38,899 [INFO ]  Normalized on power threshold: 0.6451612903225806
-2023-12-12 06:59:38,899 [INFO ]  L1 loss multiplier: 1.0
-2023-12-12 06:59:38,900 [INFO ]  Using MirroredStrategy with devices ('/job:localhost/replica:0/task:0/device:GPU:0', '/job:localhost/replica:0/task:0/device:GPU:1')
-2023-12-12 06:59:39,072 [INFO ]  Number of replicas: 2.
-2023-12-12 06:59:39,072 [INFO ]  Global batch size: 1024.
-2023-12-12 06:59:41,664 [INFO ]  Learning rate: 0.0001
-2023-12-12 06:59:42,409 [INFO ]  Collective all_reduce tensors: 16 all_reduces, num_devices = 2, group_size = 2, implementation = CommunicationImplementation.NCCL, num_packs = 1
-2023-12-12 06:59:42,960 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
-2023-12-12 06:59:43,322 [INFO ]  Collective all_reduce tensors: 16 all_reduces, num_devices = 2, group_size = 2, implementation = CommunicationImplementation.NCCL, num_packs = 1
-2023-12-12 06:59:43,448 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
-2023-12-12 06:59:47,807 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
-2023-12-12 06:59:47,811 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
-2023-12-12 06:59:47,815 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
-2023-12-12 06:59:47,815 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
-2023-12-12 06:59:47,840 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
-2023-12-12 06:59:47,841 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
-2023-12-12 06:59:47,843 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
-2023-12-12 06:59:47,844 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
-2023-12-12 07:25:18,027 [INFO ]  Collective all_reduce tensors: 16 all_reduces, num_devices = 2, group_size = 2, implementation = CommunicationImplementation.NCCL, num_packs = 1
-2023-12-12 07:25:19,042 [INFO ]  Running test loop after epoch: 1.
-2023-12-12 07:29:08,509 [INFO ]  Current val loss of 0.01802 < than val loss of inf, saving model to /home/lindo/Develop/nilm/ml/models/kettle/savemodel_cnn.
-2023-12-12 07:29:08,509 [WARNI]  Compiled the loaded model, but the compiled metrics have yet to be built. `model.compile_metrics` will be empty until you train or evaluate the model.
-2023-12-12 07:29:09,093 [INFO ]  Assets written to: /home/lindo/Develop/nilm/ml/models/kettle/savemodel_cnn/assets
-2023-12-12 07:29:09,116 [INFO ]  epoch: 1 loss: 0.2376 mse: 0.009081 mae: 0.04628 val_loss: 0.01802 val_mse: 0.01498 val_mae: 0.06777
-2023-12-12 07:29:09,623 [INFO ]  Reshuffling training dataset.
-2023-12-12 07:55:03,721 [INFO ]  Running test loop after epoch: 2.
-2023-12-12 07:58:51,894 [INFO ]  Current val loss of 0.01672 < than val loss of 0.01802, saving model to /home/lindo/Develop/nilm/ml/models/kettle/savemodel_cnn.
-2023-12-12 07:58:51,894 [WARNI]  Compiled the loaded model, but the compiled metrics have yet to be built. `model.compile_metrics` will be empty until you train or evaluate the model.
-2023-12-12 07:58:52,424 [INFO ]  Assets written to: /home/lindo/Develop/nilm/ml/models/kettle/savemodel_cnn/assets
-2023-12-12 07:58:52,453 [INFO ]  epoch: 2 loss: 0.1919 mse: 0.007757 mae: 0.03706 val_loss: 0.01672 val_mse: 0.01006 val_mae: 0.05005
-2023-12-12 07:58:53,358 [INFO ]  Reshuffling training dataset.
-2023-12-12 08:24:53,157 [INFO ]  Running test loop after epoch: 3.
-2023-12-12 08:28:40,691 [INFO ]  epoch: 3 loss: 0.1693 mse: 0.006499 mae: 0.02948 val_loss: 0.01818 val_mse: 0.01649 val_mae: 0.06113
-2023-12-12 08:28:41,956 [INFO ]  Reshuffling training dataset.
-2023-12-12 08:54:32,951 [INFO ]  Running test loop after epoch: 4.
-2023-12-12 08:58:19,496 [INFO ]  epoch: 4 loss: 0.1615 mse: 0.006372 mae: 0.02708 val_loss: 0.01707 val_mse: 0.01035 val_mae: 0.04691
-2023-12-12 08:58:21,247 [INFO ]  Reshuffling training dataset.
-2023-12-12 09:24:04,379 [INFO ]  Running test loop after epoch: 5.
-2023-12-12 09:27:52,659 [INFO ]  epoch: 5 loss: 0.1586 mse: 0.006201 mae: 0.0256 val_loss: 0.01756 val_mse: 0.006812 val_mae: 0.03104
-2023-12-12 09:27:54,779 [INFO ]  Reshuffling training dataset.
-2023-12-12 09:53:37,367 [INFO ]  Running test loop after epoch: 6.
-2023-12-12 09:57:26,347 [INFO ]  epoch: 6 loss: 0.157 mse: 0.006387 mae: 0.02608 val_loss: 0.01719 val_mse: 0.009495 val_mae: 0.0296
-2023-12-12 09:57:28,844 [INFO ]  Reshuffling training dataset.
-2023-12-12 10:23:09,467 [INFO ]  Running test loop after epoch: 7.
-2023-12-12 10:26:59,319 [INFO ]  epoch: 7 loss: 0.1566 mse: 0.006483 mae: 0.02623 val_loss: 0.01766 val_mse: 0.009766 val_mae: 0.03306
-2023-12-12 10:27:02,184 [INFO ]  Reshuffling training dataset.
-2023-12-12 10:52:51,545 [INFO ]  Running test loop after epoch: 8.
-2023-12-12 10:56:38,215 [INFO ]  Current val loss of 0.01581 < than val loss of 0.01672, saving model to /home/lindo/Develop/nilm/ml/models/kettle/savemodel_cnn.
-2023-12-12 10:56:38,216 [WARNI]  Compiled the loaded model, but the compiled metrics have yet to be built. `model.compile_metrics` will be empty until you train or evaluate the model.
-2023-12-12 10:56:38,937 [INFO ]  Assets written to: /home/lindo/Develop/nilm/ml/models/kettle/savemodel_cnn/assets
-2023-12-12 10:56:38,968 [INFO ]  epoch: 8 loss: 0.1563 mse: 0.006449 mae: 0.02614 val_loss: 0.01581 val_mse: 0.01208 val_mae: 0.04975
-2023-12-12 10:56:42,397 [INFO ]  Reshuffling training dataset.
-2023-12-12 11:22:27,673 [INFO ]  Running test loop after epoch: 9.
-2023-12-12 11:26:17,288 [INFO ]  epoch: 9 loss: 0.1567 mse: 0.006617 mae: 0.02645 val_loss: 0.01696 val_mse: 0.01168 val_mae: 0.03869
-2023-12-12 11:26:21,184 [INFO ]  Reshuffling training dataset.
-2023-12-12 11:52:02,670 [INFO ]  Running test loop after epoch: 10.
-2023-12-12 11:55:52,054 [INFO ]  Current val loss of 0.01554 < than val loss of 0.01581, saving model to /home/lindo/Develop/nilm/ml/models/kettle/savemodel_cnn.
-2023-12-12 11:55:52,055 [WARNI]  Compiled the loaded model, but the compiled metrics have yet to be built. `model.compile_metrics` will be empty until you train or evaluate the model.
-2023-12-12 11:55:52,581 [INFO ]  Assets written to: /home/lindo/Develop/nilm/ml/models/kettle/savemodel_cnn/assets
-2023-12-12 11:55:52,613 [INFO ]  epoch: 10 loss: 0.1557 mse: 0.006464 mae: 0.02641 val_loss: 0.01554 val_mse: 0.00858 val_mae: 0.03129
-2023-12-12 11:55:56,838 [INFO ]  Reshuffling training dataset.
-2023-12-12 12:21:40,241 [INFO ]  Running test loop after epoch: 11.
-2023-12-12 12:25:28,880 [INFO ]  epoch: 11 loss: 0.1562 mse: 0.006573 mae: 0.02662 val_loss: 0.01806 val_mse: 0.01096 val_mae: 0.04634
-2023-12-12 12:25:33,380 [INFO ]  Reshuffling training dataset.
-2023-12-12 12:51:26,244 [INFO ]  Running test loop after epoch: 12.
-2023-12-12 12:55:15,016 [INFO ]  epoch: 12 loss: 0.1563 mse: 0.006561 mae: 0.02673 val_loss: 0.01582 val_mse: 0.006478 val_mae: 0.02149
-2023-12-12 12:55:19,927 [INFO ]  Reshuffling training dataset.
-2023-12-12 13:20:57,564 [INFO ]  Running test loop after epoch: 13.
-2023-12-12 13:24:47,751 [INFO ]  epoch: 13 loss: 0.1564 mse: 0.006635 mae: 0.02639 val_loss: 0.01743 val_mse: 0.008031 val_mae: 0.03628
-2023-12-12 13:24:53,022 [INFO ]  Reshuffling training dataset.
-2023-12-12 13:50:39,214 [INFO ]  Running test loop after epoch: 14.
-2023-12-12 13:54:28,288 [INFO ]  epoch: 14 loss: 0.1564 mse: 0.006605 mae: 0.02626 val_loss: 0.01619 val_mse: 0.01182 val_mae: 0.04685
-2023-12-12 13:54:34,100 [INFO ]  Reshuffling training dataset.
-2023-12-12 14:20:18,147 [INFO ]  Running test loop after epoch: 15.
-2023-12-12 14:24:08,240 [INFO ]  epoch: 15 loss: 0.1572 mse: 0.00672 mae: 0.02633 val_loss: 0.01835 val_mse: 0.0129 val_mae: 0.05181
-2023-12-12 14:24:14,345 [INFO ]  Reshuffling training dataset.
-2023-12-12 14:49:50,537 [INFO ]  Running test loop after epoch: 16.
-2023-12-12 14:53:40,370 [INFO ]  epoch: 16 loss: 0.1569 mse: 0.006969 mae: 0.02587 val_loss: 0.01816 val_mse: 0.007772 val_mae: 0.02752
-2023-12-12 14:53:47,324 [INFO ]  Early termination of training.
-2023-12-12 14:53:49,746 [INFO ]  Plot directory: /home/lindo/Develop/nilm/ml/models/kettle/train_cnn_loss
-2023-12-12 18:57:05,004 [INFO ]  Plot directory: /home/lindo/Develop/nilm/ml/models/kettle/train_cnn_mae
+2024-04-04 06:22:34,927 [INFO ]  *** Training model from scratch ***
+2024-04-04 06:22:34,927 [INFO ]  Machine name: titan
+2024-04-04 06:22:34,927 [INFO ]  Arguments: 
+2024-04-04 06:22:34,927 [INFO ]  Namespace(appliance_name='kettle', model_arch='cnn', datadir='./dataset_management/refit', save_dir='/home/lindo/Develop/nilm/ml/models', batchsize=512, n_epoch=50, crop_train_dataset=None, crop_val_dataset=None, do_not_use_distributed_training=False, resume_training=False, plot_display=True)
+2024-04-04 06:22:34,927 [INFO ]  Window length: 599
+2024-04-04 06:22:34,927 [INFO ]  Training dataset: ./dataset_management/refit/kettle/kettle_training_.csv
+2024-04-04 06:22:34,927 [INFO ]  Validation dataset: ./dataset_management/refit/kettle/kettle_validation_H5.csv
+2024-04-04 06:22:34,927 [INFO ]  Checkpoint file path: /home/lindo/Develop/nilm/ml/models/kettle/checkpoints_cnn
+2024-04-04 06:22:34,927 [INFO ]  SaveModel file path: /home/lindo/Develop/nilm/ml/models/kettle/savemodel_cnn
+2024-04-04 06:22:34,927 [INFO ]  Training history file path: /home/lindo/Develop/nilm/ml/models/kettle/history_cnn
+2024-04-04 06:22:46,502 [INFO ]  There are 60.429M training samples.
+2024-04-04 06:22:46,502 [INFO ]  There are 7.431M validation samples.
+2024-04-04 06:22:46,502 [INFO ]  Normalized on power threshold: 0.6451612903225806
+2024-04-04 06:22:46,502 [INFO ]  L1 loss multiplier: 1.0
+2024-04-04 06:22:46,503 [INFO ]  Using MirroredStrategy with devices ('/job:localhost/replica:0/task:0/device:GPU:0', '/job:localhost/replica:0/task:0/device:GPU:1')
+2024-04-04 06:22:46,793 [INFO ]  Number of replicas: 2.
+2024-04-04 06:22:46,793 [INFO ]  Global batch size: 1024.
+2024-04-04 06:22:49,262 [INFO ]  Learning rate: 0.0001
+2024-04-04 06:22:50,105 [INFO ]  Collective all_reduce tensors: 16 all_reduces, num_devices = 2, group_size = 2, implementation = CommunicationImplementation.NCCL, num_packs = 1
+2024-04-04 06:22:50,688 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+2024-04-04 06:22:51,087 [INFO ]  Collective all_reduce tensors: 16 all_reduces, num_devices = 2, group_size = 2, implementation = CommunicationImplementation.NCCL, num_packs = 1
+2024-04-04 06:22:51,223 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+2024-04-04 06:22:56,390 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+2024-04-04 06:22:56,393 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+2024-04-04 06:22:56,397 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+2024-04-04 06:22:56,398 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+2024-04-04 06:22:56,425 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+2024-04-04 06:22:56,426 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+2024-04-04 06:22:56,427 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+2024-04-04 06:22:56,428 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+2024-04-04 06:51:17,125 [INFO ]  Running test loop after epoch: 1.
+2024-04-04 06:52:18,676 [INFO ]  Current val loss of 0.1342 < than val loss of inf, saving model to /home/lindo/Develop/nilm/ml/models/kettle/savemodel_cnn.
+2024-04-04 06:52:18,676 [WARNI]  Compiled the loaded model, but the compiled metrics have yet to be built. `model.compile_metrics` will be empty until you train or evaluate the model.
+2024-04-04 06:52:19,445 [INFO ]  Assets written to: /home/lindo/Develop/nilm/ml/models/kettle/savemodel_cnn/assets
+2024-04-04 06:52:19,469 [INFO ]  epoch: 1 loss: 0.2372 mse: 0.009131 mae: 0.04622 val_loss: 0.1342 val_mse: 0.01764 val_mae: 0.08427
+2024-04-04 06:52:20,065 [INFO ]  Reshuffling training dataset.
+2024-04-04 07:20:16,006 [INFO ]  Running test loop after epoch: 2.
+2024-04-04 07:21:18,712 [INFO ]  epoch: 2 loss: 0.191 mse: 0.007765 mae: 0.03698 val_loss: 0.1443 val_mse: 0.008258 val_mae: 0.04355
+2024-04-04 07:21:19,719 [INFO ]  Reshuffling training dataset.
+2024-04-04 07:48:39,568 [INFO ]  Running test loop after epoch: 3.
+2024-04-04 07:49:40,916 [INFO ]  epoch: 3 loss: 0.1703 mse: 0.00656 mae: 0.02909 val_loss: 0.1418 val_mse: 0.01328 val_mae: 0.04622
+2024-04-04 07:49:42,272 [INFO ]  Reshuffling training dataset.
+2024-04-04 08:17:42,172 [INFO ]  Running test loop after epoch: 4.
+2024-04-04 08:18:44,652 [INFO ]  epoch: 4 loss: 0.1619 mse: 0.006149 mae: 0.02551 val_loss: 0.1433 val_mse: 0.006001 val_mae: 0.02673
+2024-04-04 08:18:46,499 [INFO ]  Reshuffling training dataset.
+2024-04-04 08:46:32,680 [INFO ]  Running test loop after epoch: 5.
+2024-04-04 08:47:35,412 [INFO ]  Current val loss of 0.1281 < than val loss of 0.1342, saving model to /home/lindo/Develop/nilm/ml/models/kettle/savemodel_cnn.
+2024-04-04 08:47:35,413 [WARNI]  Compiled the loaded model, but the compiled metrics have yet to be built. `model.compile_metrics` will be empty until you train or evaluate the model.
+2024-04-04 08:47:35,979 [INFO ]  Assets written to: /home/lindo/Develop/nilm/ml/models/kettle/savemodel_cnn/assets
+2024-04-04 08:47:36,008 [INFO ]  epoch: 5 loss: 0.1589 mse: 0.006151 mae: 0.02434 val_loss: 0.1281 val_mse: 0.01038 val_mae: 0.03467
+2024-04-04 08:47:38,202 [INFO ]  Reshuffling training dataset.
+2024-04-04 09:15:35,733 [INFO ]  Running test loop after epoch: 6.
+2024-04-04 09:16:37,900 [INFO ]  Current val loss of 0.1258 < than val loss of 0.1281, saving model to /home/lindo/Develop/nilm/ml/models/kettle/savemodel_cnn.
+2024-04-04 09:16:37,900 [WARNI]  Compiled the loaded model, but the compiled metrics have yet to be built. `model.compile_metrics` will be empty until you train or evaluate the model.
+2024-04-04 09:16:38,467 [INFO ]  Assets written to: /home/lindo/Develop/nilm/ml/models/kettle/savemodel_cnn/assets
+2024-04-04 09:16:38,496 [INFO ]  epoch: 6 loss: 0.1572 mse: 0.0062 mae: 0.02412 val_loss: 0.1258 val_mse: 0.01062 val_mae: 0.04675
+2024-04-04 09:16:41,032 [INFO ]  Reshuffling training dataset.
+2024-04-04 09:44:51,778 [INFO ]  Running test loop after epoch: 7.
+2024-04-04 09:45:53,543 [INFO ]  epoch: 7 loss: 0.1557 mse: 0.006257 mae: 0.02418 val_loss: 0.1721 val_mse: 0.0238 val_mae: 0.06036
+2024-04-04 09:45:56,444 [INFO ]  Reshuffling training dataset.
+2024-04-04 10:13:25,141 [INFO ]  Running test loop after epoch: 8.
+2024-04-04 10:14:27,436 [INFO ]  epoch: 8 loss: 0.1544 mse: 0.006287 mae: 0.02417 val_loss: 0.1405 val_mse: 0.008239 val_mae: 0.0311
+2024-04-04 10:14:30,991 [INFO ]  Reshuffling training dataset.
+2024-04-04 10:42:15,390 [INFO ]  Running test loop after epoch: 9.
+2024-04-04 10:43:18,476 [INFO ]  epoch: 9 loss: 0.1545 mse: 0.00639 mae: 0.02479 val_loss: 0.1568 val_mse: 0.03188 val_mae: 0.08237
+2024-04-04 10:43:22,389 [INFO ]  Reshuffling training dataset.
+2024-04-04 11:11:26,329 [INFO ]  Running test loop after epoch: 10.
+2024-04-04 11:12:28,947 [INFO ]  epoch: 10 loss: 0.1537 mse: 0.006335 mae: 0.02465 val_loss: 0.1483 val_mse: 0.008122 val_mae: 0.03153
+2024-04-04 11:12:33,202 [INFO ]  Reshuffling training dataset.
+2024-04-04 11:40:11,159 [INFO ]  Running test loop after epoch: 11.
+2024-04-04 11:41:11,937 [INFO ]  epoch: 11 loss: 0.1538 mse: 0.006412 mae: 0.02481 val_loss: 0.1449 val_mse: 0.00595 val_mae: 0.02092
+2024-04-04 11:41:16,572 [INFO ]  Reshuffling training dataset.
+2024-04-04 12:09:06,850 [INFO ]  Running test loop after epoch: 12.
+2024-04-04 12:10:08,990 [INFO ]  epoch: 12 loss: 0.1531 mse: 0.006421 mae: 0.02455 val_loss: 0.1391 val_mse: 0.009504 val_mae: 0.03281
+2024-04-04 12:10:13,971 [INFO ]  Early termination of training.
+2024-04-04 12:10:15,801 [INFO ]  Plot directory: /home/lindo/Develop/nilm/ml/models/kettle/train_cnn_loss
+2024-04-05 13:30:34,500 [INFO ]  Plot directory: /home/lindo/Develop/nilm/ml/models/kettle/train_cnn_mae

@@ -1,149 +1,92 @@
-2023-11-30 05:50:54,885 [INFO ]  *** Training model from scratch ***
-2023-11-30 05:50:54,885 [INFO ]  Machine name: titan
-2023-11-30 05:50:54,885 [INFO ]  Arguments: 
-2023-11-30 05:50:54,885 [INFO ]  Namespace(appliance_name='microwave', model_arch='transformer', datadir='./dataset_management/refit', save_dir='/home/lindo/Develop/nilm/ml/models', batchsize=512, n_epoch=50, crop_train_dataset=None, crop_val_dataset=None, do_not_use_distributed_training=False, resume_training=False, plot_display=True)
-2023-11-30 05:50:54,885 [INFO ]  Window length: 599
-2023-11-30 05:50:54,885 [INFO ]  Training dataset: ./dataset_management/refit/microwave/microwave_training_.csv
-2023-11-30 05:50:54,885 [INFO ]  Validation dataset: ./dataset_management/refit/microwave/microwave_validation_H17.csv
-2023-11-30 05:50:54,885 [INFO ]  Checkpoint file path: /home/lindo/Develop/nilm/ml/models/microwave/checkpoints_transformer
-2023-11-30 05:50:54,885 [INFO ]  SaveModel file path: /home/lindo/Develop/nilm/ml/models/microwave/savemodel_transformer
-2023-11-30 05:50:58,795 [INFO ]  There are 18.221M training samples.
-2023-11-30 05:50:58,795 [INFO ]  There are 5.432M validation samples.
-2023-11-30 05:50:58,795 [INFO ]  Normalized on power threshold: 0.06666666666666667
-2023-11-30 05:50:58,795 [INFO ]  L1 loss multiplier: 1.0
-2023-11-30 05:50:58,796 [INFO ]  Using MirroredStrategy with devices ('/job:localhost/replica:0/task:0/device:GPU:0', '/job:localhost/replica:0/task:0/device:GPU:1')
-2023-11-30 05:50:58,966 [INFO ]  Number of replicas: 2.
-2023-11-30 05:50:58,966 [INFO ]  Global batch size: 1024.
-2023-11-30 05:50:59,765 [INFO ]  Learning rate: 0.0001
-2023-11-30 05:51:01,493 [INFO ]  Collective all_reduce tensors: 44 all_reduces, num_devices = 2, group_size = 2, implementation = CommunicationImplementation.NCCL, num_packs = 1
-2023-11-30 05:51:02,884 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
-2023-11-30 05:51:03,823 [INFO ]  Collective all_reduce tensors: 44 all_reduces, num_devices = 2, group_size = 2, implementation = CommunicationImplementation.NCCL, num_packs = 1
-2023-11-30 05:51:04,110 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
-2023-11-30 05:51:10,633 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
-2023-11-30 05:51:10,637 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
-2023-11-30 05:51:10,640 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
-2023-11-30 05:51:10,641 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
-2023-11-30 05:51:10,866 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
-2023-11-30 05:51:10,866 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
-2023-11-30 05:51:10,868 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
-2023-11-30 05:51:10,869 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
-2023-11-30 06:57:05,652 [INFO ]  Running test loop after epoch: 1.
-2023-11-30 07:05:44,867 [INFO ]  Current val loss of 0.07712 < than val loss of inf, saving model to /home/lindo/Develop/nilm/ml/models/microwave/savemodel_transformer.
-2023-11-30 07:05:47,106 [INFO ]  Assets written to: /home/lindo/Develop/nilm/ml/models/microwave/savemodel_transformer/assets
-2023-11-30 07:05:47,153 [INFO ]  epoch: 1 loss: 0.3831 mse: 0.001459 mae: 0.02402 val_loss: 0.07712 val_mse: 0.0007475 val_mae: 0.01714
-2023-11-30 07:05:47,250 [INFO ]  Reshuffling training dataset.
-2023-11-30 08:11:46,268 [INFO ]  Running test loop after epoch: 2.
-2023-11-30 08:20:25,324 [INFO ]  epoch: 2 loss: 0.2442 mse: 0.0007794 mae: 0.01777 val_loss: 0.08011 val_mse: 0.0007033 val_mae: 0.01452
-2023-11-30 08:20:25,420 [INFO ]  Reshuffling training dataset.
-2023-11-30 09:26:25,570 [INFO ]  Running test loop after epoch: 3.
-2023-11-30 09:35:05,205 [INFO ]  epoch: 3 loss: 0.2296 mse: 0.0006811 mae: 0.01591 val_loss: 0.1874 val_mse: 0.0006696 val_mae: 0.01085
-2023-11-30 09:35:05,306 [INFO ]  Reshuffling training dataset.
-2023-11-30 10:41:15,272 [INFO ]  Running test loop after epoch: 4.
-2023-11-30 10:49:55,651 [INFO ]  epoch: 4 loss: 0.219 mse: 0.0006548 mae: 0.01523 val_loss: 0.08647 val_mse: 0.0006253 val_mae: 0.01059
-2023-11-30 10:49:55,756 [INFO ]  Reshuffling training dataset.
-2023-11-30 11:56:07,195 [INFO ]  Running test loop after epoch: 5.
-2023-11-30 12:04:47,732 [INFO ]  epoch: 5 loss: 0.2155 mse: 0.0006157 mae: 0.01391 val_loss: 0.08102 val_mse: 0.0006541 val_mae: 0.01161
-2023-11-30 12:04:47,828 [INFO ]  Reshuffling training dataset.
-2023-11-30 13:11:03,467 [INFO ]  Running test loop after epoch: 6.
-2023-11-30 13:19:43,542 [INFO ]  Current val loss of 0.06126 < than val loss of 0.07712, saving model to /home/lindo/Develop/nilm/ml/models/microwave/savemodel_transformer.
-2023-11-30 13:19:45,783 [INFO ]  Assets written to: /home/lindo/Develop/nilm/ml/models/microwave/savemodel_transformer/assets
-2023-11-30 13:19:45,835 [INFO ]  epoch: 6 loss: 0.2088 mse: 0.0005893 mae: 0.01292 val_loss: 0.06126 val_mse: 0.0006658 val_mae: 0.01331
-2023-11-30 13:19:45,918 [INFO ]  Reshuffling training dataset.
-2023-11-30 14:26:01,634 [INFO ]  Running test loop after epoch: 7.
-2023-11-30 14:34:42,105 [INFO ]  Current val loss of 0.06009 < than val loss of 0.06126, saving model to /home/lindo/Develop/nilm/ml/models/microwave/savemodel_transformer.
-2023-11-30 14:34:44,123 [INFO ]  Assets written to: /home/lindo/Develop/nilm/ml/models/microwave/savemodel_transformer/assets
-2023-11-30 14:34:44,168 [INFO ]  epoch: 7 loss: 0.209 mse: 0.0005783 mae: 0.01221 val_loss: 0.06009 val_mse: 0.0006163 val_mae: 0.01044
-2023-11-30 14:34:44,256 [INFO ]  Reshuffling training dataset.
-2023-11-30 15:40:58,765 [INFO ]  Running test loop after epoch: 8.
-2023-11-30 15:49:38,648 [INFO ]  epoch: 8 loss: 0.2043 mse: 0.0005691 mae: 0.0115 val_loss: 0.06764 val_mse: 0.0005425 val_mae: 0.007317
-2023-11-30 15:49:38,740 [INFO ]  Reshuffling training dataset.
-2023-11-30 16:55:49,703 [INFO ]  Running test loop after epoch: 9.
-2023-11-30 17:04:30,680 [INFO ]  epoch: 9 loss: 0.2042 mse: 0.000579 mae: 0.01122 val_loss: 0.06189 val_mse: 0.0005673 val_mae: 0.008939
-2023-11-30 17:04:30,772 [INFO ]  Reshuffling training dataset.
-2023-11-30 18:10:45,543 [INFO ]  Running test loop after epoch: 10.
-2023-11-30 18:19:26,736 [INFO ]  epoch: 10 loss: 0.2017 mse: 0.0005756 mae: 0.01095 val_loss: 0.06239 val_mse: 0.0005931 val_mae: 0.009031
-2023-11-30 18:19:26,830 [INFO ]  Reshuffling training dataset.
-2023-11-30 19:25:43,159 [INFO ]  Running test loop after epoch: 11.
-2023-11-30 19:34:23,672 [INFO ]  epoch: 11 loss: 0.1997 mse: 0.0005806 mae: 0.01086 val_loss: 0.06804 val_mse: 0.000708 val_mae: 0.01045
-2023-11-30 19:34:23,938 [INFO ]  Reshuffling training dataset.
-2023-11-30 20:40:35,064 [INFO ]  Running test loop after epoch: 12.
-2023-11-30 20:49:15,040 [INFO ]  epoch: 12 loss: 0.1981 mse: 0.0005684 mae: 0.01041 val_loss: 0.06074 val_mse: 0.0005805 val_mae: 0.006059
-2023-11-30 20:49:15,138 [INFO ]  Reshuffling training dataset.
-2023-11-30 21:55:26,300 [INFO ]  Running test loop after epoch: 13.
-2023-11-30 22:04:06,582 [INFO ]  Current val loss of 0.05861 < than val loss of 0.06009, saving model to /home/lindo/Develop/nilm/ml/models/microwave/savemodel_transformer.
-2023-11-30 22:04:08,949 [INFO ]  Assets written to: /home/lindo/Develop/nilm/ml/models/microwave/savemodel_transformer/assets
-2023-11-30 22:04:09,023 [INFO ]  epoch: 13 loss: 0.1938 mse: 0.0005525 mae: 0.01012 val_loss: 0.05861 val_mse: 0.0006273 val_mae: 0.01019
-2023-11-30 22:04:09,119 [INFO ]  Reshuffling training dataset.
-2023-11-30 23:10:14,819 [INFO ]  Running test loop after epoch: 14.
-2023-11-30 23:18:54,525 [INFO ]  epoch: 14 loss: 0.1931 mse: 0.0005457 mae: 0.01007 val_loss: 0.06081 val_mse: 0.0006319 val_mae: 0.01025
-2023-11-30 23:18:54,624 [INFO ]  Reshuffling training dataset.
-2023-12-01 00:25:03,668 [INFO ]  Running test loop after epoch: 15.
-2023-12-01 00:33:43,849 [INFO ]  Current val loss of 0.05795 < than val loss of 0.05861, saving model to /home/lindo/Develop/nilm/ml/models/microwave/savemodel_transformer.
-2023-12-01 00:33:46,333 [INFO ]  Assets written to: /home/lindo/Develop/nilm/ml/models/microwave/savemodel_transformer/assets
-2023-12-01 00:33:46,431 [INFO ]  epoch: 15 loss: 0.1932 mse: 0.0005512 mae: 0.01 val_loss: 0.05795 val_mse: 0.0005483 val_mae: 0.00895
-2023-12-01 00:33:46,526 [INFO ]  Reshuffling training dataset.
-2023-12-01 01:39:49,247 [INFO ]  Running test loop after epoch: 16.
-2023-12-01 01:48:28,503 [INFO ]  epoch: 16 loss: 0.1877 mse: 0.0005267 mae: 0.009246 val_loss: 0.06168 val_mse: 0.0005561 val_mae: 0.009476
-2023-12-01 01:48:28,593 [INFO ]  Reshuffling training dataset.
-2023-12-01 02:54:30,712 [INFO ]  Running test loop after epoch: 17.
-2023-12-01 03:03:09,994 [INFO ]  epoch: 17 loss: 0.1876 mse: 0.0005254 mae: 0.009097 val_loss: 0.05826 val_mse: 0.0005959 val_mae: 0.006922
-2023-12-01 03:03:10,096 [INFO ]  Reshuffling training dataset.
-2023-12-01 04:09:15,033 [INFO ]  Running test loop after epoch: 18.
-2023-12-01 04:17:54,660 [INFO ]  epoch: 18 loss: 0.1862 mse: 0.0005258 mae: 0.0092 val_loss: 0.06104 val_mse: 0.0006172 val_mae: 0.007031
-2023-12-01 04:17:54,767 [INFO ]  Reshuffling training dataset.
-2023-12-01 05:24:01,214 [INFO ]  Running test loop after epoch: 19.
-2023-12-01 05:32:40,601 [INFO ]  epoch: 19 loss: 0.1864 mse: 0.0005158 mae: 0.008899 val_loss: 0.05987 val_mse: 0.0005317 val_mae: 0.006409
-2023-12-01 05:32:40,699 [INFO ]  Reshuffling training dataset.
-2023-12-01 06:38:43,007 [INFO ]  Running test loop after epoch: 20.
-2023-12-01 06:47:22,401 [INFO ]  epoch: 20 loss: 0.1823 mse: 0.0005211 mae: 0.009193 val_loss: 0.08457 val_mse: 0.000552 val_mae: 0.005748
-2023-12-01 06:47:22,502 [INFO ]  Reshuffling training dataset.
-2023-12-01 07:53:26,243 [INFO ]  Running test loop after epoch: 21.
-2023-12-01 08:02:05,795 [INFO ]  Current val loss of 0.05776 < than val loss of 0.05795, saving model to /home/lindo/Develop/nilm/ml/models/microwave/savemodel_transformer.
-2023-12-01 08:02:08,225 [INFO ]  Assets written to: /home/lindo/Develop/nilm/ml/models/microwave/savemodel_transformer/assets
-2023-12-01 08:02:08,333 [INFO ]  epoch: 21 loss: 0.1801 mse: 0.0005161 mae: 0.009029 val_loss: 0.05776 val_mse: 0.0005616 val_mae: 0.007944
-2023-12-01 08:02:08,434 [INFO ]  Reshuffling training dataset.
-2023-12-01 09:08:12,083 [INFO ]  Running test loop after epoch: 22.
-2023-12-01 09:16:52,918 [INFO ]  epoch: 22 loss: 0.1787 mse: 0.0004983 mae: 0.008756 val_loss: 0.0648 val_mse: 0.0007852 val_mae: 0.01825
-2023-12-01 09:16:53,013 [INFO ]  Reshuffling training dataset.
-2023-12-01 10:23:03,153 [INFO ]  Running test loop after epoch: 23.
-2023-12-01 10:31:44,239 [INFO ]  Current val loss of 0.05552 < than val loss of 0.05776, saving model to /home/lindo/Develop/nilm/ml/models/microwave/savemodel_transformer.
-2023-12-01 10:31:46,683 [INFO ]  Assets written to: /home/lindo/Develop/nilm/ml/models/microwave/savemodel_transformer/assets
-2023-12-01 10:31:46,789 [INFO ]  epoch: 23 loss: 0.1767 mse: 0.0005101 mae: 0.009114 val_loss: 0.05552 val_mse: 0.0005008 val_mae: 0.007418
-2023-12-01 10:31:46,881 [INFO ]  Reshuffling training dataset.
-2023-12-01 11:37:59,428 [INFO ]  Running test loop after epoch: 24.
-2023-12-01 11:46:40,154 [INFO ]  epoch: 24 loss: 0.1782 mse: 0.0005063 mae: 0.008824 val_loss: 0.07012 val_mse: 0.0006164 val_mae: 0.007564
-2023-12-01 11:46:40,250 [INFO ]  Reshuffling training dataset.
-2023-12-01 12:52:54,013 [INFO ]  Running test loop after epoch: 25.
-2023-12-01 13:01:34,318 [INFO ]  epoch: 25 loss: 0.179 mse: 0.0005146 mae: 0.009112 val_loss: 0.06119 val_mse: 0.0005556 val_mae: 0.006681
-2023-12-01 13:01:34,417 [INFO ]  Reshuffling training dataset.
-2023-12-01 14:07:51,461 [INFO ]  Running test loop after epoch: 26.
-2023-12-01 14:16:32,237 [INFO ]  epoch: 26 loss: 0.1764 mse: 0.0004978 mae: 0.008668 val_loss: 0.05651 val_mse: 0.0004831 val_mae: 0.005956
-2023-12-01 14:16:32,333 [INFO ]  Reshuffling training dataset.
-2023-12-01 15:22:48,128 [INFO ]  Running test loop after epoch: 27.
-2023-12-01 15:31:29,113 [INFO ]  epoch: 27 loss: 0.1766 mse: 0.0005074 mae: 0.008606 val_loss: 0.09863 val_mse: 0.0005976 val_mae: 0.008397
-2023-12-01 15:31:29,222 [INFO ]  Reshuffling training dataset.
-2023-12-01 16:37:43,408 [INFO ]  Running test loop after epoch: 28.
-2023-12-01 16:46:24,078 [INFO ]  Current val loss of 0.05518 < than val loss of 0.05552, saving model to /home/lindo/Develop/nilm/ml/models/microwave/savemodel_transformer.
-2023-12-01 16:46:26,541 [INFO ]  Assets written to: /home/lindo/Develop/nilm/ml/models/microwave/savemodel_transformer/assets
-2023-12-01 16:46:26,651 [INFO ]  epoch: 28 loss: 0.1757 mse: 0.0004966 mae: 0.008653 val_loss: 0.05518 val_mse: 0.0004898 val_mae: 0.008694
-2023-12-01 16:46:26,741 [INFO ]  Reshuffling training dataset.
-2023-12-01 17:52:39,020 [INFO ]  Running test loop after epoch: 29.
-2023-12-01 18:01:19,459 [INFO ]  epoch: 29 loss: 0.1742 mse: 0.0004919 mae: 0.008686 val_loss: 0.09077 val_mse: 0.0006226 val_mae: 0.008711
-2023-12-01 18:01:19,556 [INFO ]  Reshuffling training dataset.
-2023-12-01 19:07:33,994 [INFO ]  Running test loop after epoch: 30.
-2023-12-01 19:16:14,774 [INFO ]  epoch: 30 loss: 0.1724 mse: 0.0004822 mae: 0.008549 val_loss: 0.05523 val_mse: 0.000571 val_mae: 0.008397
-2023-12-01 19:16:14,877 [INFO ]  Reshuffling training dataset.
-2023-12-01 20:22:25,202 [INFO ]  Running test loop after epoch: 31.
-2023-12-01 20:31:05,655 [INFO ]  epoch: 31 loss: 0.1715 mse: 0.0004739 mae: 0.008309 val_loss: 0.07943 val_mse: 0.0005577 val_mae: 0.00849
-2023-12-01 20:31:05,750 [INFO ]  Reshuffling training dataset.
-2023-12-01 21:37:14,163 [INFO ]  Running test loop after epoch: 32.
-2023-12-01 21:45:54,176 [INFO ]  epoch: 32 loss: 0.17 mse: 0.0004762 mae: 0.008293 val_loss: 0.05701 val_mse: 0.0004933 val_mae: 0.006218
-2023-12-01 21:45:54,268 [INFO ]  Reshuffling training dataset.
-2023-12-01 22:51:54,351 [INFO ]  Running test loop after epoch: 33.
-2023-12-01 23:00:33,974 [INFO ]  epoch: 33 loss: 0.1689 mse: 0.0004728 mae: 0.008088 val_loss: 0.137 val_mse: 0.0005996 val_mae: 0.01286
-2023-12-01 23:00:34,078 [INFO ]  Reshuffling training dataset.
-2023-12-02 00:06:32,718 [INFO ]  Running test loop after epoch: 34.
-2023-12-02 00:15:12,223 [INFO ]  epoch: 34 loss: 0.1698 mse: 0.0004709 mae: 0.008294 val_loss: 0.119 val_mse: 0.0005239 val_mae: 0.007952
-2023-12-02 00:15:12,306 [INFO ]  Early termination of training.
-2023-12-02 00:15:13,991 [INFO ]  Plot directory: /home/lindo/Develop/nilm/ml/models/microwave/train_transformer_loss
-2023-12-02 05:03:22,479 [INFO ]  Plot directory: /home/lindo/Develop/nilm/ml/models/microwave/train_transformer_mae
+2023-12-22 06:57:00,224 [INFO ]  *** Training model from scratch ***
+2023-12-22 06:57:00,224 [INFO ]  Machine name: titan
+2023-12-22 06:57:00,224 [INFO ]  Arguments: 
+2023-12-22 06:57:00,224 [INFO ]  Namespace(appliance_name='microwave', model_arch='transformer', datadir='./dataset_management/refit', save_dir='/home/lindo/Develop/nilm/ml/models', batchsize=512, n_epoch=50, crop_train_dataset=10000000, crop_val_dataset=None, do_not_use_distributed_training=False, resume_training=False, plot_display=False)
+2023-12-22 06:57:00,224 [INFO ]  Window length: 599
+2023-12-22 06:57:00,224 [INFO ]  Training dataset: ./dataset_management/refit/microwave/microwave_training_.csv
+2023-12-22 06:57:00,224 [INFO ]  Validation dataset: ./dataset_management/refit/microwave/microwave_validation_H17.csv
+2023-12-22 06:57:00,224 [INFO ]  Checkpoint file path: /home/lindo/Develop/nilm/ml/models/microwave/checkpoints_transformer
+2023-12-22 06:57:00,224 [INFO ]  SaveModel file path: /home/lindo/Develop/nilm/ml/models/microwave/savemodel_transformer
+2023-12-22 06:57:00,224 [INFO ]  Training history file path: /home/lindo/Develop/nilm/ml/models/microwave/history_transformer
+2023-12-22 06:57:03,132 [INFO ]  There are 10.000M training samples.
+2023-12-22 06:57:03,133 [INFO ]  There are 5.432M validation samples.
+2023-12-22 06:57:03,133 [INFO ]  Normalized on power threshold: 0.06666666666666667
+2023-12-22 06:57:03,133 [INFO ]  L1 loss multiplier: 1.0
+2023-12-22 06:57:03,133 [INFO ]  Using MirroredStrategy with devices ('/job:localhost/replica:0/task:0/device:GPU:0', '/job:localhost/replica:0/task:0/device:GPU:1')
+2023-12-22 06:57:03,294 [INFO ]  Number of replicas: 2.
+2023-12-22 06:57:03,294 [INFO ]  Global batch size: 1024.
+2023-12-22 06:57:03,673 [INFO ]  Learning rate: 0.0001
+2023-12-22 06:57:05,328 [INFO ]  Collective all_reduce tensors: 44 all_reduces, num_devices = 2, group_size = 2, implementation = CommunicationImplementation.NCCL, num_packs = 1
+2023-12-22 06:57:06,752 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+2023-12-22 06:57:07,649 [INFO ]  Collective all_reduce tensors: 44 all_reduces, num_devices = 2, group_size = 2, implementation = CommunicationImplementation.NCCL, num_packs = 1
+2023-12-22 06:57:07,925 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+2023-12-22 06:57:14,159 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+2023-12-22 06:57:14,164 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+2023-12-22 06:57:14,167 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+2023-12-22 06:57:14,167 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+2023-12-22 06:57:14,391 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+2023-12-22 06:57:14,392 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+2023-12-22 06:57:14,393 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+2023-12-22 06:57:14,394 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+2023-12-22 07:33:18,935 [INFO ]  Running test loop after epoch: 1.
+2023-12-22 07:41:57,235 [INFO ]  Current val loss of 0.07837 < than val loss of inf, saving model to /home/lindo/Develop/nilm/ml/models/microwave/savemodel_transformer.
+2023-12-22 07:41:59,242 [INFO ]  Assets written to: /home/lindo/Develop/nilm/ml/models/microwave/savemodel_transformer/assets
+2023-12-22 07:41:59,289 [INFO ]  epoch: 1 loss: 0.4703 mse: 0.002337 mae: 0.03203 val_loss: 0.07837 val_mse: 0.0008385 val_mae: 0.01209
+2023-12-22 07:41:59,425 [INFO ]  Reshuffling training dataset.
+2023-12-22 08:18:02,941 [INFO ]  Running test loop after epoch: 2.
+2023-12-22 08:26:40,235 [INFO ]  epoch: 2 loss: 0.2457 mse: 0.0007517 mae: 0.01766 val_loss: 0.5428 val_mse: 0.001714 val_mae: 0.02995
+2023-12-22 08:26:40,424 [INFO ]  Reshuffling training dataset.
+2023-12-22 09:02:42,873 [INFO ]  Running test loop after epoch: 3.
+2023-12-22 09:11:19,799 [INFO ]  epoch: 3 loss: 0.2256 mse: 0.0006466 mae: 0.01565 val_loss: 0.3034 val_mse: 0.0007792 val_mae: 0.01157
+2023-12-22 09:11:20,058 [INFO ]  Reshuffling training dataset.
+2023-12-22 09:47:27,633 [INFO ]  Running test loop after epoch: 4.
+2023-12-22 09:56:05,983 [INFO ]  Current val loss of 0.07613 < than val loss of 0.07837, saving model to /home/lindo/Develop/nilm/ml/models/microwave/savemodel_transformer.
+2023-12-22 09:56:08,106 [INFO ]  Assets written to: /home/lindo/Develop/nilm/ml/models/microwave/savemodel_transformer/assets
+2023-12-22 09:56:08,157 [INFO ]  epoch: 4 loss: 0.2185 mse: 0.0005921 mae: 0.01438 val_loss: 0.07613 val_mse: 0.0007817 val_mae: 0.01277
+2023-12-22 09:56:08,440 [INFO ]  Reshuffling training dataset.
+2023-12-22 10:32:17,864 [INFO ]  Running test loop after epoch: 5.
+2023-12-22 10:40:56,113 [INFO ]  Current val loss of 0.0692 < than val loss of 0.07613, saving model to /home/lindo/Develop/nilm/ml/models/microwave/savemodel_transformer.
+2023-12-22 10:40:58,060 [INFO ]  Assets written to: /home/lindo/Develop/nilm/ml/models/microwave/savemodel_transformer/assets
+2023-12-22 10:40:58,106 [INFO ]  epoch: 5 loss: 0.2141 mse: 0.0005607 mae: 0.01321 val_loss: 0.0692 val_mse: 0.0009185 val_mae: 0.02216
+2023-12-22 10:40:58,447 [INFO ]  Reshuffling training dataset.
+2023-12-22 11:17:04,642 [INFO ]  Running test loop after epoch: 6.
+2023-12-22 11:25:43,265 [INFO ]  Current val loss of 0.0673 < than val loss of 0.0692, saving model to /home/lindo/Develop/nilm/ml/models/microwave/savemodel_transformer.
+2023-12-22 11:25:45,237 [INFO ]  Assets written to: /home/lindo/Develop/nilm/ml/models/microwave/savemodel_transformer/assets
+2023-12-22 11:25:45,285 [INFO ]  epoch: 6 loss: 0.2085 mse: 0.0005429 mae: 0.0127 val_loss: 0.0673 val_mse: 0.0006951 val_mae: 0.01455
+2023-12-22 11:25:45,699 [INFO ]  Reshuffling training dataset.
+2023-12-22 12:01:54,638 [INFO ]  Running test loop after epoch: 7.
+2023-12-22 12:10:33,389 [INFO ]  epoch: 7 loss: 0.2057 mse: 0.0005179 mae: 0.012 val_loss: 0.1044 val_mse: 0.0006784 val_mae: 0.009988
+2023-12-22 12:10:33,856 [INFO ]  Reshuffling training dataset.
+2023-12-22 12:46:46,260 [INFO ]  Running test loop after epoch: 8.
+2023-12-22 12:55:25,890 [INFO ]  Current val loss of 0.06249 < than val loss of 0.0673, saving model to /home/lindo/Develop/nilm/ml/models/microwave/savemodel_transformer.
+2023-12-22 12:55:28,020 [INFO ]  Assets written to: /home/lindo/Develop/nilm/ml/models/microwave/savemodel_transformer/assets
+2023-12-22 12:55:28,078 [INFO ]  epoch: 8 loss: 0.2011 mse: 0.0005106 mae: 0.01171 val_loss: 0.06249 val_mse: 0.000752 val_mae: 0.01411
+2023-12-22 12:55:28,595 [INFO ]  Reshuffling training dataset.
+2023-12-22 13:31:39,031 [INFO ]  Running test loop after epoch: 9.
+2023-12-22 13:40:18,305 [INFO ]  epoch: 9 loss: 0.2012 mse: 0.0005287 mae: 0.01198 val_loss: 0.06529 val_mse: 0.0007018 val_mae: 0.01393
+2023-12-22 13:40:18,897 [INFO ]  Reshuffling training dataset.
+2023-12-22 14:16:32,027 [INFO ]  Running test loop after epoch: 10.
+2023-12-22 14:25:12,518 [INFO ]  Current val loss of 0.06119 < than val loss of 0.06249, saving model to /home/lindo/Develop/nilm/ml/models/microwave/savemodel_transformer.
+2023-12-22 14:25:14,696 [INFO ]  Assets written to: /home/lindo/Develop/nilm/ml/models/microwave/savemodel_transformer/assets
+2023-12-22 14:25:14,784 [INFO ]  epoch: 10 loss: 0.1981 mse: 0.0005179 mae: 0.0115 val_loss: 0.06119 val_mse: 0.0006331 val_mae: 0.007985
+2023-12-22 14:25:15,424 [INFO ]  Reshuffling training dataset.
+2023-12-22 15:01:23,294 [INFO ]  Running test loop after epoch: 11.
+2023-12-22 15:10:02,481 [INFO ]  epoch: 11 loss: 0.1972 mse: 0.0005157 mae: 0.01147 val_loss: 0.337 val_mse: 0.0006762 val_mae: 0.008655
+2023-12-22 15:10:03,174 [INFO ]  Reshuffling training dataset.
+2023-12-22 15:46:18,417 [INFO ]  Running test loop after epoch: 12.
+2023-12-22 15:54:58,396 [INFO ]  epoch: 12 loss: 0.2006 mse: 0.0005092 mae: 0.01106 val_loss: 0.08281 val_mse: 0.0007513 val_mae: 0.01045
+2023-12-22 15:54:59,205 [INFO ]  Reshuffling training dataset.
+2023-12-22 16:31:10,780 [INFO ]  Running test loop after epoch: 13.
+2023-12-22 16:39:50,821 [INFO ]  epoch: 13 loss: 0.2013 mse: 0.0005269 mae: 0.01173 val_loss: 0.06289 val_mse: 0.0008302 val_mae: 0.01593
+2023-12-22 16:39:51,683 [INFO ]  Reshuffling training dataset.
+2023-12-22 17:16:08,537 [INFO ]  Running test loop after epoch: 14.
+2023-12-22 17:24:48,874 [INFO ]  epoch: 14 loss: 0.1988 mse: 0.0005152 mae: 0.01107 val_loss: 0.1434 val_mse: 0.0008488 val_mae: 0.01902
+2023-12-22 17:24:49,783 [INFO ]  Reshuffling training dataset.
+2023-12-22 18:01:03,375 [INFO ]  Running test loop after epoch: 15.
+2023-12-22 18:09:43,711 [INFO ]  epoch: 15 loss: 0.1932 mse: 0.0004959 mae: 0.01086 val_loss: 0.0618 val_mse: 0.0006516 val_mae: 0.01205
+2023-12-22 18:09:44,686 [INFO ]  Reshuffling training dataset.
+2023-12-22 18:45:58,860 [INFO ]  Running test loop after epoch: 16.
+2023-12-22 18:54:39,185 [INFO ]  epoch: 16 loss: 0.193 mse: 0.0004941 mae: 0.01061 val_loss: 0.06535 val_mse: 0.0006575 val_mae: 0.01271
+2023-12-22 18:54:40,176 [INFO ]  Early termination of training.
+2023-12-22 18:54:40,528 [INFO ]  Plot directory: /home/lindo/Develop/nilm/ml/models/microwave/train_transformer_loss
+2023-12-22 18:54:40,858 [INFO ]  Plot directory: /home/lindo/Develop/nilm/ml/models/microwave/train_transformer_mae

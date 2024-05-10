@@ -1,0 +1,10 @@
+Edge TPU Compiler version 16.0.384591198
+Input: kettle_cnn_w8_a8.tflite
+Output: kettle_cnn_w8_a8_edgetpu.tflite
+
+Operator                       Count      Status
+
+MAX_POOL_2D                    4          Mapped to Edge TPU
+FULLY_CONNECTED                3          Mapped to Edge TPU
+CONV_2D                        5          Mapped to Edge TPU
+RESHAPE                        10         Mapped to Edge TPU

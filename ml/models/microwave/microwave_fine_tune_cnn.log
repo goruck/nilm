@@ -1,0 +1,76 @@
+2024-04-21 05:45:14,442 [INFO ]  Machine name: titan
+2024-04-21 05:45:14,442 [INFO ]  Arguments: 
+2024-04-21 05:45:14,442 [INFO ]  Namespace(appliance_name='microwave', model_arch='cnn', datadir='./dataset_management/my-house', save_dir='/home/lindo/Develop/nilm/ml/models', batchsize=512, n_epoch=50, crop_train_dataset=None, crop_val_dataset=None, plot_display=True)
+2024-04-21 05:45:14,442 [INFO ]  Window length: 599
+2024-04-21 05:45:14,443 [INFO ]  Training dataset: ./dataset_management/my-house/microwave/microwave_training_house.csv
+2024-04-21 05:45:14,443 [INFO ]  Validation dataset: ./dataset_management/my-house/microwave/microwave_validation_house.csv
+2024-04-21 05:45:14,443 [INFO ]  Restoring model from: /home/lindo/Develop/nilm/ml/models/microwave/savemodel_cnn
+2024-04-21 05:45:14,443 [INFO ]  Checkpoint file path: /home/lindo/Develop/nilm/ml/models/microwave/checkpoints_cnn_fine_tune
+2024-04-21 05:45:14,443 [INFO ]  SaveModel file path: /home/lindo/Develop/nilm/ml/models/microwave/savemodel_cnn_fine_tune
+2024-04-21 05:45:14,443 [INFO ]  Training history file path: /home/lindo/Develop/nilm/ml/models/microwave/history_cnn_fine_tune
+2024-04-21 05:45:14,539 [INFO ]  There are 0.290M training samples.
+2024-04-21 05:45:14,539 [INFO ]  There are 0.103M validation samples.
+2024-04-21 05:45:14,539 [INFO ]  Normalized on power threshold: 0.06666666666666667
+2024-04-21 05:45:14,539 [INFO ]  L1 loss multiplier: 1.0
+2024-04-21 05:45:14,540 [INFO ]  Using MirroredStrategy with devices ('/job:localhost/replica:0/task:0/device:GPU:0', '/job:localhost/replica:0/task:0/device:GPU:1')
+2024-04-21 05:45:14,822 [INFO ]  Number of replicas: 2.
+2024-04-21 05:45:14,822 [INFO ]  Global batch size: 1024.
+2024-04-21 05:45:14,872 [INFO ]  Learning rate: 0.0001
+2024-04-21 05:45:15,250 [WARNI]  No training configuration found in save file, so the model was *not* compiled. Compile it manually.
+2024-04-21 05:45:16,043 [INFO ]  Collective all_reduce tensors: 6 all_reduces, num_devices = 2, group_size = 2, implementation = CommunicationImplementation.NCCL, num_packs = 1
+2024-04-21 05:45:16,271 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+2024-04-21 05:45:16,679 [INFO ]  Collective all_reduce tensors: 6 all_reduces, num_devices = 2, group_size = 2, implementation = CommunicationImplementation.NCCL, num_packs = 1
+2024-04-21 05:45:16,733 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+2024-04-21 05:45:18,578 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+2024-04-21 05:45:18,580 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+2024-04-21 05:45:18,582 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+2024-04-21 05:45:18,583 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+2024-04-21 05:45:18,602 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+2024-04-21 05:45:18,602 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+2024-04-21 05:45:18,603 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+2024-04-21 05:45:18,603 [INFO ]  Reduce to /job:localhost/replica:0/task:0/device:CPU:0 then broadcast to ('/job:localhost/replica:0/task:0/device:CPU:0',).
+2024-04-21 05:45:23,913 [INFO ]  Running test loop after epoch: 1.
+2024-04-21 05:45:25,140 [INFO ]  Current val loss of 0.1128 < than val loss of inf, saving model to /home/lindo/Develop/nilm/ml/models/microwave/savemodel_cnn_fine_tune.
+2024-04-21 05:45:25,140 [WARNI]  Compiled the loaded model, but the compiled metrics have yet to be built. `model.compile_metrics` will be empty until you train or evaluate the model.
+2024-04-21 05:45:25,957 [INFO ]  Assets written to: /home/lindo/Develop/nilm/ml/models/microwave/savemodel_cnn_fine_tune/assets
+2024-04-21 05:45:25,976 [INFO ]  epoch: 1 loss: 0.2469 mse: 0.003491 mae: 0.03899 val_loss: 0.1128 val_mse: 0.002217 val_mae: 0.0271
+2024-04-21 05:45:26,233 [INFO ]  Reshuffling training dataset.
+2024-04-21 05:45:32,006 [INFO ]  Running test loop after epoch: 2.
+2024-04-21 05:45:32,650 [INFO ]  epoch: 2 loss: 0.1804 mse: 0.003133 mae: 0.03716 val_loss: 0.1339 val_mse: 0.00247 val_mae: 0.02763
+2024-04-21 05:45:32,894 [INFO ]  Reshuffling training dataset.
+2024-04-21 05:45:39,486 [INFO ]  Running test loop after epoch: 3.
+2024-04-21 05:45:40,456 [INFO ]  Current val loss of 0.1122 < than val loss of 0.1128, saving model to /home/lindo/Develop/nilm/ml/models/microwave/savemodel_cnn_fine_tune.
+2024-04-21 05:45:40,457 [WARNI]  Compiled the loaded model, but the compiled metrics have yet to be built. `model.compile_metrics` will be empty until you train or evaluate the model.
+2024-04-21 05:45:41,068 [INFO ]  Assets written to: /home/lindo/Develop/nilm/ml/models/microwave/savemodel_cnn_fine_tune/assets
+2024-04-21 05:45:41,085 [INFO ]  epoch: 3 loss: 0.1568 mse: 0.00277 mae: 0.02982 val_loss: 0.1122 val_mse: 0.002292 val_mae: 0.0268
+2024-04-21 05:45:41,337 [INFO ]  Reshuffling training dataset.
+2024-04-21 05:45:48,384 [INFO ]  Running test loop after epoch: 4.
+2024-04-21 05:45:49,347 [INFO ]  Current val loss of 0.1107 < than val loss of 0.1122, saving model to /home/lindo/Develop/nilm/ml/models/microwave/savemodel_cnn_fine_tune.
+2024-04-21 05:45:49,347 [WARNI]  Compiled the loaded model, but the compiled metrics have yet to be built. `model.compile_metrics` will be empty until you train or evaluate the model.
+2024-04-21 05:45:49,952 [INFO ]  Assets written to: /home/lindo/Develop/nilm/ml/models/microwave/savemodel_cnn_fine_tune/assets
+2024-04-21 05:45:49,969 [INFO ]  epoch: 4 loss: 0.1408 mse: 0.002224 mae: 0.02637 val_loss: 0.1107 val_mse: 0.001843 val_mae: 0.02112
+2024-04-21 05:45:50,218 [INFO ]  Reshuffling training dataset.
+2024-04-21 05:45:57,090 [INFO ]  Running test loop after epoch: 5.
+2024-04-21 05:45:58,058 [INFO ]  Current val loss of 0.08969 < than val loss of 0.1107, saving model to /home/lindo/Develop/nilm/ml/models/microwave/savemodel_cnn_fine_tune.
+2024-04-21 05:45:58,058 [WARNI]  Compiled the loaded model, but the compiled metrics have yet to be built. `model.compile_metrics` will be empty until you train or evaluate the model.
+2024-04-21 05:45:58,802 [INFO ]  Assets written to: /home/lindo/Develop/nilm/ml/models/microwave/savemodel_cnn_fine_tune/assets
+2024-04-21 05:45:58,821 [INFO ]  epoch: 5 loss: 0.1345 mse: 0.001823 mae: 0.02231 val_loss: 0.08969 val_mse: 0.001602 val_mae: 0.01902
+2024-04-21 05:45:59,076 [INFO ]  Reshuffling training dataset.
+2024-04-21 05:46:05,914 [INFO ]  Running test loop after epoch: 6.
+2024-04-21 05:46:06,883 [INFO ]  epoch: 6 loss: 0.1291 mse: 0.001308 mae: 0.01959 val_loss: 0.09533 val_mse: 0.001179 val_mae: 0.0145
+2024-04-21 05:46:07,156 [INFO ]  Reshuffling training dataset.
+2024-04-21 05:46:13,944 [INFO ]  Running test loop after epoch: 7.
+2024-04-21 05:46:14,921 [INFO ]  epoch: 7 loss: 0.1229 mse: 0.001217 mae: 0.01788 val_loss: 0.09582 val_mse: 0.0009059 val_mae: 0.01269
+2024-04-21 05:46:15,199 [INFO ]  Reshuffling training dataset.
+2024-04-21 05:46:22,041 [INFO ]  Running test loop after epoch: 8.
+2024-04-21 05:46:23,010 [INFO ]  epoch: 8 loss: 0.1205 mse: 0.001261 mae: 0.01866 val_loss: 0.09807 val_mse: 0.001019 val_mae: 0.01301
+2024-04-21 05:46:23,278 [INFO ]  Reshuffling training dataset.
+2024-04-21 05:46:30,190 [INFO ]  Running test loop after epoch: 9.
+2024-04-21 05:46:31,169 [INFO ]  epoch: 9 loss: 0.1141 mse: 0.001006 mae: 0.01651 val_loss: 0.09086 val_mse: 0.0008857 val_mae: 0.01196
+2024-04-21 05:46:31,446 [INFO ]  Reshuffling training dataset.
+2024-04-21 05:46:38,325 [INFO ]  Running test loop after epoch: 10.
+2024-04-21 05:46:39,283 [INFO ]  epoch: 10 loss: 0.1107 mse: 0.001119 mae: 0.01696 val_loss: 0.09156 val_mse: 0.0009668 val_mae: 0.01477
+2024-04-21 05:46:39,560 [INFO ]  Reshuffling training dataset.
+2024-04-21 05:46:46,468 [INFO ]  Running test loop after epoch: 11.
+2024-04-21 05:46:47,490 [INFO ]  epoch: 11 loss: 0.1101 mse: 0.0007604 mae: 0.01483 val_loss: 0.0898 val_mse: 0.0007362 val_mae: 0.0113
+2024-04-21 05:46:47,758 [INFO ]  Early termination of training.
