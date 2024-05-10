@@ -1,0 +1,115 @@
+2024-04-11 19:19:11,566 [INFO ]  Machine name: titan
+2024-04-11 19:19:11,566 [INFO ]  Arguments: 
+2024-04-11 19:19:11,566 [INFO ]  Namespace(appliances=['kettle', 'fridge', 'microwave', 'washingmachine', 'dishwasher'], datadir='/home/lindo/Develop/nilm-datasets/my-house', panel='house', results_dir='/home/lindo/Develop/nilm/ml/dataset_management/my-house', crop=None, plot=True)
+2024-04-11 19:19:11,566 [INFO ]  Using alt standardization.
+2024-04-11 19:19:11,567 [INFO ]  Found mains real power files: ['/home/lindo/Develop/nilm-datasets/my-house/house/samples_03_28_24.csv', '/home/lindo/Develop/nilm-datasets/my-house/house/samples_02_14_24.csv', '/home/lindo/Develop/nilm-datasets/my-house/house/samples_02_28_24.csv', '/home/lindo/Develop/nilm-datasets/my-house/house/samples_02_25_24.csv', '/home/lindo/Develop/nilm-datasets/my-house/house/samples_03_08_24.csv', '/home/lindo/Develop/nilm-datasets/my-house/house/samples_03_18_24.csv', '/home/lindo/Develop/nilm-datasets/my-house/house/samples_02_15_24.csv', '/home/lindo/Develop/nilm-datasets/my-house/house/samples_04_06_24.csv'].
+2024-04-11 19:19:14,295 [INFO ]  Found ground truth files: ['/home/lindo/Develop/nilm-datasets/my-house/house/appliance_energy_data_032824.csv', '/home/lindo/Develop/nilm-datasets/my-house/house/appliance_energy_data_021624.csv', '/home/lindo/Develop/nilm-datasets/my-house/house/appliance_energy_data_021424.csv', '/home/lindo/Develop/nilm-datasets/my-house/house/appliance_energy_data_022824.csv', '/home/lindo/Develop/nilm-datasets/my-house/house/appliance_energy_data_041124.csv', '/home/lindo/Develop/nilm-datasets/my-house/house/appliance_energy_data_030824.csv', '/home/lindo/Develop/nilm-datasets/my-house/house/appliance_energy_data_022524.csv', '/home/lindo/Develop/nilm-datasets/my-house/house/appliance_energy_data_031924.csv', '/home/lindo/Develop/nilm-datasets/my-house/house/appliance_energy_data_021124.csv', '/home/lindo/Develop/nilm-datasets/my-house/house/appliance_energy_data_021224.csv'].
+2024-04-11 19:19:31,296 [INFO ]  Number of ground truth samples per appliance: 516583.
+2024-04-11 19:19:31,296 [INFO ]  Number of training samples: 413266
+2024-04-11 19:19:31,296 [INFO ]  Number of validation samples: 103316
+2024-04-11 19:19:31,296 [INFO ]  Number of test samples: 0
+2024-04-11 19:19:31,296 [INFO ]  Working on dataset: training.
+2024-04-11 19:19:31,296 [INFO ]  Working on appliance: kettle.
+2024-04-11 19:19:31,298 [INFO ]  Number of NaN rows dropped: 802
+2024-04-11 19:19:31,303 [INFO ]  Clamping appliance power to: 3100.0 (W)
+2024-04-11 19:19:31,305 [INFO ]  Computing on-off status.
+2024-04-11 19:19:31,365 [INFO ]  Number of samples with on status: 873.
+2024-04-11 19:19:31,365 [INFO ]  Number of samples with off status: 411591.
+2024-04-11 19:19:31,365 [INFO ]  Number of total samples: 412464.
+2024-04-11 19:19:59,974 [INFO ]  Standardizing aggregate with mean 522.0 (W) and std 814.0 (W).
+2024-04-11 19:19:59,977 [INFO ]  Normalizing appliance with min 0.0 (W) and max 3100.0 (W).
+2024-04-11 19:19:59,979 [INFO ]  Saving dataset as kettle_training_house.csv.
+2024-04-11 19:20:02,188 [INFO ]  Working on appliance: fridge.
+2024-04-11 19:20:02,190 [INFO ]  Number of NaN rows dropped: 673
+2024-04-11 19:20:02,194 [INFO ]  Clamping appliance power to: 400.0 (W)
+2024-04-11 19:20:02,197 [INFO ]  Computing on-off status.
+2024-04-11 19:20:02,258 [INFO ]  Number of samples with on status: 171504.
+2024-04-11 19:20:02,258 [INFO ]  Number of samples with off status: 241089.
+2024-04-11 19:20:02,258 [INFO ]  Number of total samples: 412593.
+2024-04-11 19:20:19,425 [INFO ]  Standardizing aggregate with mean 522.0 (W) and std 814.0 (W).
+2024-04-11 19:20:19,427 [INFO ]  Normalizing appliance with min 0.0 (W) and max 400.0 (W).
+2024-04-11 19:20:19,429 [INFO ]  Saving dataset as fridge_training_house.csv.
+2024-04-11 19:20:21,722 [INFO ]  Working on appliance: microwave.
+2024-04-11 19:20:21,724 [INFO ]  Number of NaN rows dropped: 123404
+2024-04-11 19:20:21,727 [INFO ]  Clamping appliance power to: 3000.0 (W)
+2024-04-11 19:20:21,729 [INFO ]  Computing on-off status.
+2024-04-11 19:20:21,770 [INFO ]  Number of samples with on status: 1321.
+2024-04-11 19:20:21,770 [INFO ]  Number of samples with off status: 288541.
+2024-04-11 19:20:21,770 [INFO ]  Number of total samples: 289862.
+2024-04-11 19:20:30,100 [INFO ]  Standardizing aggregate with mean 522.0 (W) and std 814.0 (W).
+2024-04-11 19:20:30,101 [INFO ]  Normalizing appliance with min 0.0 (W) and max 3000.0 (W).
+2024-04-11 19:20:30,103 [INFO ]  Saving dataset as microwave_training_house.csv.
+2024-04-11 19:20:31,745 [INFO ]  Working on appliance: washingmachine.
+2024-04-11 19:20:31,747 [INFO ]  Number of NaN rows dropped: 445
+2024-04-11 19:20:31,751 [INFO ]  Clamping appliance power to: 2500.0 (W)
+2024-04-11 19:20:31,753 [INFO ]  Computing on-off status.
+2024-04-11 19:20:31,814 [INFO ]  Number of samples with on status: 20379.
+2024-04-11 19:20:31,814 [INFO ]  Number of samples with off status: 392442.
+2024-04-11 19:20:31,814 [INFO ]  Number of total samples: 412821.
+2024-04-11 19:20:41,648 [INFO ]  Standardizing aggregate with mean 522.0 (W) and std 814.0 (W).
+2024-04-11 19:20:41,650 [INFO ]  Normalizing appliance with min 0.0 (W) and max 2500.0 (W).
+2024-04-11 19:20:41,652 [INFO ]  Saving dataset as washingmachine_training_house.csv.
+2024-04-11 19:20:43,985 [INFO ]  Working on appliance: dishwasher.
+2024-04-11 19:20:43,987 [INFO ]  Number of NaN rows dropped: 123446
+2024-04-11 19:20:43,990 [INFO ]  Clamping appliance power to: 2500.0 (W)
+2024-04-11 19:20:43,992 [INFO ]  Computing on-off status.
+2024-04-11 19:20:44,034 [INFO ]  Number of samples with on status: 8755.
+2024-04-11 19:20:44,034 [INFO ]  Number of samples with off status: 281065.
+2024-04-11 19:20:44,034 [INFO ]  Number of total samples: 289820.
+2024-04-11 19:20:52,922 [INFO ]  Standardizing aggregate with mean 522.0 (W) and std 814.0 (W).
+2024-04-11 19:20:52,924 [INFO ]  Normalizing appliance with min 0.0 (W) and max 2500.0 (W).
+2024-04-11 19:20:52,926 [INFO ]  Saving dataset as dishwasher_training_house.csv.
+2024-04-11 19:20:54,671 [INFO ]  Working on dataset: validation.
+2024-04-11 19:20:54,671 [INFO ]  Working on appliance: kettle.
+2024-04-11 19:20:54,672 [INFO ]  Number of NaN rows dropped: 22
+2024-04-11 19:20:54,673 [INFO ]  Clamping appliance power to: 3100.0 (W)
+2024-04-11 19:20:54,674 [INFO ]  Computing on-off status.
+2024-04-11 19:20:54,690 [INFO ]  Number of samples with on status: 82.
+2024-04-11 19:20:54,690 [INFO ]  Number of samples with off status: 103212.
+2024-04-11 19:20:54,690 [INFO ]  Number of total samples: 103294.
+2024-04-11 19:21:05,629 [INFO ]  Standardizing aggregate with mean 522.0 (W) and std 814.0 (W).
+2024-04-11 19:21:05,631 [INFO ]  Normalizing appliance with min 0.0 (W) and max 3100.0 (W).
+2024-04-11 19:21:05,631 [INFO ]  Saving dataset as kettle_validation_house.csv.
+2024-04-11 19:21:06,221 [INFO ]  Working on appliance: fridge.
+2024-04-11 19:21:06,222 [INFO ]  Number of NaN rows dropped: 17
+2024-04-11 19:21:06,223 [INFO ]  Clamping appliance power to: 400.0 (W)
+2024-04-11 19:21:06,224 [INFO ]  Computing on-off status.
+2024-04-11 19:21:06,240 [INFO ]  Number of samples with on status: 44587.
+2024-04-11 19:21:06,240 [INFO ]  Number of samples with off status: 58712.
+2024-04-11 19:21:06,240 [INFO ]  Number of total samples: 103299.
+2024-04-11 19:21:12,618 [INFO ]  Standardizing aggregate with mean 522.0 (W) and std 814.0 (W).
+2024-04-11 19:21:12,620 [INFO ]  Normalizing appliance with min 0.0 (W) and max 400.0 (W).
+2024-04-11 19:21:12,621 [INFO ]  Saving dataset as fridge_validation_house.csv.
+2024-04-11 19:21:13,237 [INFO ]  Working on appliance: microwave.
+2024-04-11 19:21:13,238 [INFO ]  Number of NaN rows dropped: 38
+2024-04-11 19:21:13,239 [INFO ]  Clamping appliance power to: 3000.0 (W)
+2024-04-11 19:21:13,240 [INFO ]  Computing on-off status.
+2024-04-11 19:21:13,255 [INFO ]  Number of samples with on status: 504.
+2024-04-11 19:21:13,255 [INFO ]  Number of samples with off status: 102774.
+2024-04-11 19:21:13,255 [INFO ]  Number of total samples: 103278.
+2024-04-11 19:21:19,601 [INFO ]  Standardizing aggregate with mean 522.0 (W) and std 814.0 (W).
+2024-04-11 19:21:19,602 [INFO ]  Normalizing appliance with min 0.0 (W) and max 3000.0 (W).
+2024-04-11 19:21:19,603 [INFO ]  Saving dataset as microwave_validation_house.csv.
+2024-04-11 19:21:20,220 [INFO ]  Working on appliance: washingmachine.
+2024-04-11 19:21:20,221 [INFO ]  Number of NaN rows dropped: 15
+2024-04-11 19:21:20,222 [INFO ]  Clamping appliance power to: 2500.0 (W)
+2024-04-11 19:21:20,223 [INFO ]  Computing on-off status.
+2024-04-11 19:21:20,239 [INFO ]  Number of samples with on status: 5128.
+2024-04-11 19:21:20,239 [INFO ]  Number of samples with off status: 98173.
+2024-04-11 19:21:20,239 [INFO ]  Number of total samples: 103301.
+2024-04-11 19:21:26,486 [INFO ]  Standardizing aggregate with mean 522.0 (W) and std 814.0 (W).
+2024-04-11 19:21:26,487 [INFO ]  Normalizing appliance with min 0.0 (W) and max 2500.0 (W).
+2024-04-11 19:21:26,488 [INFO ]  Saving dataset as washingmachine_validation_house.csv.
+2024-04-11 19:21:27,108 [INFO ]  Working on appliance: dishwasher.
+2024-04-11 19:21:27,109 [INFO ]  Number of NaN rows dropped: 28
+2024-04-11 19:21:27,110 [INFO ]  Clamping appliance power to: 2500.0 (W)
+2024-04-11 19:21:27,111 [INFO ]  Computing on-off status.
+2024-04-11 19:21:27,127 [INFO ]  Number of samples with on status: 5288.
+2024-04-11 19:21:27,127 [INFO ]  Number of samples with off status: 98000.
+2024-04-11 19:21:27,127 [INFO ]  Number of total samples: 103288.
+2024-04-11 19:21:32,377 [INFO ]  Standardizing aggregate with mean 522.0 (W) and std 814.0 (W).
+2024-04-11 19:21:32,378 [INFO ]  Normalizing appliance with min 0.0 (W) and max 2500.0 (W).
+2024-04-11 19:21:32,379 [INFO ]  Saving dataset as dishwasher_validation_house.csv.
+2024-04-11 19:21:33,023 [INFO ]  Working on dataset: test.
+2024-04-11 19:21:33,023 [INFO ]  Empty dataset, skipping.
+2024-04-11 19:21:33,023 [INFO ]  Successfully completed.
