@@ -7,16 +7,14 @@ Copyright (c) 2022 Lindo St. Angel.
 import os
 import argparse
 import socket
-import sys
 
 import tflite_runtime.interpreter as tflite
 import numpy as np
 
-sys.path.append('../ml')
-import common #pylint: disable=import-error
-from nilm_metric import NILMTestMetrics #pylint: disable=import-error
-from logger import Logger #pylint: disable=import-error
-from window_generator import WindowGenerator #pylint: disable=import-error
+import common
+from nilm_metric import NILMTestMetrics
+from logger import Logger
+from window_generator import WindowGenerator
 
 def get_arguments():
     parser = argparse.ArgumentParser(

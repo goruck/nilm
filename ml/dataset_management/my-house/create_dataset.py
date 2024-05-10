@@ -8,12 +8,10 @@ Copyright (c) 2023~2024 Lindo St. Angel
 
 import os
 import argparse
-import sys
 
 import pandas as pd
 import matplotlib.pyplot as plt
 
-sys.path.append('../../../ml')
 import common
 
 DATA_DIRECTORY = '/home/lindo/Develop/nilm-datasets/my-house/house'

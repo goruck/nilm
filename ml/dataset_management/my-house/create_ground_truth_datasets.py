@@ -18,16 +18,14 @@ Copyright (c) 2024 Lindo St. Angel
 import argparse
 import socket
 import glob
-import sys
 from pathlib import Path
 
 import matplotlib.pyplot as plt
 from matplotlib.dates import AutoDateLocator, AutoDateFormatter
 import pandas as pd
 
-sys.path.append('../../../ml')
-import common #pylint: disable=wrong-import-position
-from logger import Logger #pylint: disable=wrong-import-position
+import common
+from logger import Logger
 
 # Names of all appliances that can be monitored.
 DEFAULT_APPLIANCES = ['kettle', 'fridge', 'microwave', 'washingmachine', 'dishwasher']
