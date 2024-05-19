@@ -1,10 +1,10 @@
-2024-04-29 05:43:08,524 [INFO ]  Machine name: titan
-2024-04-29 05:43:08,524 [INFO ]  Arguments: 
-2024-04-29 05:43:08,524 [INFO ]  Namespace(appliance_name='fridge', model_arch='cnn_fine_tune', datadir='/home/lindo/Develop/nilm/ml/dataset_management/refit', save_dir='/home/lindo/Develop/nilm/ml/models', crop=None, evaluate=False, num_eval=432000, test_type='test', prune=False, quant_mode='w8', debug_model=False, fix_model=False, use_tpu=False)
-2024-04-29 05:43:08,524 [INFO ]  Savemodel file path: /home/lindo/Develop/nilm/ml/models/fridge/savemodel_cnn_fine_tune
-2024-04-29 05:43:09,400 [WARNI]  No training configuration found in save file, so the model was *not* compiled. Compile it manually.
-2024-04-29 05:43:09,402 [INFO ]  dataset: /home/lindo/Develop/nilm/ml/dataset_management/refit/fridge/fridge_test_H15.csv
-2024-04-29 05:43:10,514 [INFO ]  Loaded 6.226M samples from dataset.
-2024-04-29 05:43:10,520 [INFO ]  Converting model to tflite using w8 quantization.
-2024-04-29 05:43:11,244 [INFO ]  Assets written to: /tmp/tmp25zq5i4l/assets
-2024-04-29 05:43:13,241 [INFO ]  Quantized tflite model saved to /home/lindo/Develop/nilm/ml/models/fridge/fridge_cnn_fine_tune_w8.tflite.
+2024-05-17 07:45:38,071 [INFO ]  Machine name: titan
+2024-05-17 07:45:38,071 [INFO ]  Arguments: 
+2024-05-17 07:45:38,071 [INFO ]  Namespace(appliance_name='fridge', model_arch='cnn_fine_tune', datadir='/home/lindo/Develop/nilm/ml/dataset_management/refit', save_dir='/home/lindo/Develop/nilm/ml/models', crop=None, evaluate=False, num_eval=432000, test_type='test', prune=False, quant_mode='w8', debug_model=False, fix_model=False, use_tpu=False)
+2024-05-17 07:45:38,071 [INFO ]  Savemodel file path: /home/lindo/Develop/nilm/ml/models/fridge/savemodel_cnn_fine_tune
+2024-05-17 07:45:38,919 [WARNI]  No training configuration found in save file, so the model was *not* compiled. Compile it manually.
+2024-05-17 07:45:38,921 [INFO ]  dataset: /home/lindo/Develop/nilm/ml/dataset_management/refit/fridge/fridge_test_H15.csv
+2024-05-17 07:45:39,971 [INFO ]  Loaded 6.226M samples from dataset.
+2024-05-17 07:45:39,978 [INFO ]  Converting model to tflite using w8 quantization.
+2024-05-17 07:45:44,036 [INFO ]  Assets written to: /tmp/tmprml5dwt5/assets
+2024-05-17 07:45:46,090 [INFO ]  Quantized tflite model saved to /home/lindo/Develop/nilm/ml/models/fridge/fridge_cnn_fine_tune_w8.tflite.
