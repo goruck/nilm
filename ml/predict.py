@@ -188,7 +188,7 @@ def denormalize(predictions:np.ndarray, appliance_name:str) -> np.ndarray:
 def get_real_power(
         file_name:str,
         not_before:datetime,
-        zone:str='US/Pacific'
+        zone:str='America/Los_Angeles'
     ) -> pd.DataFrame:
     """Load real-time dataset and return total real power with datetimes."""
     dataframe = pd.read_csv(
@@ -213,7 +213,7 @@ def get_real_power(
 def get_ground_truth(
         file_name:str,
         not_before:datetime,
-        zone:str='US/Pacific'
+        zone:str='America/Los_Angeles'
     ) -> pd.DataFrame:
     """Load ground truth dataset and return appliance active power with datetimes.
 
@@ -267,7 +267,8 @@ def get_ground_truth(
 def get_realtime_predictions(
         file_name:str,
         not_before:datetime,
-        zone='US/Pacific') -> pd.DataFrame:
+        zone='America/Los_Angeles'
+    ) -> pd.DataFrame:
     """Load appliance power predictions that were preformed in real-time with datetimes."""
     # Load real-time prediction dataset.
     dataframe = pd.read_csv(
