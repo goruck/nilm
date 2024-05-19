@@ -19,11 +19,13 @@ import argparse
 import socket
 import glob
 from pathlib import Path
+import sys
 
 import matplotlib.pyplot as plt
 from matplotlib.dates import AutoDateLocator, AutoDateFormatter
 import pandas as pd
 
+sys.path.append('../../')
 import common
 from logger import Logger
 
@@ -87,13 +89,13 @@ def get_arguments():
     parser.add_argument(
         '--plot',
         action='store_true',
-        help='if set, show predicted appliance and mains power plots'
+        help='if set, show datasets for visually inspection'
     )
     parser.set_defaults(plot=False)
 
     return parser.parse_args()
 
-def get_real_power(file_name, crop=None, zone='US/Pacific') -> pd.DataFrame:
+def get_real_power(file_name, crop=None, zone='America/Los_Angeles') -> pd.DataFrame:
     """Load real-time dataset and return total real power with datetimes."""
     dataframe = pd.read_csv(
         file_name,
@@ -113,7 +115,7 @@ def get_real_power(file_name, crop=None, zone='US/Pacific') -> pd.DataFrame:
     dataframe = dataframe.drop(columns=['W1', 'W2'])
     return dataframe.fillna(0)
 
-def get_ground_truth(file_name, crop=None, zone='US/Pacific') -> pd.DataFrame:
+def get_ground_truth(file_name, crop=None, zone='America/Los_Angeles') -> pd.DataFrame:
     """Load ground truth dataset and return appliance active power with datetimes.
 
     This reads a ground truth csv file, as a dataframe, localizes it, converts it
