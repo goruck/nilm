@@ -26,6 +26,7 @@ import numpy as np
 import tensorflow as tf
 import matplotlib.pyplot as plt
 from matplotlib.dates import AutoDateLocator, AutoDateFormatter
+from matplotlib import rcParams
 import pandas as pd
 
 import common
@@ -49,6 +50,9 @@ RT_DATA_FILE_PREFIX = 'samples'
 # csv file name of ground truth appliance power readings.
 # These files are in the 'default_dataset_dir' identified below.
 GT_DATA_FILE_PREFIX = 'appliance_energy_data_'
+
+# Set local time zone. Dataset datetimes are UTC.
+TZ = 'America/Los_Angeles'
 
 def get_arguments():
     """Get command line arguments."""
@@ -188,7 +192,7 @@ def denormalize(predictions:np.ndarray, appliance_name:str) -> np.ndarray:
 def get_real_power(
         file_name:str,
         not_before:datetime,
-        zone:str='America/Los_Angeles'
+        zone:str=TZ
     ) -> pd.DataFrame:
     """Load real-time dataset and return total real power with datetimes."""
     dataframe = pd.read_csv(
@@ -213,7 +217,7 @@ def get_real_power(
 def get_ground_truth(
         file_name:str,
         not_before:datetime,
-        zone:str='America/Los_Angeles'
+        zone:str=TZ
     ) -> pd.DataFrame:
     """Load ground truth dataset and return appliance active power with datetimes.
 
@@ -267,7 +271,7 @@ def get_ground_truth(
 def get_realtime_predictions(
         file_name:str,
         not_before:datetime,
-        zone='America/Los_Angeles'
+        zone=TZ
     ) -> pd.DataFrame:
     """Load appliance power predictions that were preformed in real-time with datetimes."""
     # Load real-time prediction dataset.
@@ -472,6 +476,10 @@ if __name__ == '__main__':
         )
         logger.log(result)
 
+    # Plot setup
+    rcParams['timezone'] = TZ
+    locator = AutoDateLocator(tz=TZ)
+
     ###
     ### Save and show appliance powers each in a single row of subplots.
     ###
@@ -482,31 +490,22 @@ if __name__ == '__main__':
     ax[0].set_ylabel('Watts')
     # Plot mains power.
     ax[0].set_title('aggregate')
-    ax[0].plot(rp_df, color='orange', linewidth=1.8)
+    ax[0].plot(rp_df, color='orange')
     # Set friendly looking date and times on x-axis.
-    locator = AutoDateLocator()
     ax[0].xaxis.set_major_locator(locator=locator)
     ax[0].xaxis.set_major_formatter(AutoDateFormatter(locator=locator))
     fig.autofmt_xdate()
-    row = 1
-    for appliance in args.appliances:
+    for row, appliance in enumerate(args.appliances, start=1):
         ax[row].set_ylabel('Watts')
         ax[row].set_title(appliance)
         ax[row].set_ylim(0, max_pred)
-        ax[row].plot(
-            pp_df[appliance], color='red', linewidth=1.5, label='prediction'
-        )
+        ax[row].plot(pp_df[appliance], color='red', label='prediction')
         if args.show_rt_preds:
-            ax[row].plot(
-                rt_df[appliance], color='green', linewidth=1.5, label='real-time prediction'
-            )
+            ax[row].plot(rt_df[appliance], color='green', label='real-time prediction')
             ax[row].legend(loc='upper right')
         if args.show_gt:
-            ax[row].plot(
-                gt_df[appliance], color='blue', linewidth=1.5, label='ground_truth'
-            )
-            ax[row].legend(loc='upper right', fontsize='x-small')
-        row+=1
+            ax[row].plot(gt_df[appliance], color='blue', label='ground_truth')
+            ax[row].legend(loc='upper right')
     fig.suptitle(f'Prediction results for {args.panel}', fontsize=16, fontweight='bold')
     # Save and optionally show plot.
     plot_savepath = os.path.join(
@@ -527,13 +526,12 @@ if __name__ == '__main__':
     # Plot mains power.
     ax.plot(rp_df, label='aggregate')
     # Set friendly looking date and times on x-axis.
-    locator = AutoDateLocator()
     ax.xaxis.set_major_locator(locator=locator)
     ax.xaxis.set_major_formatter(AutoDateFormatter(locator=locator))
     fig.autofmt_xdate()
     # Plot appliance powers.
     ax.plot(pp_df, label=pp_df.columns.to_list())
-    ax.legend(loc='upper right', fontsize='x-small')
+    ax.legend(loc='upper right')
     # Save and optionally show plot.
     plot_savepath = os.path.join(
         args.results_dir, args.panel, f'predict_{args.model_arch}_plot.png'
