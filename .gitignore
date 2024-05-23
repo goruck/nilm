@@ -1,5 +1,6 @@
 #/.vscode
 #*.log
+rpi/*.log
 *.tflite
 *.pb
 *.index
@@ -11,6 +12,7 @@ __pycache__
 /.venv
 *checkpoints*
 ml/linux_x86-64_benchmark_model
+ml/linux_aarch64_benchmark_model
 ml/quant_aware_train.py
 ml/train_keras.py
 
