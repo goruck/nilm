@@ -26,8 +26,9 @@ import pytz
 import tflite_runtime.interpreter as tflite
 import numpy as np
 
-from logger import Logger
-import common
+sys.path.append('../ml/')
+from logger import Logger   #pylint: disable=import-error
+import common               #pylint: disable=import-error
 
 # Rpi serial port where the Arduino is connected.
 SER_PORT = '/dev/ttyACM0'
