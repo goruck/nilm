@@ -29,7 +29,11 @@ The following first two diagrams illustrate the NILM concept and process steps a
 
 Energy disaggregation is a highly underdetermined and a single-channel Blind Source Separation (BSS) problem² which makes it difficult to obtain accurate predictions. Let $M$ be the number of household appliances and $i$ be the index referring to the $i$-th appliance. The aggregate power consumption $x$ at a given time $t$ is the sum of the power consumption of all appliances $M$, denoted by $y_i\forall{i=1,...,M}$. Therefore, the total power consumption $x$ at a given time $t$ can expressed by the equation below.
 
-$$x(t)=\sum_{i=1}^My_i(t)+\epsilon_{noise}(t) \tag{1}$$
+$$
+x(t)=\sum_{i=1}^{M} y_i(t) + \epsilon_{\text{noise}}(t)
+$$
+(1)
+
 
 Where $\epsilon_{noise}$ is a noise term. The goal of this project is to solve the inverse problem and estimate the appliance power consumption $y_i$, given the aggregate power signal $x$, and to do so in a manner suitable for deployment at the edge. 
 
@@ -71,25 +75,43 @@ I used the following metrics to evaluate the model’s performance. You can view
 
 * Mean absolute error ($MAE$), which evaluates the absolute difference between the prediction and the ground truth power at every time point and calculates the mean value, as defined by the equation below.
 
-$$MAE = \frac{1}{N}\sum_{i=1}^{N}|\hat{x_i}-x_i|\tag{2}$$
+$$
+\mathrm{MAE}=\frac{1}{N}\sum_{i=1}^{N}\lvert \hat{x}_i - x_i\rvert
+$$
+(2)
 
 * Normalized signal aggregate error ($SAE$), which indicates the relative error of the total energy. Denote $r$ as the total energy consumption of the appliance and $\hat{r}$ as the predicted total energy, then SAE is defined per the equation below.
 
-$$SAE = \frac{|\hat{r} - r|}{r}\tag{3}$$
+$$
+\mathrm{SAE}=\frac{\lvert \hat{r} - r\rvert}{r}
+$$
+(3)
 
 * Energy per Day ($EpD$) which measures the predicted energy used in a day, useful when the household users are interested in the total energy consumed in a period. Denote $D$ as the total number of days and $e=\sum_{t}e_t$ as the appliance energy consumed in a day, then EpD is defined per the equation below.
 
-$$EpD = \frac{1}{D}\sum_{n=1}^{D}e\tag{4}$$
+$$
+\mathrm{EpD}=\frac{1}{D}\sum_{n=1}^{D} e_n
+$$
+(4)
 
 * Normalized disaggregation error ($NDE$) which measures the normalized error of the squared difference between the prediction and the ground truth power of the appliances, as defined by the equation below.
 
-$$NDE = \frac{\sum_{i,t}(x_{i,t}-\hat{x_{i,t}})^2}{\sum_{i,t}x_{i,t}^2}\tag{5}$$
+$$
+\mathrm{NDE}=\frac{\sum_{i,t}\bigl(x_{i,t}-\hat{x}_{i,t}\bigr)^2}{\sum_{i,t} x_{i,t}^2}
+$$
+(5)
 
 I also used accuracy ($ACC$), F1-score ($F1$) and Matthew’s correlation coefficient ($MCC$) to assess if the model can perform well with the severely imbalanced datasets used to train and test the model. These metrics depend on the on-off status of the device and are computed using the parameters in the [common.py](./ml/common.py) module. $ACC$ is equal to the number of correctly predicted time points over the test dataset. $F1$ and $MCC$ are computed according to the equations below where $TP$ stands for true positives, $TN$ stands for true negatives, $FP$ stands for false positives and $FN$ stands for false negatives.
 
-$$F1=\frac{TP}{TP+\frac{1}{2}(FP+FN)}\tag{6}$$
+$$
+F_1=\frac{TP}{TP+\frac{1}{2}(FP+FN)}
+$$
+(6)
 
-$$MCC=\frac{TN \times TP-FN \times FP }{\sqrt{(TP+FP)(TP+FN)(TN+FP)(TN+FN)}}\tag{7}$$
+$$
+\mathrm{MCC}=\frac{TN\cdot TP - FN\cdot FP}{\sqrt{(TP+FP)(TP+FN)(TN+FP)(TN+FN)}}
+$$
+(7)
 
 $MAE$, $SAE$, $NDE$ and $EpD_e$ (defined as $ 100\% \times (EpD_{predicted} - EpD_{ground\_truth}) / EpD_{ground\_truth}$) reflect the model's ability to correctly predict the appliance energy consumption levels. $F1$ and $MCC$ indicates the model's ability to correctly predict appliance activations using imbalanced classes. $ACC$ is less useful in this application because most of the time the model will correctly predict the appliance is off which dominates the dataset.
 
@@ -107,7 +129,14 @@ The key hyper-parameters for training and the optimizer are summarized below.
 
 The loss function<sup>11</sup> shown in the equation below is used to compute training gradients and to evaluate validation loss on a per-batch basis. It consists of a combination of Mean Squared Error, Binary Cross-Entropy and Mean Absolute Error losses, averaged over distributed model replica batches.
 
-$$L(x, s) = (\hat{x} - x)^2 -(\hat{s}\log{s}+(1-\hat{s})\log{(1-s)}) + (\lambda|\hat{x}-x|, \hat{x}\in\set{O})\tag{8}$$
+$$
+L(x,s) = (\hat{x}-x)^{2}
+        - [\hat{s}\log s + (1-\hat{s})\log(1-s)]
+        + \lambda\,|\hat{x}-x|
+$$
+
+for $\hat{x} \in \mathcal{O}$.
+(8)
 
 Where $x, \hat{x}\in[0, 1]$ are the ground truth and predicted power usage single point values divided by the maximum power limit per appliance and $s, \hat{s}\in\set{0, 1}$ are the appliance state label and prediction, and $O$ is the set of predictions when either the status label is on or the prediction is incorrect. The hyperparameter $\lambda$ tunes the absolute loss term on an a per-appliance basis. 
 
