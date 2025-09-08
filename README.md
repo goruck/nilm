@@ -32,6 +32,7 @@ Energy disaggregation is a highly underdetermined and a single-channel Blind Sou
 $$
 x(t)=\sum_{i=1}^{M} y_i(t) + \epsilon_{\text{noise}}(t)
 $$
+
 (1)
 
 
@@ -78,6 +79,7 @@ I used the following metrics to evaluate the model’s performance. You can view
 $$
 \mathrm{MAE}=\frac{1}{N}\sum_{i=1}^{N}\lvert \hat{x}_i - x_i\rvert
 $$
+
 (2)
 
 * Normalized signal aggregate error ($SAE$), which indicates the relative error of the total energy. Denote $r$ as the total energy consumption of the appliance and $\hat{r}$ as the predicted total energy, then SAE is defined per the equation below.
@@ -85,6 +87,7 @@ $$
 $$
 \mathrm{SAE}=\frac{\lvert \hat{r} - r\rvert}{r}
 $$
+
 (3)
 
 * Energy per Day ($EpD$) which measures the predicted energy used in a day, useful when the household users are interested in the total energy consumed in a period. Denote $D$ as the total number of days and $e=\sum_{t}e_t$ as the appliance energy consumed in a day, then EpD is defined per the equation below.
@@ -92,6 +95,7 @@ $$
 $$
 \mathrm{EpD}=\frac{1}{D}\sum_{n=1}^{D} e_n
 $$
+
 (4)
 
 * Normalized disaggregation error ($NDE$) which measures the normalized error of the squared difference between the prediction and the ground truth power of the appliances, as defined by the equation below.
@@ -99,6 +103,7 @@ $$
 $$
 \mathrm{NDE}=\frac{\sum_{i,t}\bigl(x_{i,t}-\hat{x}_{i,t}\bigr)^2}{\sum_{i,t} x_{i,t}^2}
 $$
+
 (5)
 
 I also used accuracy ($ACC$), F1-score ($F1$) and Matthew’s correlation coefficient ($MCC$) to assess if the model can perform well with the severely imbalanced datasets used to train and test the model. These metrics depend on the on-off status of the device and are computed using the parameters in the [common.py](./ml/common.py) module. $ACC$ is equal to the number of correctly predicted time points over the test dataset. $F1$ and $MCC$ are computed according to the equations below where $TP$ stands for true positives, $TN$ stands for true negatives, $FP$ stands for false positives and $FN$ stands for false negatives.
@@ -106,11 +111,13 @@ I also used accuracy ($ACC$), F1-score ($F1$) and Matthew’s correlation coeffi
 $$
 F_1=\frac{TP}{TP+\frac{1}{2}(FP+FN)}
 $$
+
 (6)
 
 $$
 \mathrm{MCC}=\frac{TN\cdot TP - FN\cdot FP}{\sqrt{(TP+FP)(TP+FN)(TN+FP)(TN+FN)}}
 $$
+
 (7)
 
 $MAE$, $SAE$, $NDE$ and $EpD_e$ (defined as $ 100\% \times (EpD_{predicted} - EpD_{ground\_truth}) / EpD_{ground\_truth}$) reflect the model's ability to correctly predict the appliance energy consumption levels. $F1$ and $MCC$ indicates the model's ability to correctly predict appliance activations using imbalanced classes. $ACC$ is less useful in this application because most of the time the model will correctly predict the appliance is off which dominates the dataset.
